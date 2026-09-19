@@ -1,8 +1,17 @@
 import type { CookieOptions } from "hono/utils/cookie";
 
 export function getSessionCookieOptions(headers: Headers): CookieOptions {
+  const proto = headers.get("x-forwarded-proto") || "";
+  const host = headers.get("host") || "";
+  const origin = headers.get("origin") || "";
+  const referer = headers.get("referer") || "";
+
   const isHttps =
-    headers.get("x-forwarded-proto") === "https" ||
+    proto.includes("https") ||
+    headers.get("x-forwarded-ssl") === "on" ||
+    host.includes(".run.app") ||
+    origin.startsWith("https:") ||
+    referer.startsWith("https:") ||
     process.env.NODE_ENV === "production";
 
   return {
@@ -10,5 +19,6 @@ export function getSessionCookieOptions(headers: Headers): CookieOptions {
     path: "/",
     sameSite: isHttps ? "None" : "Lax",
     secure: isHttps,
+    partitioned: isHttps,
   };
 }

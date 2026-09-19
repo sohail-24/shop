@@ -1,8 +1,9 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { FormEvent } from "react";
 import { useNavigate, useSearchParams } from "react-router";
 import { Lock, Mail, ShieldCheck } from "lucide-react";
-import { trpc } from "@/providers/trpc";
+import { setStoredAdminToken, trpc } from "@/providers/trpc";
+import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -16,13 +17,25 @@ export default function AdminLogin() {
   const [error, setError] = useState<string | null>(null);
   const utils = trpc.useUtils();
   const login = trpc.auth.loginAdmin.useMutation();
+  const { user, isAuthenticated, isLoading } = useAuth();
+
+  useEffect(() => {
+    if (!isLoading && isAuthenticated && user) {
+      const returnTo = searchParams.get("returnTo");
+      navigate(returnTo?.startsWith("/") ? returnTo : "/dashboard", { replace: true });
+    }
+  }, [isAuthenticated, isLoading, user, navigate, searchParams]);
 
   async function submit(event: FormEvent) {
     event.preventDefault();
     setError(null);
     try {
-      await login.mutateAsync({ email, password });
-      await utils.auth.me.invalidate();
+      const result = await login.mutateAsync({ email, password });
+      if (result?.token) {
+        setStoredAdminToken(result.token);
+      }
+      utils.auth.me.setData(undefined, result.user);
+      await utils.auth.me.refetch();
       const returnTo = searchParams.get("returnTo");
       navigate(returnTo?.startsWith("/") ? returnTo : "/dashboard", { replace: true });
     } catch (cause) {

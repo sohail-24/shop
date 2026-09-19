@@ -26,7 +26,7 @@ const imageExtensions: Record<string, string> = {
 app.use(
   "*",
   cors({
-    origin: (origin) => origin || "*",
+    origin: (origin) => origin || "",
     allowHeaders: ["Content-Type", "Authorization", "x-trpc-source", "trpc-accept"],
     allowMethods: ["POST", "GET", "OPTIONS", "PUT", "DELETE", "PATCH"],
     exposeHeaders: ["Content-Length"],

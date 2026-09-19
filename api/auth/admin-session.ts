@@ -85,8 +85,13 @@ function appendCookie(headers: Headers, requestHeaders: Headers, name: string, v
     path: "/",
     sameSite: options.sameSite?.toLowerCase() as "lax" | "none",
     secure: options.secure,
+    partitioned: options.partitioned,
     maxAge: Math.floor(maxAgeMs / 1000),
   }));
+}
+
+export async function signAdminToken(email: string, type: "access" | "refresh" = "access") {
+  return signToken(email, type);
 }
 
 export async function issueAdminSessionCookies(email: string, requestHeaders: Headers, responseHeaders: Headers) {
@@ -103,6 +108,7 @@ export function clearAdminSessionCookies(requestHeaders: Headers, responseHeader
       path: "/",
       sameSite: options.sameSite?.toLowerCase() as "lax" | "none",
       secure: options.secure,
+      partitioned: options.partitioned,
       maxAge: 0,
     }));
   }
@@ -110,7 +116,26 @@ export function clearAdminSessionCookies(requestHeaders: Headers, responseHeader
 
 export async function authenticateAdminRequest(requestHeaders: Headers, responseHeaders?: Headers) {
   const cookies = cookie.parse(requestHeaders.get("cookie") ?? "");
-  if (cookies[accessCookieName]) return verifyToken(cookies[accessCookieName], "access");
+  if (cookies[accessCookieName]) {
+    try {
+      return await verifyToken(cookies[accessCookieName], "access");
+    } catch {
+      // Token may be expired; fall through to Bearer / refresh token check
+    }
+  }
+
+  const authHeader = requestHeaders.get("authorization");
+  if (authHeader?.startsWith("Bearer ")) {
+    const bearerToken = authHeader.slice(7).trim();
+    if (bearerToken) {
+      try {
+        return await verifyToken(bearerToken, "access");
+      } catch {
+        // Bearer token verification failed; fall through to refresh check
+      }
+    }
+  }
+
   if (!cookies[refreshCookieName] || !responseHeaders) throw new Error("Authentication required");
   const user = await verifyToken(cookies[refreshCookieName], "refresh");
   await issueAdminSessionCookies(user.email!, requestHeaders, responseHeaders);

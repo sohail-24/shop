@@ -1,4 +1,4 @@
-import { trpc } from "@/providers/trpc";
+import { setStoredAdminToken, trpc } from "@/providers/trpc";
 import { useCallback, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router";
 import { LOGIN_PATH } from "@/const";
@@ -28,6 +28,8 @@ export function useAuth(options?: UseAuthOptions) {
 
   const logoutMutation = trpc.auth.logout.useMutation({
     onSuccess: async () => {
+      setStoredAdminToken(null);
+      utils.auth.me.setData(undefined, null);
       await utils.invalidate();
       navigate(redirectPath);
     },

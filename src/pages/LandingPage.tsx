@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router";
 import { toast } from "sonner";
 import {
+  Home,
   Utensils,
   Beef,
   Sandwich,
@@ -22,8 +23,6 @@ import {
   ChevronRight,
   Minus,
   Plus,
-  Menu,
-  X,
 } from "lucide-react";
 import { trpc } from "@/providers/trpc";
 import { useAuth } from "@/hooks/useAuth";
@@ -90,7 +89,6 @@ export default function LandingPage() {
   const [selectedCategoryKey, setSelectedCategoryKey] = useState("all");
   const [sort, setSort] = useState<"newest" | "price" | "name">("newest");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(true);
   const utils = trpc.useUtils();
 
   const categoriesQuery = trpc.category.list.useQuery(undefined, { retry: false });
@@ -135,6 +133,8 @@ export default function LandingPage() {
     enabled: isAuthenticated,
     retry: false,
   });
+
+  const cartCount = isAuthenticated ? (cartQuery.data?.count ?? 0) : guestCart.count;
 
   const addToCart = trpc.cart.add.useMutation({
     onSuccess: async () => {
@@ -184,96 +184,88 @@ export default function LandingPage() {
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-row">
       {/* ====================================================================== */}
-      {/* 1. MOBILE LEFT CATEGORY PANEL (~31% WIDTH, OPEN BY DEFAULT ON PHONE)   */}
+      {/* 1. MOBILE LEFT CATEGORY PANEL (~28% WIDTH, PERMANENTLY VISIBLE)        */}
       {/* ====================================================================== */}
-      {mobileMenuOpen && (
-        <aside className="md:hidden w-[31%] shrink-0 sticky top-0 h-screen bg-[#033b2c] border-r border-[#022c22] text-white p-1.5 xs:p-2 flex flex-col justify-between overflow-y-auto hide-scrollbar z-30 select-none">
-          <div className="flex flex-col">
-            {/* 1. Close button ✕ */}
-            <div className="flex justify-end pb-1">
-              <button
-                type="button"
-                onClick={() => setMobileMenuOpen(false)}
-                className="p-1 text-emerald-200 hover:text-white hover:bg-emerald-800/60 rounded-md transition-colors"
-                aria-label="Close categories panel"
-              >
-                <X className="h-5 w-5" />
-              </button>
+      <aside
+        id="mobile-category-sidebar"
+        style={{
+          background: "linear-gradient(to bottom, #0F5132 0%, #062E1F 50%, #0F5132 100%)",
+        }}
+        className="md:hidden w-[28%] shrink-0 sticky top-0 h-screen border-r border-[#062E1F] text-white p-1 xs:p-1.5 pt-2.5 xs:pt-3 flex flex-col justify-between overflow-y-auto hide-scrollbar z-30 select-none"
+      >
+        <div className="flex flex-col">
+          {/* AM FRUITS logo */}
+          <div className="flex flex-col items-center text-center">
+            <div className="flex items-center justify-center p-1 rounded-xl bg-white/10 backdrop-blur-xs border border-white/20 mb-1 shadow-xs">
+              <img
+                src="/branding/am-fruits-logo.png"
+                alt="AM Fruits - Shah's Halal"
+                className="h-8 xs:h-9 w-auto object-contain"
+              />
             </div>
 
-            {/* 2. AM FRUITS logo */}
-            <div className="flex flex-col items-center text-center">
-              <div className="flex items-center justify-center p-1 rounded-xl bg-white/10 backdrop-blur-xs border border-white/20 mb-1 shadow-xs">
-                <img
-                  src="/branding/am-fruits-logo.png"
-                  alt="AM Fruits - Shah's Halal"
-                  className="h-8 xs:h-9 w-auto object-contain"
-                />
-              </div>
+            {/* Shah's Halal */}
+            <h2 className="text-xs xs:text-sm font-extrabold tracking-tight text-white leading-tight">
+              Shah&apos;s Halal
+            </h2>
 
-              {/* 3. Shah's Halal */}
-              <h2 className="text-xs xs:text-sm font-extrabold tracking-tight text-white leading-tight">
-                Shah&apos;s Halal
-              </h2>
-
-              {/* 4. Fresh Food · Pure Taste */}
-              <p className="mt-0.5 text-[8px] xs:text-[9px] font-semibold text-emerald-300/90 tracking-wide text-center leading-tight">
-                Fresh Food · Pure Taste
-              </p>
-            </div>
-
-            {/* 5. Divider */}
-            <div className="w-full my-2 border-b border-emerald-800/60" />
-
-            {/* 6-16. Categories */}
-            <nav className="space-y-0.5">
-              {SIDEBAR_CATEGORIES.map((item) => {
-                const isActive = selectedCategoryKey === item.key;
-                return (
-                  <button
-                    key={item.key}
-                    type="button"
-                    onClick={() => {
-                      setSelectedCategoryKey(item.key);
-                      const grid = document.getElementById("products-grid");
-                      if (grid) {
-                        grid.scrollIntoView({ behavior: "smooth" });
-                      }
-                    }}
-                    className={`w-full flex items-center gap-1.5 px-1.5 xs:px-2 py-1.5 rounded-lg text-left transition-all ${
-                      isActive
-                        ? "bg-emerald-700 text-white font-bold shadow-xs ring-1 ring-emerald-400/50"
-                        : "text-emerald-100/80 hover:bg-emerald-800/60 hover:text-white"
-                    }`}
-                  >
-                    <span className="text-xs xs:text-sm select-none leading-none shrink-0">{item.emoji}</span>
-                    <span className="text-[10px] xs:text-[11px] font-medium leading-tight truncate">
-                      {item.name}
-                    </span>
-                  </button>
-                );
-              })}
-            </nav>
+            {/* Fresh Food · Pure Taste */}
+            <p className="mt-0.5 text-[8px] xs:text-[9px] font-semibold text-emerald-300 tracking-wide text-center leading-tight">
+              Fresh Food · Pure Taste
+            </p>
           </div>
 
-          {/* 17. Good Food Brings Good People & 18/19. ☪ HALAL CERTIFIED HALAL */}
-          <div className="pt-2.5 mt-2.5 border-t border-emerald-800/60 flex flex-col items-center text-center gap-1.5 pb-1 shrink-0">
-            <div className="text-[9px] xs:text-[10px] italic text-emerald-200/90 font-medium leading-tight">
-              <p>Good Food</p>
-              <p>Brings Good People</p>
-            </div>
-            <div className="inline-flex flex-col items-center gap-0.5 rounded-lg bg-emerald-950/90 border border-amber-400/40 px-2 py-0.5 text-amber-300 shadow-xs">
-              <div className="flex items-center gap-1 text-[9px] xs:text-[10px] font-bold">
-                <span className="text-amber-400 text-xs">☪</span>
-                <span>HALAL</span>
-              </div>
-              <span className="text-[7.5px] xs:text-[8px] font-semibold text-emerald-300 uppercase tracking-wider">
-                CERTIFIED HALAL
-              </span>
-            </div>
+          {/* Divider */}
+          <div className="w-full my-2 border-b border-emerald-800/60" />
+
+          {/* Categories */}
+          <nav className="space-y-0.5">
+            {SIDEBAR_CATEGORIES.map((item) => {
+              const isActive = selectedCategoryKey === item.key;
+              return (
+                <button
+                  key={item.key}
+                  type="button"
+                  onClick={() => {
+                    setSelectedCategoryKey(item.key);
+                    const grid = document.getElementById("products-grid");
+                    if (grid) {
+                      grid.scrollIntoView({ behavior: "smooth" });
+                    }
+                  }}
+                  className={`w-full flex items-center gap-1.5 px-1.5 xs:px-2 py-1.5 rounded-lg text-left transition-all ${
+                    isActive
+                      ? "bg-[#0b6e54] text-white font-bold shadow-xs ring-1 ring-emerald-400/50"
+                      : "text-emerald-100/90 hover:bg-[#075c46]/60 hover:text-white"
+                  }`}
+                >
+                  <span className="text-xs xs:text-sm select-none leading-none shrink-0">{item.emoji}</span>
+                  <span className="text-[10px] xs:text-[11px] font-medium leading-tight truncate">
+                    {item.name}
+                  </span>
+                </button>
+              );
+            })}
+          </nav>
+        </div>
+
+        {/* Good Food Brings Good People & ☪ HALAL CERTIFIED HALAL */}
+        <div className="pt-2.5 mt-2.5 border-t border-emerald-800/60 flex flex-col items-center text-center gap-1.5 pb-1 shrink-0">
+          <div className="text-[9px] xs:text-[10px] italic text-emerald-200 font-medium leading-tight">
+            <p>Good Food</p>
+            <p>Brings Good People</p>
           </div>
-        </aside>
-      )}
+          <div className="inline-flex flex-col items-center gap-0.5 rounded-lg bg-[#042d22] border border-amber-400/40 px-2 py-0.5 text-amber-300 shadow-xs">
+            <div className="flex items-center gap-1 text-[9px] xs:text-[10px] font-bold">
+              <span className="text-amber-400 text-xs">☪</span>
+              <span>HALAL</span>
+            </div>
+            <span className="text-[7.5px] xs:text-[8px] font-semibold text-emerald-300 uppercase tracking-wider">
+              CERTIFIED HALAL
+            </span>
+          </div>
+        </div>
+      </aside>
 
       {/* ====================================================================== */}
       {/* 2. PERMANENT LEFT VERTICAL CATEGORY SIDEBAR (DESKTOP / TABLET)         */}
@@ -354,7 +346,7 @@ export default function LandingPage() {
       {/* ====================================================================== */}
       {/* 3. RIGHT MAIN CONTENT AREA (TAKES ALL REMAINING SPACE)                 */}
       {/* ====================================================================== */}
-      <div className={`${mobileMenuOpen ? "w-[69%]" : "w-full"} md:w-auto flex-1 min-w-0 flex flex-col`}>
+      <div className="w-[72%] md:w-auto flex-1 min-w-0 flex flex-col">
         {/* ==================================================================== */}
         {/* DESKTOP HEADER (>= md screens)                                       */}
         {/* ==================================================================== */}
@@ -433,26 +425,7 @@ export default function LandingPage() {
         <header className="md:hidden sticky top-0 z-40 bg-white border-b border-slate-200 shadow-xs">
           <div className="flex items-center justify-between gap-1.5 px-2 xs:px-3 py-2">
             <div className="flex items-center gap-1 xs:gap-1.5 min-w-0">
-              {!mobileMenuOpen && (
-                <button
-                  type="button"
-                  onClick={() => setMobileMenuOpen(true)}
-                  className="p-1 -ml-1 text-slate-700 hover:text-emerald-800 hover:bg-slate-100 rounded-lg transition-colors shrink-0"
-                  aria-label="Open navigation menu"
-                >
-                  <Menu className="h-5 w-5 xs:h-6 xs:w-6 text-slate-800" />
-                </button>
-              )}
               <Link to="/" className="flex items-center gap-1.5 min-w-0">
-                {!mobileMenuOpen && (
-                  <div className="flex items-center justify-center p-1 rounded-lg bg-emerald-900 border border-emerald-800 shrink-0">
-                    <img
-                      src="/branding/am-fruits-logo.png"
-                      alt="Shah's Halal"
-                      className="h-5 xs:h-6 w-auto object-contain"
-                    />
-                  </div>
-                )}
                 <div className="min-w-0">
                   <span className="block text-xs xs:text-sm font-extrabold tracking-tight text-slate-900 leading-tight truncate">
                     Shah&apos;s Halal
@@ -461,35 +434,6 @@ export default function LandingPage() {
                     Fresh Food • Pure Taste
                   </span>
                 </div>
-              </Link>
-            </div>
-
-            {/* Mobile Header Right Actions: Login & Cart */}
-            <div className="flex items-center gap-1 xs:gap-1.5 shrink-0">
-              <Link to="/admin/login">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="h-7 xs:h-8 px-1.5 xs:px-2.5 text-[11px] xs:text-xs font-semibold border-slate-300 text-slate-800 hover:border-emerald-600 hover:text-emerald-700 rounded-lg gap-1 shadow-xs"
-                >
-                  <UserRound className="h-3 w-3 xs:h-3.5 xs:w-3.5 text-emerald-700" />
-                  <span>Login</span>
-                </Button>
-              </Link>
-              <Link to="/cart">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="relative h-7 xs:h-8 px-1.5 xs:px-2.5 text-[11px] xs:text-xs font-semibold border-slate-300 text-slate-800 hover:border-emerald-600 hover:text-emerald-700 rounded-lg gap-1 shadow-xs"
-                >
-                  <ShoppingCart className="h-3 w-3 xs:h-3.5 xs:w-3.5 text-emerald-700" />
-                  <span>Cart</span>
-                  {!!(isAuthenticated ? cartQuery.data?.count : guestCart.count) && (
-                    <span className="flex h-3.5 min-w-3.5 xs:h-4 xs:min-w-4 items-center justify-center rounded-full bg-emerald-600 px-1 text-[9px] xs:text-[10px] font-bold text-white shadow-xs">
-                      {isAuthenticated ? cartQuery.data?.count : guestCart.count}
-                    </span>
-                  )}
-                </Button>
               </Link>
             </div>
           </div>
@@ -518,7 +462,7 @@ export default function LandingPage() {
         {/* ==================================================================== */}
         {/* HOMEPAGE BODY: TWO-COLUMN PRODUCT GRID & HERO                        */}
         {/* ==================================================================== */}
-        <main className="flex-1 p-1.5 xs:p-2 sm:p-5 md:p-6 lg:p-8 w-full">
+        <main className="flex-1 p-1.5 xs:p-2 sm:p-5 md:p-6 lg:p-8 w-full pb-20 md:pb-8">
           <div className="space-y-3 sm:space-y-5 lg:space-y-6">
             {/* HERO BANNER */}
             <HeroBanner onOrderNow={handleOrderNow} />
@@ -572,6 +516,77 @@ export default function LandingPage() {
             />
           </div>
         </main>
+
+        {/* ==================================================================== */}
+        {/* FIXED MOBILE BOTTOM NAVIGATION (< md screens)                        */}
+        {/* ==================================================================== */}
+        <nav
+          id="mobile-bottom-nav"
+          aria-label="Mobile Navigation"
+          className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-[#FFFFFF] border-t border-[#E5E7EB] shadow-[0_-1px_6px_rgba(0,0,0,0.04)] px-2 py-1"
+        >
+          <div className="grid grid-cols-4 items-center max-w-md mx-auto">
+            {/* 1. Home */}
+            <Link
+              to="/"
+              id="mobile-nav-home"
+              onClick={() => {
+                window.scrollTo({ top: 0, behavior: "smooth" });
+              }}
+              className="flex flex-col items-center justify-center py-0.5 text-emerald-700 font-bold transition-colors group"
+            >
+              <Home className="h-5 w-5 text-emerald-700 group-hover:scale-110 transition-transform" />
+              <span className="text-[10px] xs:text-[11px] font-bold mt-0.5 leading-none">Home</span>
+            </Link>
+
+            {/* 2. Categories */}
+            <button
+              type="button"
+              id="mobile-nav-categories"
+              onClick={() => {
+                const sidebar = document.getElementById("mobile-category-sidebar");
+                if (sidebar) {
+                  sidebar.scrollIntoView({ behavior: "smooth" });
+                  sidebar.scrollTo({ top: 0, behavior: "smooth" });
+                } else {
+                  const grid = document.getElementById("products-grid");
+                  if (grid) grid.scrollIntoView({ behavior: "smooth" });
+                }
+              }}
+              className="flex flex-col items-center justify-center py-0.5 text-slate-500 hover:text-slate-800 font-medium transition-colors group"
+            >
+              <LayoutGrid className="h-5 w-5 text-slate-500 group-hover:text-slate-800 group-hover:scale-110 transition-all" />
+              <span className="text-[10px] xs:text-[11px] mt-0.5 leading-none">Categories</span>
+            </button>
+
+            {/* 3. Cart */}
+            <Link
+              to="/cart"
+              id="mobile-nav-cart"
+              className="relative flex flex-col items-center justify-center py-0.5 text-slate-500 hover:text-slate-800 font-medium transition-colors group"
+            >
+              <div className="relative">
+                <ShoppingCart className="h-5 w-5 text-slate-500 group-hover:text-slate-800 group-hover:scale-110 transition-all" />
+                {!!cartCount && (
+                  <span className="absolute -top-1.5 -right-2.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-emerald-600 px-1 text-[9px] font-bold text-white shadow-xs">
+                    {cartCount}
+                  </span>
+                )}
+              </div>
+              <span className="text-[10px] xs:text-[11px] mt-0.5 leading-none">Cart</span>
+            </Link>
+
+            {/* 4. Login */}
+            <Link
+              to="/admin/login"
+              id="mobile-nav-login"
+              className="flex flex-col items-center justify-center py-0.5 text-slate-500 hover:text-slate-800 font-medium transition-colors group"
+            >
+              <UserRound className="h-5 w-5 text-slate-500 group-hover:text-slate-800 group-hover:scale-110 transition-all" />
+              <span className="text-[10px] xs:text-[11px] mt-0.5 leading-none">Login</span>
+            </Link>
+          </div>
+        </nav>
       </div>
     </div>
   );
@@ -771,10 +786,10 @@ function FoodProductCard({
   const unitLabel = unitLabels[unit] ?? unit;
 
   return (
-    <Card className="group overflow-hidden rounded-lg sm:rounded-2xl border border-slate-200/90 bg-white shadow-xs hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300 flex flex-col justify-between">
-      <div>
+    <Card id={`product-card-${product.id}`} className="group overflow-hidden rounded-lg sm:rounded-2xl border border-slate-200/90 bg-white shadow-xs hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300 flex flex-col justify-between p-0 py-0 gap-0">
+      <div className="flex flex-col flex-1">
         {/* Food Image with Zoom effect */}
-        <div className="relative aspect-square sm:aspect-[4/3] md:aspect-[16/10] bg-slate-100 overflow-hidden">
+        <div className="relative aspect-square sm:aspect-[4/3] md:aspect-[16/10] bg-slate-100 overflow-hidden shrink-0">
           <Link to={`/products/${product.slug}`} className="block h-full w-full">
             {product.image && !imageFailed ? (
               <img
@@ -792,7 +807,7 @@ function FoodProductCard({
 
           {/* SPECIAL OFFER Badge */}
           {compareAt > price && (
-            <span className="absolute top-1.5 left-1.5 sm:top-3 sm:left-3 z-10 rounded-full bg-amber-500 px-1.5 py-0.5 sm:px-2.5 sm:py-0.5 text-[8.5px] xs:text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-slate-950 shadow-xs">
+            <span className="absolute top-1 left-1 xs:top-1.5 xs:left-1.5 sm:top-3 sm:left-3 z-10 rounded-full bg-amber-500 px-1 xs:px-1.5 py-0.5 sm:px-2.5 sm:py-0.5 text-[7.5px] xs:text-[8.5px] sm:text-[11px] font-bold uppercase tracking-wider text-slate-950 shadow-xs">
               Offer
             </span>
           )}
@@ -811,57 +826,152 @@ function FoodProductCard({
                 toast.info(`Removed "${product.name}" from favorites`);
               }
             }}
-            className="absolute top-1.5 right-1.5 sm:top-3 sm:right-3 z-10 flex h-6 w-6 sm:h-8 sm:w-8 items-center justify-center rounded-full bg-white/90 backdrop-blur-xs text-slate-700 shadow-xs transition-transform hover:scale-110 active:scale-95 hover:bg-white"
+            className="absolute top-1 right-1 xs:top-1.5 xs:right-1.5 sm:top-3 sm:right-3 z-10 flex h-5 w-5 xs:h-6 xs:w-6 sm:h-8 sm:w-8 items-center justify-center rounded-full bg-white/90 backdrop-blur-xs text-slate-700 shadow-xs transition-transform hover:scale-110 active:scale-95 hover:bg-white"
           >
             <Heart
-              className={`h-3 w-3 sm:h-4 sm:w-4 transition-colors ${
+              className={`h-2.5 w-2.5 xs:h-3 xs:w-3 sm:h-4 sm:w-4 transition-colors ${
                 isWishlisted ? "fill-rose-500 text-rose-500" : "text-slate-600"
               }`}
             />
           </button>
         </div>
 
-        {/* Product Information */}
-        <CardContent className="p-1.5 xs:p-2 sm:p-4 md:p-5 space-y-1 sm:space-y-2.5">
+        {/* ============================================================== */}
+        {/* MOBILE PRODUCT INFORMATION (sm:hidden)                          */}
+        {/* Exact 6-line compact design directly following the image        */}
+        {/* ============================================================== */}
+        <div className="sm:hidden p-1.5 xs:p-2 pt-1 xs:pt-1.5 pb-1.5 xs:pb-2 flex flex-col gap-1">
+          {/* LINE 1 & 2: PRODUCT NAME & CONTINUATION */}
+          <Link
+            id={`product-name-mobile-${product.id}`}
+            to={`/products/${product.slug}`}
+            className="font-bold text-[11px] xs:text-xs text-slate-900 leading-tight line-clamp-2 hover:text-emerald-700 transition-colors break-words"
+          >
+            {product.name}
+          </Link>
+
+          {/* LINE 3: SHOP NAME */}
+          <p className="text-[9px] xs:text-[10px] font-normal text-slate-500 leading-none truncate">
+            Shah's Halal Food
+          </p>
+
+          {/* LINE 4: PRICE + ORIGINAL PRICE */}
+          <div className="flex items-baseline justify-between gap-1 pt-0.5 min-w-0">
+            <span className="text-xs xs:text-sm font-extrabold text-emerald-700 leading-none shrink-0">
+              {formatCurrency(price)}
+            </span>
+            {compareAt > price ? (
+              <span className="text-[9.5px] xs:text-[10.5px] text-black font-medium line-through leading-none truncate">
+                {formatCurrency(compareAt)}
+              </span>
+            ) : null}
+          </div>
+
+          {/* LINE 5: RATING + CERTIFIED HALAL */}
+          <div className="flex items-center justify-between gap-0.5 pt-0.5 min-w-0">
+            <div className="flex items-center gap-0.5 text-[9px] xs:text-[10px] font-bold text-slate-800 shrink-0">
+              <Star className="h-2.5 w-2.5 fill-amber-400 text-amber-400 shrink-0" />
+              <span>{product.rating ?? "4.8"}</span>
+            </div>
+            <div className="inline-flex items-center gap-0.5 rounded bg-emerald-50 border border-emerald-200/80 px-1 py-0.5 text-[7px] xs:text-[8px] font-semibold text-emerald-700 shrink-0 whitespace-nowrap">
+              <CheckCircle2 className="h-2 w-2 xs:h-2.5 xs:w-2.5 text-emerald-600 shrink-0" />
+              <span>Certified Halal</span>
+            </div>
+          </div>
+
+          {/* LINE 6: QUANTITY + ADD */}
+          <div className="flex items-center justify-between gap-1 pt-1 min-w-0">
+            <div className="flex items-center rounded border border-slate-200 bg-slate-50 p-0.5 shrink-0">
+              <Button
+                id={`product-qty-minus-mobile-${product.id}`}
+                type="button"
+                variant="ghost"
+                size="icon"
+                className="h-4.5 w-4.5 xs:h-5 xs:w-5 p-0 flex items-center justify-center rounded hover:bg-white text-slate-700 transition-colors"
+                onClick={() => setQuantity(Math.max(moq, quantity - 1))}
+                disabled={quantity <= moq || isOutOfStock}
+                aria-label="Decrease quantity"
+              >
+                <Minus className="h-2 w-2 xs:h-2.5 xs:w-2.5" />
+              </Button>
+              <span className="w-3 xs:w-3.5 text-center text-[9px] xs:text-[10px] font-bold text-slate-800">
+                {quantity}
+              </span>
+              <Button
+                id={`product-qty-plus-mobile-${product.id}`}
+                type="button"
+                variant="ghost"
+                size="icon"
+                className="h-4.5 w-4.5 xs:h-5 xs:w-5 p-0 flex items-center justify-center rounded hover:bg-white text-slate-700 transition-colors"
+                onClick={() => {
+                  if (quantity >= stock) {
+                    toast.error(`Only ${stock} available.`);
+                  } else {
+                    setQuantity(quantity + 1);
+                  }
+                }}
+                disabled={isOutOfStock}
+                aria-label="Increase quantity"
+              >
+                <Plus className="h-2 w-2 xs:h-2.5 xs:w-2.5" />
+              </Button>
+            </div>
+
+            <Button
+              id={`product-add-btn-mobile-${product.id}`}
+              type="button"
+              className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold h-5.5 xs:h-6 px-2 xs:px-2.5 text-[9.5px] xs:text-[10.5px] rounded shadow-xs active:scale-[0.98] shrink-0"
+              onClick={() => onAdd(product, quantity)}
+              disabled={pending || isOutOfStock}
+            >
+              Add
+            </Button>
+          </div>
+        </div>
+
+        {/* ============================================================== */}
+        {/* DESKTOP PRODUCT INFORMATION (hidden sm:block)                  */}
+        {/* ============================================================== */}
+        <CardContent className="hidden sm:block p-4 md:p-5 space-y-2.5">
           <div>
             <Link
               to={`/products/${product.slug}`}
-              className="font-bold text-xs xs:text-sm sm:text-base md:text-lg text-slate-900 line-clamp-1 hover:text-emerald-700 transition-colors leading-snug"
+              className="font-bold text-base md:text-lg text-slate-900 line-clamp-1 hover:text-emerald-700 transition-colors leading-snug"
             >
               {product.name}
             </Link>
-            <p className="text-[9px] xs:text-[10px] sm:text-xs text-slate-400 truncate hidden xs:block">
+            <p className="text-xs text-slate-400 truncate">
               {product.supplierName ?? "Shah's Halal Food"}
             </p>
           </div>
 
           {/* Price and Comparison */}
-          <div className="flex items-baseline flex-wrap gap-1 sm:gap-1.5">
-            <span className="text-xs xs:text-sm sm:text-xl md:text-2xl font-extrabold text-emerald-700 leading-tight">
+          <div className="flex items-baseline flex-wrap gap-1.5">
+            <span className="text-xl md:text-2xl font-extrabold text-emerald-700 leading-tight">
               {formatCurrency(price)}
             </span>
             {compareAt > price && (
-              <span className="text-[9px] xs:text-xs sm:text-sm text-slate-400 line-through">
+              <span className="text-sm text-slate-400 line-through">
                 {formatCurrency(compareAt)}
               </span>
             )}
             {product.unitSize ? (
-              <span className="text-[9px] xs:text-[10px] sm:text-xs text-slate-500">({product.unitSize})</span>
+              <span className="text-xs text-slate-500">({product.unitSize})</span>
             ) : unitLabel && unitLabel !== "item" && unitLabel !== "order" ? (
-              <span className="text-[9px] xs:text-[10px] sm:text-xs text-slate-500">/{unitLabel}</span>
+              <span className="text-xs text-slate-500">/{unitLabel}</span>
             ) : null}
           </div>
 
           {/* Rating and Certified Halal Badge */}
-          <div className="flex items-center justify-between gap-1 pt-0.5 sm:pt-1">
-            <div className="inline-flex items-center gap-0.5 xs:gap-1 rounded bg-emerald-50 border border-emerald-200/80 px-1 xs:px-1.5 py-0.5 text-[8.5px] xs:text-[9.5px] sm:text-xs font-semibold text-emerald-700">
-              <CheckCircle2 className="h-2.5 w-2.5 sm:h-3.5 sm:w-3.5 text-emerald-600 shrink-0" />
+          <div className="flex items-center justify-between gap-1 pt-1">
+            <div className="inline-flex items-center gap-1 rounded bg-emerald-50 border border-emerald-200/80 px-1.5 py-0.5 text-xs font-semibold text-emerald-700">
+              <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600 shrink-0" />
               <span className="truncate">Halal</span>
             </div>
 
             {product.rating ? (
-              <div className="flex items-center gap-0.5 text-[9px] xs:text-[10px] sm:text-xs font-bold text-slate-700 shrink-0">
-                <Star className="h-2.5 w-2.5 sm:h-3.5 sm:w-3.5 fill-amber-400 text-amber-400" />
+              <div className="flex items-center gap-0.5 text-xs font-bold text-slate-700 shrink-0">
+                <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />
                 <span>{product.rating}</span>
               </div>
             ) : null}
@@ -869,28 +979,30 @@ function FoodProductCard({
         </CardContent>
       </div>
 
-      {/* Action Controls: Quantity Selector and Add to Cart */}
-      <div className="p-1.5 xs:p-2 sm:p-4 md:p-5 pt-0">
-        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-1 sm:gap-2 pt-1 sm:pt-3 border-t border-slate-100">
-          <div className="flex items-center justify-between sm:justify-center rounded-lg border border-slate-200 bg-slate-50 p-0.5 self-stretch sm:self-auto">
+      {/* ============================================================== */}
+      {/* DESKTOP ACTION CONTROLS (hidden sm:block)                      */}
+      {/* ============================================================== */}
+      <div className="hidden sm:block p-4 md:p-5 pt-0">
+        <div className="flex items-center gap-2 pt-3 border-t border-slate-100">
+          <div className="flex items-center justify-center rounded-lg border border-slate-200 bg-slate-50 p-0.5">
             <Button
               type="button"
               variant="ghost"
               size="icon"
-              className="h-5 w-5 xs:h-6 xs:w-6 sm:h-8 sm:w-8 rounded hover:bg-white text-slate-700 transition-colors"
+              className="h-8 w-8 rounded hover:bg-white text-slate-700 transition-colors"
               onClick={() => setQuantity(Math.max(moq, quantity - 1))}
               disabled={quantity <= moq || isOutOfStock}
             >
-              <Minus className="h-2.5 w-2.5 xs:h-3 xs:w-3 sm:h-3.5 sm:w-3.5" />
+              <Minus className="h-3.5 w-3.5" />
             </Button>
-            <span className="w-4 xs:w-6 sm:w-8 text-center text-[10px] xs:text-xs font-bold text-slate-800">
+            <span className="w-8 text-center text-xs font-bold text-slate-800">
               {quantity}
             </span>
             <Button
               type="button"
               variant="ghost"
               size="icon"
-              className="h-5 w-5 xs:h-6 xs:w-6 sm:h-8 sm:w-8 rounded hover:bg-white text-slate-700 transition-colors"
+              className="h-8 w-8 rounded hover:bg-white text-slate-700 transition-colors"
               onClick={() => {
                 if (quantity >= stock) {
                   toast.error(`Only ${stock} available.`);
@@ -900,17 +1012,17 @@ function FoodProductCard({
               }}
               disabled={isOutOfStock}
             >
-              <Plus className="h-2.5 w-2.5 xs:h-3 xs:w-3 sm:h-3.5 sm:w-3.5" />
+              <Plus className="h-3.5 w-3.5" />
             </Button>
           </div>
 
           <Button
             type="button"
-            className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold h-6.5 xs:h-7.5 sm:h-9 text-[10px] xs:text-[11px] sm:text-xs md:text-sm rounded-lg shadow-xs gap-1 transition-all active:scale-[0.98] px-1 xs:px-1.5 sm:px-3"
+            className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold h-9 text-xs md:text-sm rounded-lg shadow-xs gap-1 transition-all active:scale-[0.98] px-3"
             onClick={() => onAdd(product, quantity)}
             disabled={pending || isOutOfStock}
           >
-            <ShoppingCart className="h-3 w-3 sm:h-4 sm:w-4 shrink-0" />
+            <ShoppingCart className="h-4 w-4 shrink-0" />
             <span className="truncate">Add to Cart</span>
           </Button>
         </div>
