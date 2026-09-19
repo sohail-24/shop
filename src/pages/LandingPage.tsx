@@ -882,27 +882,23 @@ function FoodProductCard({
           {/* LINE 6: QUANTITY + ADD */}
           <div className="flex items-center justify-between gap-1 pt-1 min-w-0">
             <div className="flex items-center rounded border border-slate-200 bg-slate-50 p-0.5 shrink-0">
-              <Button
+              <button
                 id={`product-qty-minus-mobile-${product.id}`}
                 type="button"
-                variant="ghost"
-                size="icon"
-                className="h-4.5 w-4.5 xs:h-5 xs:w-5 p-0 flex items-center justify-center rounded hover:bg-white text-slate-700 transition-colors"
+                className="h-4 w-4 p-0 flex items-center justify-center rounded text-slate-600 hover:bg-white hover:text-slate-900 transition-colors disabled:opacity-30 disabled:pointer-events-none"
                 onClick={() => setQuantity(Math.max(moq, quantity - 1))}
                 disabled={quantity <= moq || isOutOfStock}
                 aria-label="Decrease quantity"
               >
-                <Minus className="h-2 w-2 xs:h-2.5 xs:w-2.5" />
-              </Button>
-              <span className="w-3 xs:w-3.5 text-center text-[9px] xs:text-[10px] font-bold text-slate-800">
+                <Minus className="h-2.5 w-2.5" />
+              </button>
+              <span className="w-3 text-center text-[10px] font-bold text-slate-800 leading-none select-none">
                 {quantity}
               </span>
-              <Button
+              <button
                 id={`product-qty-plus-mobile-${product.id}`}
                 type="button"
-                variant="ghost"
-                size="icon"
-                className="h-4.5 w-4.5 xs:h-5 xs:w-5 p-0 flex items-center justify-center rounded hover:bg-white text-slate-700 transition-colors"
+                className="h-4 w-4 p-0 flex items-center justify-center rounded text-slate-600 hover:bg-white hover:text-slate-900 transition-colors disabled:opacity-30 disabled:pointer-events-none"
                 onClick={() => {
                   if (quantity >= stock) {
                     toast.error(`Only ${stock} available.`);
@@ -913,19 +909,19 @@ function FoodProductCard({
                 disabled={isOutOfStock}
                 aria-label="Increase quantity"
               >
-                <Plus className="h-2 w-2 xs:h-2.5 xs:w-2.5" />
-              </Button>
+                <Plus className="h-2.5 w-2.5" />
+              </button>
             </div>
 
-            <Button
+            <button
               id={`product-add-btn-mobile-${product.id}`}
               type="button"
-              className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold h-5.5 xs:h-6 px-2 xs:px-2.5 text-[9.5px] xs:text-[10.5px] rounded shadow-xs active:scale-[0.98] shrink-0"
+              className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold h-[22px] px-2 text-[10px] rounded shadow-xs active:scale-[0.98] shrink-0 flex items-center justify-center leading-none transition-colors disabled:opacity-50 disabled:pointer-events-none"
               onClick={() => onAdd(product, quantity)}
               disabled={pending || isOutOfStock}
             >
               Add
-            </Button>
+            </button>
           </div>
         </div>
 
