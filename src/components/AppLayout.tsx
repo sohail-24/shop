@@ -197,6 +197,12 @@ function AppLayoutContent() {
     .slice(0, 2)
     .toUpperCase();
 
+  // Public storefront pages share this route outlet but must not expose the
+  // preserved FreshFlow buyer-account navigation.
+  if (!user) {
+    return <Outlet />;
+  }
+
   const isActive = (path: string) => {
     if (path === "/products") {
       return location.pathname === "/products" || location.pathname.startsWith("/products/");

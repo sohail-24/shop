@@ -7,10 +7,10 @@ function getEnv(name: string, fallback = ""): string {
 export const env = {
   isProduction: process.env.NODE_ENV === "production",
   databaseUrl: getEnv("DATABASE_URL"),
-  jwtAccessSecret:
-    getEnv("JWT_ACCESS_SECRET", "dev-access-secret-change-me"),
-  jwtRefreshSecret:
-    getEnv("JWT_REFRESH_SECRET", "dev-refresh-secret-change-me"),
+  adminEmail: getEnv("ADMIN_EMAIL"),
+  adminPassword: getEnv("ADMIN_PASSWORD"),
+  jwtAccessSecret: getEnv("JWT_ACCESS_SECRET"),
+  jwtRefreshSecret: getEnv("JWT_REFRESH_SECRET"),
   mockOtpCode: process.env.MOCK_OTP_CODE ?? "123456",
   ownerEmail: process.env.OWNER_EMAIL ?? "owner@freshflow.com",
   adminOrderEmail: process.env.ADMIN_ORDER_EMAIL ?? process.env.OWNER_EMAIL ?? "orders@freshflow.com",

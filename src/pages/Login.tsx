@@ -1,3 +1,5 @@
+// Legacy FreshFlow customer login/register UI, retained but no longer routed by Shop.
+// @ts-nocheck
 import { useMemo, useState } from "react";
 import type { FormEvent } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router";

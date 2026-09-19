@@ -6,7 +6,7 @@ import type { HttpBindings } from "@hono/node-server";
 import { fetchRequestHandler } from "@trpc/server/adapters/fetch";
 import { appRouter } from "./router";
 import { createContext } from "./context";
-import { authenticateRequest } from "./auth/session";
+import { authenticateAdminRequest } from "./auth/admin-session";
 import { isOwner } from "@contracts/roles";
 
 import { readFileSync } from "node:fs";
@@ -78,7 +78,7 @@ app.post("/api/products/upload", async (c) => {
   const responseHeaders = new Headers();
   let user;
   try {
-    user = await authenticateRequest(c.req.raw.headers, responseHeaders);
+    user = await authenticateAdminRequest(c.req.raw.headers, responseHeaders);
   } catch {
     return c.json({ error: "Authentication required" }, 401);
   }

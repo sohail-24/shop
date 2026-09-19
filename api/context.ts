@@ -1,6 +1,6 @@
 import type { FetchCreateContextFnOptions } from "@trpc/server/adapters/fetch";
 import type { User } from "@db/schema";
-import { authenticateRequest } from "./auth/session";
+import { authenticateAdminRequest } from "./auth/admin-session";
 
 export type TrpcContext = {
   req: Request;
@@ -13,7 +13,7 @@ export async function createContext(
 ): Promise<TrpcContext> {
   const ctx: TrpcContext = { req: opts.req, resHeaders: opts.resHeaders };
   try {
-    ctx.user = await authenticateRequest(opts.req.headers, opts.resHeaders);
+    ctx.user = await authenticateAdminRequest(opts.req.headers, opts.resHeaders);
   } catch {
     // Authentication is optional here
   }

@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { Link, useNavigate } from "react-router";
+import { Link } from "react-router";
 import { toast } from "sonner";
 import {
   Apple,
@@ -12,7 +12,6 @@ import {
   Droplets,
   Image as ImageIcon,
   Leaf,
-  LogIn,
   Package,
   Search,
   ShoppingCart,
@@ -24,6 +23,7 @@ import {
 } from "lucide-react";
 import { trpc } from "@/providers/trpc";
 import { useAuth } from "@/hooks/useAuth";
+import { addGuestCartItem, useGuestCart } from "@/lib/guestCart";
 import { formatCurrency, formatNumber, toNumber, unitLabels } from "@/lib/i18n";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -82,8 +82,8 @@ function getCategoryEmoji(name: string): string | React.ElementType {
 }
 
 export default function LandingPage() {
-  const navigate = useNavigate();
   const { user, isAuthenticated } = useAuth();
+  const guestCart = useGuestCart();
   const [search, setSearch] = useState("");
   const [categoryId, setCategoryId] = useState("all");
   const [sort] = useState<"newest" | "price" | "name">("newest");
@@ -143,14 +143,22 @@ export default function LandingPage() {
   }
 
   function addProductToCart(product: MarketplaceProduct, quantity: number) {
-    if (!isAuthenticated) {
-      const returnTo = `/?product=${encodeURIComponent(product.slug)}`;
-      toast.info("Please log in to add wholesale products to your cart.");
-      navigate(`/login?returnTo=${encodeURIComponent(returnTo)}`);
+    if (isAuthenticated) {
+      addToCart.mutate({ productId: product.id, quantity });
       return;
     }
-
-    addToCart.mutate({ productId: product.id, quantity });
+    addGuestCartItem({
+      id: product.id,
+      productId: product.id,
+      productSlug: product.slug,
+      productName: product.name,
+      productImage: product.image ?? null,
+      productUnitType: product.unitType ?? "kg",
+      productUnitSize: product.unitSize ?? product.unitType ?? "kg",
+      quantity,
+      unitPrice: String(product.unitPrice ?? 0),
+    });
+    toast.success("Product added to cart.");
   }
 
   return (
@@ -193,21 +201,14 @@ export default function LandingPage() {
                     <span className="hidden sm:inline">{user?.name ?? "Profile"}</span>
                   </Button>
                 </Link>
-              ) : (
-                <Link to="/login">
-                  <Button variant="ghost" size="sm" className="gap-2">
-                    <LogIn className="h-4 w-4" />
-                    Login
-                  </Button>
-                </Link>
-              )}
+              ) : null}
               <Link to="/cart">
                 <Button variant="outline" size="sm" className="relative gap-2 border-border">
                   <ShoppingCart className="h-4 w-4" />
                   Cart
-                  {!!cartQuery.data?.count && (
+                  {!!(isAuthenticated ? cartQuery.data?.count : guestCart.count) && (
                     <span className="absolute -right-2 -top-2 flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1 text-[11px] font-semibold text-white">
-                      {cartQuery.data.count}
+                      {isAuthenticated ? cartQuery.data?.count : guestCart.count}
                     </span>
                   )}
                 </Button>

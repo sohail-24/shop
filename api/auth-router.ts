@@ -25,6 +25,13 @@ import {
   clearSessionCookies,
   issueSessionCookies,
 } from "./auth/session";
+import {
+  activeAdminUser,
+  authenticateAdminRequest,
+  clearAdminSessionCookies,
+  issueAdminSessionCookies,
+  validateAdminCredentials,
+} from "./auth/admin-session";
 
 const mobileNumberSchema = z
   .string()
@@ -122,7 +129,9 @@ async function signInUser(user: User, requestHeaders: Headers, responseHeaders: 
   return publicUser(refreshed ?? user);
 }
 
-export const authRouter = createRouter({
+// Preserved FreshFlow customer/buyer auth implementation. It is intentionally not
+// registered by the active Shop API; do not remove it during this reversible phase.
+export const legacyAuthRouter = createRouter({
   me: publicQuery.query((opts) => (opts.ctx.user ? publicUser(opts.ctx.user) : null)),
 
   register: publicQuery
@@ -237,6 +246,28 @@ export const authRouter = createRouter({
       await updateUserRefreshTokenHash(ctx.user.id, null);
     }
     clearSessionCookies(ctx.req.headers, ctx.resHeaders);
+    return { success: true };
+  }),
+});
+
+export const authRouter = createRouter({
+  me: publicQuery.query((opts) => (opts.ctx.user ? publicUser(opts.ctx.user) : null)),
+
+  loginAdmin: publicQuery
+    .input(z.object({ email: z.string().trim().email(), password: z.string().min(1) }))
+    .mutation(async ({ ctx, input }) => {
+      if (!validateAdminCredentials(input.email, input.password)) {
+        throw new TRPCError({ code: "UNAUTHORIZED", message: "Invalid administrator credentials." });
+      }
+      const email = input.email.trim().toLowerCase();
+      await issueAdminSessionCookies(email, ctx.req.headers, ctx.resHeaders);
+      return { user: publicUser(activeAdminUser(email)) };
+    }),
+
+  refresh: publicQuery.mutation(async ({ ctx }) => ({ user: publicUser(await authenticateAdminRequest(ctx.req.headers, ctx.resHeaders)) })),
+
+  logout: publicQuery.mutation(async ({ ctx }) => {
+    clearAdminSessionCookies(ctx.req.headers, ctx.resHeaders);
     return { success: true };
   }),
 });

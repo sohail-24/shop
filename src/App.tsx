@@ -30,7 +30,7 @@ const Reports = lazy(() => import("./pages/Reports"));
 const Profile = lazy(() => import("./pages/Profile"));
 const Settings = lazy(() => import("./pages/Settings"));
 const OwnerPlaceholder = lazy(() => import("./pages/OwnerPlaceholder"));
-const Login = lazy(() => import("./pages/Login"));
+const AdminLogin = lazy(() => import("./pages/AdminLogin"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 function PageLoader() {
@@ -59,7 +59,7 @@ function ProtectedRoute({ children }: { children: ReactNode }) {
     const returnTo = `${location.pathname}${location.search}`;
     return (
       <Navigate
-        to={`/login?returnTo=${encodeURIComponent(returnTo)}`}
+        to={`/admin/login?returnTo=${encodeURIComponent(returnTo)}`}
         replace
       />
     );
@@ -80,7 +80,7 @@ function OwnerRoute({ children }: { children: ReactNode }) {
     const returnTo = `${location.pathname}${location.search}`;
     return (
       <Navigate
-        to={`/login?returnTo=${encodeURIComponent(returnTo)}`}
+        to={`/admin/login?returnTo=${encodeURIComponent(returnTo)}`}
         replace
       />
     );
@@ -99,7 +99,10 @@ function AppRoutes() {
       <Routes>
         {/* Public routes */}
         <Route path="/" element={<LandingPage />} />
-        <Route path="/login" element={<Login />} />
+        {/* Legacy customer login remains in source but is intentionally inactive. */}
+        <Route path="/login" element={<Navigate to="/" replace />} />
+        <Route path="/admin/login" element={<AdminLogin />} />
+        <Route path="/admin" element={<Navigate to="/dashboard" replace />} />
 
         {/* Dashboard routes with layout */}
         <Route element={<AppLayout />}>
