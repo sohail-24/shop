@@ -1,7 +1,7 @@
 export type CurrencyCode = "INR" | "USD" | "EUR" | "GBP";
 
-export const DEFAULT_LOCALE = "en-IN";
-export const DEFAULT_CURRENCY: CurrencyCode = "INR";
+export const DEFAULT_LOCALE = "en-US";
+export const DEFAULT_CURRENCY: CurrencyCode = "USD";
 
 const currencyLocale: Record<CurrencyCode, string> = {
   INR: "en-IN",
@@ -27,7 +27,8 @@ export function formatCurrency(
   return new Intl.NumberFormat(currencyLocale[currency] ?? DEFAULT_LOCALE, {
     style: "currency",
     currency,
-    maximumFractionDigits: 0,
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
     ...options,
   }).format(toNumber(value));
 }
@@ -48,13 +49,19 @@ export function formatDate(value: unknown) {
 }
 
 export const unitLabels: Record<string, string> = {
+  order: "order",
+  item: "item",
+  each: "item",
+  platter: "platter",
+  gyro: "gyro",
+  sandwich: "sandwich",
+  burger: "burger",
+  pack: "pack",
+  can: "can",
+  bottle: "bottle",
+  box: "box",
   kg: "kg",
   lb: "lb",
-  case: "case",
-  pallet: "pallet",
-  each: "each",
-  bunch: "bunch",
-  box: "box",
   bag: "bag",
 };
 

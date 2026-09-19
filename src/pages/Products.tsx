@@ -114,13 +114,13 @@ function BuyerMarketplace() {
     <div className="mx-auto flex w-full max-w-[1500px] flex-col gap-3 md:gap-4 pb-16 md:pb-0">
       <section className="rounded-lg border bg-card shadow-sm">
         <div className="flex flex-col gap-3 border-b p-4 lg:flex-row lg:items-center lg:justify-between">
-          <Link to="/dashboard" className="flex items-center gap-2 text-lg font-semibold">
+          <Link to="/" className="flex items-center gap-2 text-lg font-semibold">
             <ArrowLeft className="h-4 w-4" />
-            FreshFlow
+            Shah's Halal
           </Link>
           <div className="relative flex-1 lg:max-w-xl">
             <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <Input value={search} onChange={(event) => setSearch(event.target.value)} className="pl-9" placeholder="Search products..." />
+            <Input value={search} onChange={(event) => setSearch(event.target.value)} className="pl-9" placeholder="Search menu items..." />
           </div>
           <div className="hidden lg:flex gap-2">
             <Button variant="outline" size="icon"><ShoppingCart className="h-4 w-4" /></Button>
@@ -166,32 +166,28 @@ function BuyerMarketplace() {
                 </SelectContent>
               </Select>
             </div>
-            <FilterCheck label="Fruits" />
-            <FilterCheck label="Vegetables" />
-            <FilterCheck label="Dairy" />
-            <FilterCheck label="Grocery" />
+            <FilterCheck label="100% Certified Halal" checked />
+            <FilterCheck label="Platters Over Rice" />
+            <FilterCheck label="Pita Gyros & Wraps" />
+            <FilterCheck label="Wings & Sides" />
             <div className="space-y-2">
-              <Label>Price</Label>
-              <div className="rounded-md border p-3 text-sm text-muted-foreground">₹0 ───── ₹1000</div>
+              <Label>Price Range</Label>
+              <div className="rounded-md border p-3 text-sm text-muted-foreground">$1.00 ───── $30.00</div>
             </div>
-            <FilterCheck label="India" checked />
-            <FilterCheck label="Imported" />
             <div className="space-y-2">
-              <Label>Supplier</Label>
+              <Label>Restaurant</Label>
               <Select defaultValue="all">
                 <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent><SelectItem value="all">All Suppliers</SelectItem></SelectContent>
+                <SelectContent><SelectItem value="all">Shah's Halal Food</SelectItem></SelectContent>
               </Select>
             </div>
-            <FilterCheck label="In Stock" checked />
-            <FilterCheck label="Low Stock" />
-            <FilterCheck label="Out of Stock" />
+            <FilterCheck label="Available to Order" checked />
             <div className="space-y-2">
               <Label>Rating</Label>
-              <div className="text-sm">★★★★★</div>
-              <div className="text-sm">★★★★☆</div>
+              <div className="text-sm">★★★★★ 4.8+</div>
+              <div className="text-sm">★★★★☆ 4.0+</div>
             </div>
-            <Button variant="outline" className="w-full">Reset Filters</Button>
+            <Button variant="outline" className="w-full" onClick={() => { setCategoryId("all"); setSearch(""); }}>Reset Filters</Button>
           </div>
         </aside>
 
@@ -308,49 +304,58 @@ function BuyerMarketplace() {
 function ProductCard({ product, onAdd, pending }: { product: CatalogProduct; onAdd: (quantity: number) => void; pending?: boolean }) {
   const price = toNumber(product.unitPrice);
   const moq = product.minimumOrderQuantity ?? 1;
-  const unit = product.unitType ?? "kg";
-  const stock = product.stock ?? 0;
-  const isOutOfStock = stock < moq;
+  const unit = product.unitType ?? "order";
+  const stock = typeof product.stock === 'number' ? product.stock : 100;
+  const isOutOfStock = stock < moq && typeof product.stock === 'number';
   const [quantity, setQuantity] = useState(moq);
   const [imageFailed, setImageFailed] = useState(false);
+  const unitLabel = unitLabels[unit] ?? unit;
 
   return (
-    <Card className="overflow-hidden rounded-xl shadow-sm hover:shadow-premium sm:hover:-translate-y-1 transition-all duration-300 border-border">
-      <Link to={`/products/${product.slug}`} className="block relative">
-        <div className="flex aspect-[3/2] items-center justify-center bg-muted text-lg font-semibold text-muted-foreground">
-          {product.image && !imageFailed ? <img src={product.image} alt={product.name} className="h-full w-full object-cover" onError={() => setImageFailed(true)} /> : <ImageIcon className="h-8 w-8 sm:h-9 sm:w-9" />}
-        </div>
-      </Link>
-      <CardContent className="space-y-1.5 p-2 sm:p-3 text-xs sm:text-sm">
-        <div className="min-h-[40px] sm:min-h-[48px]">
-          <Link to={`/products/${product.slug}`} className="text-sm font-semibold hover:text-primary line-clamp-2">{product.name}</Link>
-          <p className="mt-0.5 sm:mt-1 truncate text-[10px] sm:text-xs text-muted-foreground">{product.supplierName ?? "Supplier"}</p>
-        </div>
-        <div className="grid gap-0.5 sm:gap-1 text-[10px] sm:text-xs text-muted-foreground">
-          <p><span className="text-sm font-bold text-primary">{formatCurrency(price)}</span> / {unitLabels[unit] ?? unit}</p>
-          <div className="grid grid-cols-1 gap-x-2">
-            <span>Stock: {product.stock ?? "Not set"}</span>
+    <Card className="overflow-hidden rounded-xl shadow-sm hover:shadow-premium sm:hover:-translate-y-1 transition-all duration-300 border-border flex flex-col justify-between">
+      <div>
+        <Link to={`/products/${product.slug}`} className="block relative">
+          <div className="flex aspect-[4/3] items-center justify-center bg-muted text-lg font-semibold text-muted-foreground overflow-hidden">
+            {product.image && !imageFailed ? <img src={product.image} alt={product.name} className="h-full w-full object-cover transition-transform duration-300 hover:scale-105" onError={() => setImageFailed(true)} /> : <ImageIcon className="h-8 w-8 sm:h-9 sm:w-9" />}
           </div>
-          {product.rating && <div className="flex items-center gap-0.5"><Star className="h-3 w-3 fill-primary text-primary" /> {product.rating}</div>}
-        </div>
+        </Link>
+        <CardContent className="space-y-1.5 p-2 sm:p-3 text-xs sm:text-sm">
+          <div className="min-h-[40px] sm:min-h-[48px]">
+            <Link to={`/products/${product.slug}`} className="text-sm font-semibold hover:text-primary line-clamp-2">{product.name}</Link>
+            <p className="mt-0.5 sm:mt-1 truncate text-[10px] sm:text-xs text-muted-foreground">{product.supplierName ?? "Shah's Halal Food"}</p>
+          </div>
+          <div className="grid gap-0.5 sm:gap-1 text-[10px] sm:text-xs text-muted-foreground">
+            <p className="flex items-baseline gap-1">
+              <span className="text-sm font-bold text-primary">{formatCurrency(price)}</span>
+              {product.unitSize ? (
+                <span className="text-muted-foreground">({product.unitSize})</span>
+              ) : unitLabel && unitLabel !== "item" && unitLabel !== "order" ? (
+                <span className="text-muted-foreground">/ {unitLabel}</span>
+              ) : null}
+            </p>
+            <div className="flex items-center justify-between text-[11px] pt-0.5">
+              <span className="font-medium text-emerald-600 dark:text-emerald-400">Certified Halal</span>
+              {product.rating && <div className="flex items-center gap-0.5 font-medium"><Star className="h-3 w-3 fill-amber-500 text-amber-500" /> {product.rating}</div>}
+            </div>
+          </div>
+        </CardContent>
+      </div>
+      <div className="p-2 sm:p-3 pt-0 space-y-2">
         <QuantitySelector
           quantity={quantity}
           setQuantity={setQuantity}
           moq={moq}
           stock={stock}
           isOutOfStock={isOutOfStock}
-          unitLabel={unit}
+          unitLabel={unitLabel}
         />
-        <div className="flex items-center justify-between sm:block">
-          <p className="font-semibold text-xs sm:text-sm hidden sm:block">Total: {formatCurrency(price * quantity)}</p>
-        </div>
-        <div className="grid gap-2 mt-1 sm:mt-0">
-          <Link to={`/products/${product.slug}`} className="hidden sm:block"><Button variant="outline" className="w-full"><Eye className="mr-2 h-4 w-4" />View Details</Button></Link>
-          <Button onClick={() => onAdd(quantity)} disabled={pending || isOutOfStock} size="sm" className="w-full h-8 sm:h-9 bg-emerald-600 hover:bg-emerald-700 text-xs sm:text-sm">
-            {isOutOfStock ? "Out of Stock" : "Add"}
+        <div className="grid gap-2">
+          <Button onClick={() => onAdd(quantity)} disabled={pending || isOutOfStock} size="sm" className="w-full h-8 sm:h-9 bg-primary hover:bg-primary/90 text-xs sm:text-sm">
+            <ShoppingCart className="mr-1.5 h-3.5 w-3.5" />
+            {isOutOfStock ? "Out of Stock" : "Add To Cart"}
           </Button>
         </div>
-      </CardContent>
+      </div>
     </Card>
   );
 }

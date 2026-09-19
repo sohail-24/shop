@@ -120,38 +120,32 @@ export default function ProductDetail() {
 
         <div className="space-y-5 md:space-y-6">
           <div className="flex flex-wrap gap-2">
-            <Badge variant="outline">{product.categoryName ?? "Uncategorized"}</Badge>
-            <Badge variant="secondary">{product.grade ?? "Grade A"}</Badge>
+            <Badge variant="outline">{product.categoryName ?? "Halal Food"}</Badge>
+            <Badge className="bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border-emerald-300">100% Certified Halal</Badge>
           </div>
           <div>
             <h1 className="text-3xl font-semibold tracking-tight">{product.name}</h1>
-            <p className="mt-1 text-sm text-muted-foreground">by {product.supplierName ?? "Supplier"}</p>
+            <p className="mt-1 text-sm text-muted-foreground">by {product.supplierName ?? "Shah's Halal Food"}</p>
           </div>
           <div className="flex flex-wrap items-baseline gap-3">
             <span className="text-3xl font-semibold text-emerald-700">{formatCurrency(price)}</span>
-            <span className="text-sm text-muted-foreground">/ {unitLabels[unit] ?? unit}</span>
+            {product.unitSize ? (
+              <span className="text-sm text-muted-foreground">({product.unitSize})</span>
+            ) : unitLabels[unit] && unitLabels[unit] !== "item" && unitLabels[unit] !== "order" ? (
+              <span className="text-sm text-muted-foreground">/ {unitLabels[unit]}</span>
+            ) : null}
             {compareAt > 0 && <span className="text-lg text-muted-foreground line-through">{formatCurrency(compareAt)}</span>}
             {discount > 0 && <Badge>{discount}% OFF</Badge>}
           </div>
           <div className="grid gap-2 text-sm text-muted-foreground sm:grid-cols-2">
-            <p><span className="font-medium text-foreground">Stock:</span> {product.stock ?? "Not set"} {unitLabels[unit] ?? unit}</p>
-            <p><span className="font-medium text-foreground">Unit:</span> {unitLabels[unit] ?? unit}</p>
-            <p>
-              <span className="font-medium text-foreground">Unit Size:</span>{" "}
-              {product.unitSize ? (
-                <>
-                  {product.unitSize}{" "}
-                  <span className="text-xs text-muted-foreground">
-                    (1 {unitLabels[unit] ?? unit} = {product.unitSize})
-                  </span>
-                </>
-              ) : (
-                "Not set"
-              )}
-            </p>
-            <p className="hidden md:block"><span className="font-medium text-foreground">MOQ:</span> {minQty} {unitLabels[unit] ?? unit}</p>
-            <p><span className="font-medium text-foreground">Origin:</span> {product.origin ?? "Not set"}</p>
-            <p><span className="font-medium text-foreground">Grade:</span> {product.grade ?? "Not set"}</p>
+            <p><span className="font-medium text-foreground">Serving / Portion:</span> {product.unitSize ?? "1 Order"}</p>
+            <p><span className="font-medium text-foreground">Category:</span> {product.categoryName ?? "Halal Food"}</p>
+            {product.origin && (
+              <p><span className="font-medium text-foreground">Style / Recipe:</span> {product.origin}</p>
+            )}
+            {product.season && (
+              <p><span className="font-medium text-foreground">Served With:</span> {product.season}</p>
+            )}
           </div>
 
           <div className="flex flex-col gap-3 mt-6 md:mt-0">
@@ -204,24 +198,24 @@ export default function ProductDetail() {
         </div>
       </section>
 
-      <DetailSection title="Product Description">
-        {product.description ?? "No description has been added for this product."}
+      <DetailSection title="Item Details & Ingredients">
+        {product.description ?? "Authentic halal food prepared fresh with quality ingredients."}
       </DetailSection>
       <div className="hidden md:block">
-        <DetailSection title="Product Specifications">
-          No specifications have been added for this product.
+        <DetailSection title="Dietary & Preparation Info">
+          100% Certified Halal meats. Prepared fresh to order with authentic spices, warm pita, and signature white and hot sauces.
         </DetailSection>
       </div>
-      <DetailSection title="Supplier Information">
+      <DetailSection title="Restaurant & Kitchen Information">
         <div className="grid gap-2 text-sm sm:grid-cols-2">
-          <p><span className="font-medium text-foreground">Supplier Name:</span> {product.supplierName ?? "Not set"}</p>
-          <p><span className="font-medium text-foreground">Phone / Contact:</span> {product.supplierPhone ?? "Not set"}</p>
+          <p><span className="font-medium text-foreground">Restaurant:</span> {product.supplierName ?? "Shah's Halal Food"}</p>
+          <p><span className="font-medium text-foreground">Phone / Contact:</span> {product.supplierPhone ?? "+1 (718) 555-0199"}</p>
           <p className="sm:col-span-2"><span className="font-medium text-foreground">Address:</span> {formatSupplierAddress(product)}</p>
         </div>
       </DetailSection>
       {related.length > 0 && (
         <div className="hidden md:block">
-          <DetailSection title="Related Products">
+          <DetailSection title="You Might Also Like">
             <div className="flex flex-wrap gap-2">
               {related.map((item) => (
                 <Link key={item.slug} to={`/products/${item.slug}`} className="rounded-md border px-3 py-2 text-sm hover:bg-muted">

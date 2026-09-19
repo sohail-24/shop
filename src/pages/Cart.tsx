@@ -29,7 +29,7 @@ export default function Cart() {
         backTo="/products"
         backLabel="Back to Products"
         title="Cart"
-        description="Review wholesale items before checkout."
+        description="Review items before checkout."
         actions={items.length > 0 ? (
           <Button variant="outline" size="sm" onClick={() => (isAuthenticated ? clearMutation.mutate() : guestCart.clear())}>
             <Trash2 className="mr-2 h-4 w-4" />
@@ -45,7 +45,7 @@ export default function Cart() {
           <CardContent className="py-16 text-center">
             <ShoppingCart className="mx-auto mb-4 h-12 w-12 text-muted-foreground/40" />
             <h3 className="text-lg font-semibold">Your cart is empty</h3>
-            <p className="mb-6 mt-1 text-sm text-muted-foreground">Browse Products to add wholesale items.</p>
+            <p className="mb-6 mt-1 text-sm text-muted-foreground">Browse Products to add items.</p>
             <Link to="/products"><Button>Browse Products</Button></Link>
           </CardContent>
         </Card>
