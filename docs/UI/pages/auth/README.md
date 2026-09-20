@@ -1,123 +1,79 @@
-Perfect. I now have everything needed.
+# Authentication / Admin Login
 
-From these documents, the **Auth page** is responsible only for the **user interface** of authentication. It should **not** document JWTs, bcrypt, cookies, or database details—those already belong to `AUTHENTICATION.md`.
+**Version:** 2.0
 
-The page documentation should answer:
+**Status:** Active
 
-* What can users do on this page?
-* How do they navigate?
-* Which authentication methods are available?
-* What happens after successful authentication?
-
-Here is the complete **`README.md`**.
-
-# Authentication
-
-**Version:** 1.0
-
-**Status:** Approved Design
-
-**Page:** Authentication
+**Pages:**
+- Active: `/admin/login` (`src/pages/AdminLogin.tsx`)
+- Redirected: `/login`, `/register`, `/auth` (Redirect to `/`)
 
 ---
 
 # Overview
 
-The Authentication page provides a secure entry point into FreshFlow.
+The active authentication interface is the **Admin Login** page (`src/pages/AdminLogin.tsx`), which provides administrative ERP access to authorized platform operators.
 
-It allows new users to create an account and existing users to sign in using supported authentication methods.
-
-The page is designed to keep onboarding simple while providing a secure authentication experience for both Business Owners and Buyers.
-
-Authentication is centralized across FreshFlow. This page acts as the user interface for the Authentication module and does not implement authentication logic itself.
+Because customer ordering operates in an unauthenticated guest mode (`src/lib/guestCart.ts`), customer authentication routes (`/login`, `/register`, `/auth`) automatically redirect users back to the storefront (`/`).
 
 ---
 
 # Purpose
 
-The Authentication page exists to:
+The Admin Login page exists to:
 
-* Register new users.
-* Authenticate existing users.
-* Support multiple login methods.
-* Provide a simple onboarding experience.
-* Secure access to protected areas of FreshFlow.
-* Redirect authenticated users to the appropriate workspace.
+* Provide a secure credentials prompt (Email and Password) for administrative personnel.
+* Authenticate against `ADMIN_EMAIL` and `ADMIN_PASSWORD` via `trpc.auth.loginAdmin`.
+* Set secure HTTP-only cookies (`shop_admin_access`, `shop_admin_refresh`) and persist the JWT in client storage.
+* Redirect authenticated administrators to the operational ERP dashboard (`/dashboard`).
 
 ---
 
-# Users
+# User Roles & Experience
 
-## Guest Visitor
+## Administrative Operator
 
 Can:
 
-* Register a new account.
-* Sign in using Email.
-* Sign in using Mobile Number.
-* Sign in using Mobile OTP.
-* Switch between authentication methods.
-
-Cannot:
-
-* Access protected pages.
-* Add products to the shopping cart.
-* View dashboards.
-* Place orders.
+* Enter administrator email and password.
+* Authenticate securely with timing-safe backend verification.
+* Access the operations dashboard (`/dashboard`), inventory, warehouse management, products, orders, and reports.
 
 ---
 
-## Authenticated Buyer
+## Storefront Customer
 
-After successful authentication can:
-
-* Access Buyer Dashboard.
-* Add products to the shopping cart.
-* Place orders.
-* Manage personal profile.
+* Customers do not need to sign in or register to browse or purchase halal food.
+* If a customer attempts to visit `/login`, `/register`, or `/auth`, `src/App.tsx` routes them seamlessly to the storefront homepage (`/`).
 
 ---
 
-## Business Owner
+# Form Validation & Feedback
 
-After successful authentication can:
-
-* Access Business Owner Dashboard.
-* Manage business operations.
-* Manage products.
-* Manage categories.
-* Manage inventory.
-* Manage orders.
-* Access reports.
+- **Form Fields:** Email input (`type="email"`), Password input (`type="password"`).
+- **Client Validation:** Verifies that both email and password are provided prior to submission.
+- **Error States:** Displays an explicit error notification if credentials fail validation.
+- **Loading State:** Disables the submission button and displays a spinner during authentication.
 
 ---
 
-# Page Goals
+# Technical Wiring
 
-The Authentication page aims to:
+- **Component:** `src/pages/AdminLogin.tsx`
+- **Route:** `/admin/login`
+- **tRPC Procedure:** `trpc.auth.loginAdmin.useMutation()`
+- **Post-Login Action:** Persists JWT in `localStorage.setItem('shop_admin_token', token)` and navigates to `/dashboard`.
+- **Customer Redirects:** Configured in `src/App.tsx`:
+  - `<Route path="/login" element={<Navigate to="/" replace />} />`
+  - `<Route path="/register" element={<Navigate to="/" replace />} />`
+  - `<Route path="/auth" element={<Navigate to="/" replace />} />`
 
-* Minimise the number of steps required to create an account.
-* Provide a fast login experience.
-* Support secure authentication.
-* Keep the interface simple and easy to understand.
-* Work consistently across desktop and mobile devices.
-* Allow users to continue their previous activity after authentication.
 
 ---
 
-# Navigation
+# Preserved Customer Auth Capability
 
-Users can navigate to:
-
-* Home Marketplace
-* Registration
-* Email Login
-* Mobile Login
-* Mobile OTP Login
-* Buyer Dashboard (After Login)
-* Business Owner Dashboard (After Login)
-
-If authentication was requested while performing another action (such as Add to Cart), users are returned to their original page after signing in.
+The codebase preserves the multi-method buyer authentication UI workflows (Email Login, Mobile Password Login, and Mobile OTP verification) in code history, backed by the inactive `legacyAuthRouter`. Should user registration be re-introduced for a customer loyalty tier, the authentication components can be remounted on `/login` and `/register`.
 
 ---
 

@@ -1,23 +1,20 @@
-```markdown
 # Orders Module
 
-Version: 1.0
+**Version:** 2.0
 
-Status: Approved Design
+**Status:** Active
 
-Module: Orders
+**Module:** Orders
+- Administrative List: `src/pages/Orders.tsx` (`/orders`)
+- Administrative Detail: `src/pages/OrderDetail.tsx` (`/orders/:id`)
 
 ---
 
 # Overview
 
-The Orders module manages the complete lifecycle of customer purchase orders within FreshFlow.
+The Orders module manages the complete lifecycle of customer orders within **Shah's Halal** and the **Shop** administrative platform.
 
-It is responsible for converting a buyer's shopping cart into a purchase order, maintaining order information, tracking order progress, recording delivery information, and preserving an immutable snapshot of purchased products.
-
-The Orders module acts as the central business process connecting products, inventory, customers, and future invoice generation.
-
-Version 1.0 focuses on providing a simple and reliable order management experience while keeping the architecture ready for future business growth.
+It is responsible for converting a customer's shopping cart into a verified purchase order following secure Razorpay payment authorization, tracking order preparation and delivery milestones, recording delivery addresses, and preserving an immutable snapshot of purchased dishes and items.
 
 ---
 
@@ -25,13 +22,12 @@ Version 1.0 focuses on providing a simple and reliable order management experien
 
 The purpose of this module is to:
 
-* Create purchase orders.
-* Manage customer orders.
-* Track order progress.
-* Monitor delivery status.
-* Display delivery estimates.
-* Preserve product snapshots.
-* Maintain a single source of truth for order information.
+* Process and store customer orders placed through the online storefront.
+* Verify Razorpay payment signatures cryptographically using HMAC-SHA256 (`timingSafeEqual`).
+* Preserve immutable line-item price and quantity snapshots to protect against future menu changes.
+* Track order fulfillment states (Pending, Confirmed, Shipped, Delivered, Cancelled).
+* Provide administrative inspection, search, and status updating at `/orders` and `/orders/:id`.
+
 
 ---
 
@@ -358,15 +354,10 @@ This module includes:
 
 # Version History
 
+## Version 2.0 (2026-09-20)
+- Documented active administrative routes (`/orders`, `/orders/:id`).
+- Documented Razorpay payment flow integration, HMAC signature verification, and guest storefront ordering.
+
 ## Version 1.0
+- Initial Orders module documentation.
 
-Initial Orders module documentation.
-
-Focus areas:
-
-* Simple order management.
-* Complete order lifecycle.
-* Immutable product snapshots.
-* Delivery tracking and delivery estimates.
-* Foundation for invoices, reporting, and future business operations.
-```

@@ -1,8 +1,14 @@
-# FreshFlow
+# Shah's Halal / Shop (FreshFlow)
 
-FreshFlow is a B2B wholesale marketplace for fruit suppliers and buyers. The app uses React, Vite, Hono, tRPC, PostgreSQL, and Drizzle ORM. It provides two separate workflows: a Buyer Workspace for procurement and a Business Owner Workspace for ERP operations.
+Shah's Halal is an authentic Halal food restaurant storefront powered by the **Shop** / **FreshFlow** administrative ERP platform. Built with React 19, Vite, Tailwind CSS, Radix UI, Hono, tRPC, PostgreSQL, and Drizzle ORM.
 
-## Setup
+The platform provides a dual-layer architecture:
+1. **Customer Storefront ("Shah's Halal"):** Public, friction-free Halal food discovery, menu categorization, dedicated About page, guest cart, and Razorpay checkout.
+2. **Operations & ERP ("Shop"):** Secure administrative portal (`/admin/login`, `/dashboard`) for product management, multi-warehouse stock movements, GST invoicing, order fulfillment, and business intelligence.
+
+---
+
+## Quick Start
 
 ### Development
 
@@ -12,73 +18,54 @@ cp .env.example .env
 npm run dev
 ```
 
-### Production (Docker)
+The application will bind to `0.0.0.0:3000`.
 
-FreshFlow is containerized for production following a Platform Engineering Phase 1 approach. It uses Docker Compose with an Nginx reverse proxy, a Node 22-slim backend, and a PostgreSQL 15-alpine database.
+### Production (Docker)
 
 ```bash
 cp .env.example .env
 docker compose up --build -d
 ```
 
-- Nginx will run on port `80` acting as the single public entry point, serving static files and reverse-proxying `/api/*` to the backend.
-- The Node backend (Hono server + tRPC) runs internally on port `3000`.
-- The database runs internally on port `5432`.
-- Migrations are automatically run in `api/boot.ts` during backend startup.
+- **Nginx Reverse Proxy:** Ingress on port `80`, terminates TLS and reverse-proxies `/api/*` to Hono.
+- **Node.js App Server:** Hono + tRPC backend on internal port `3000`.
+- **PostgreSQL Database:** PostgreSQL 15 on internal port `5432` with automated boot migrations (`api/boot.ts`).
 
-Required production environment variables:
+---
 
-- `DATABASE_URL`
-- `JWT_ACCESS_SECRET`
-- `JWT_REFRESH_SECRET`
+## Architecture & Workflows
 
-Development OTP login uses `MOCK_OTP_CODE`, which defaults to `123456`.
+### 1. Customer Storefront
+- **Navigation:** Persistent 4-tab bottom navigation (`CustomerBottomNav.tsx`) linking to Home (`/`), Categories (`/categories`), Cart (`/cart`), and About (`/about`).
+- **Brand Heritage & Halal Transparency:** Dedicated About page (`/about`) featuring 100% Zabiha certification, quality pillars, interactive FAQ, and store hours.
+- **Ordering Experience:** LocalStorage guest cart (`src/lib/guestCart.ts`), live cart badge counts, and Razorpay checkout modal with cryptographic backend signature verification (`crypto.timingSafeEqual`).
 
-## Scripts
+### 2. Administrative Operations
+- **Authentication:** Admin login at `/admin/login` validating against `ADMIN_EMAIL` and `ADMIN_PASSWORD` with HTTP-only cookies (`shop_admin_access`, `shop_admin_refresh`).
+- **Operations Dashboard (`/dashboard`):** Real-time revenue statistics, active orders, and low-stock alerts.
+- **Multi-Warehouse Stock:** Multi-facility tracking and an immutable audit log (`warehouse_stock_movements`).
+- **Invoicing & Taxes:** Sequential GST invoice generation (`INV-YYYY-XXXX`) with automated CGST/SGST/IGST breakdown.
 
-```bash
-npm run dev
-npm run build
-npm run check
-npm run test
-```
+---
 
-## Authentication
+## Documentation Directory
 
-FreshFlow uses local authentication.
+All documentation is maintained according to strict codebase truth:
 
-- Email/password login with bcrypt password hashing.
-- +91 mobile OTP login through an `OtpProvider` interface.
-- Mock OTP provider in development; replace `api/auth/otp-provider.ts` to add Twilio, MSG91, or another SMS provider.
-- Access and refresh JWTs are stored in HTTP-only cookies.
-- Refresh tokens are hashed before being persisted on the user record.
-- Logout clears both cookies and removes the stored refresh token hash.
+- **System Architecture:** [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md)
+- **API Reference (tRPC & Endpoints):** [`docs/API.md`](docs/API.md)
+- **Authentication Specification:** [`docs/AUTHENTICATION.md`](docs/AUTHENTICATION.md)
+- **Database Schema:** [`docs/database/SCHEMA.md`](docs/database/SCHEMA.md)
+- **Database Migrations:** [`docs/database/MIGRATIONS.md`](docs/database/MIGRATIONS.md)
+- **Production Readiness & Deployment:** [`docs/PRODUCTION_READINESS.md`](docs/PRODUCTION_READINESS.md)
+- **Roadmap & Phases:** [`docs/ROADMAP.md`](docs/ROADMAP.md)
+- **Development Log:** [`docs/DEVELOPMENT_LOG.md`](docs/DEVELOPMENT_LOG.md)
+- **Documentation Structure:** [`docs/DOCUMENTATION_STRUCTURE.md`](docs/DOCUMENTATION_STRUCTURE.md)
+- **UI & Page Specifications:** [`docs/UI/`](docs/UI/)
 
-Public routes:
-
-- Products
-- Product search
-- Product details
-- Add to cart
-- View cart
-
-Protected routes:
-
-- Checkout
-- Orders
-- Profile
-- Dashboard
-- Inventory
-- Reports
-- Settings
-
-Protected routes redirect to `/login?returnTo=...` and return users to the requested page after successful login. Guest cart items are stored locally and synced to the server cart after login.
-
-## Documentation
-
-- Architecture: `docs/ARCHITECTURE.md`
-- Auth API: `docs/API.md`
+---
 
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+

@@ -1,74 +1,29 @@
-# FreshFlow Documentation Structure
+# Shah's Halal / Shop Documentation Structure
 
-**Version:** 4.1
+**Version:** 5.0
 
 **Status:** Active
 
-**Last Updated:** 2026-09-12
+**Last Updated:** 2026-09-20
 
 ---
 
 # Purpose
 
-This document defines the official documentation standard for the FreshFlow project.
+This document defines the official documentation standard for the Shah's Halal / Shop project (incorporating foundational ERP and commerce modules from FreshFlow).
 
 All project documentation must follow this structure.
 
-Business modules own business logic.
-
-UI pages own screen behaviour.
-
-Business rules must never be duplicated across documents.
-
-Documentation must be updated before implementation changes.
-
-Documentation is the single source of truth for FreshFlow.
+Business modules own business logic. UI pages own screen behaviour. Business rules must never be duplicated across documents. The actual repository codebase is the single source of truth.
 
 ---
 
 # Documentation Philosophy
 
-FreshFlow follows a **Documentation First Development** methodology.
-
-Every feature must be documented before implementation.
-
-Project workflow:
-
-```text
-Idea
-   ↓
-Business Analysis
-   ↓
-Documentation
-   ↓
-Architecture Review
-   ↓
-Approval
-   ↓
-Implementation
-   ↓
-Testing
-   ↓
-Deployment
-```
-
-No implementation begins until documentation has been reviewed and approved.
-
----
-
-# Documentation Principles
-
-FreshFlow documentation follows these principles:
-
-* Documentation is the source of truth.
-* Every feature has its own documentation.
-* Business logic and UI are documented separately.
-* Every module follows the same documentation structure.
-* Every page follows the same documentation structure.
-* Documentation should remain technology independent whenever possible.
-* Business rules must never be duplicated.
-* Documentation must be updated before implementation changes.
-* Documentation should be simple, consistent, and easy for both developers and AI assistants to understand.
+The project follows a **Code-Truth Documentation** methodology:
+- **Code is Reality:** Documentation must accurately describe what is actually implemented in the repository, without speculation or obsolete claims.
+- **Truthful Status:** Features are classified by their real status: `ACTIVE`, `PRESERVED BUT DEACTIVATED`, `HIDDEN`, `UNUSED / ORPHANED`, or `REMOVED`.
+- **Verified Verification:** If a capability cannot be definitively proven in the codebase, it is marked as `Needs verification`.
 
 ---
 
@@ -76,28 +31,48 @@ FreshFlow documentation follows these principles:
 
 ```text
 docs/
-
-├── ARCHITECTURE.md
-├── API.md
-├── AUTHENTICATION.md
-├── ROADMAP.md
-├── DEVELOPMENT_LOG.md
-├── DOCUMENTATION_STRUCTURE.md
-├── PRODUCTION_READINESS.md
+├── ARCHITECTURE.md                 # Full-stack system architecture, technology stack, and routing
+├── API.md                          # Global tRPC API standards, registered routers, and protocols
+├── AUTHENTICATION.md               # Admin authentication and customer guest/legacy session management
+├── ROADMAP.md                      # Real project progress, completed milestones, and planned work
+├── DEVELOPMENT_LOG.md              # Historical development log and audit records
+├── DOCUMENTATION_STRUCTURE.md      # This document: documentation map and structural guidelines
+├── PRODUCTION_READINESS.md         # Factual production readiness assessment
 │
 ├── database/
-│   ├── MIGRATIONS.md
-│   └── SCHEMA.md
+│   ├── MIGRATIONS.md               # Drizzle migration flow, startup execution, and mock fallback
+│   └── SCHEMA.md                   # Full 18-table relational PostgreSQL schema and enum inventory
 │
 └── UI/
+    ├── pages/                      # Specific view/page wireframes and user interaction flows
+    │   ├── home-marketplace/      # Storefront landing page (/), mobile category panel, products grid
+    │   ├── product-details/       # Product detail page (/products/:slug) with bottom navigation
+    │   ├── cart/                   # Customer cart (/cart), guest storage, and checkout entry
+    │   ├── checkout/               # Multi-step checkout, zone shipping, and Razorpay payment
+    │   ├── about/                  # Customer About page (/about) with Halal promise & 4-item bottom nav
+    │   ├── auth/                   # Admin Login (/admin/login) and customer login redirect handling
+    │   ├── buyer-dashboard/        # Customer order tracking and purchase dashboard
+    │   └── owner-dashboard/        # Operational admin ERP dashboard (/dashboard)
     │
-    ├── categories/
-    ├── company/
-    ├── inventory/
-    ├── invoices/
-    ├── orders/
-    ├── products/
-    ├── reports/
+    ├── categories/                 # Category management module documentation
+    ├── company/                    # Supplier/Buyer company profile module documentation
+    ├── inventory/                  # Multi-warehouse inventory and batch tracking documentation
+    ├── invoices/                   # GST-compliant tax invoices and PDF generation documentation
+    ├── orders/                     # Order lifecycle, fulfillment state transitions, and Razorpay
+    ├── products/                   # Catalog item management, pricing, SKU, and visibility
+    ├── reports/                    # Sales, inventory valuation, and performance analytics
+    ├── user-profile/               # User preferences, themes, and profile management
+    └── warehouse/                  # Physical warehouse facilities and stock movements log
+```
+
+---
+
+# Documentation Principles
+
+* **Codebase is the Source of Truth:** Documentation must reflect actual files, endpoints, tables, and UI components.
+* **Separation of Concerns:** Business logic and UI wireframes are documented separately.
+* **Explicit Navigation Standards:** Customer-facing pages must explicitly document both desktop headers and the active mobile bottom navigation bar (`Home`, `Categories`, `Cart`, `About`).
+* **No Unverified Claims:** Production readiness, external cloud services, or security guarantees are documented based strictly on verifiable code.
     ├── user-profile/
     ├── warehouse/
     │
@@ -208,15 +183,15 @@ Example:
 
 ```text
 pages/
-
-auth/
-buyer-dashboard/
-cart/
-checkout/
-home-marketplace/
-orders/
-owner-dashboard/
-product-details/
+├── about/
+├── auth/
+├── buyer-dashboard/
+├── cart/
+├── checkout/
+├── home-marketplace/
+├── orders/
+├── owner-dashboard/
+└── product-details/
 ```
 
 UI pages define screen layout, navigation, user interactions, and user experience.

@@ -1,22 +1,22 @@
 # Products Module
 
-Version: 1.0
+**Version:** 2.0
 
-Status: Approved Design
+**Status:** Active
 
-Module: Products
+**Module:** Products
+- Administrative List: `src/pages/Products.tsx` (`/products`)
+- Add Product: `src/pages/AddProduct.tsx` (`/products/new`)
+- Edit Product: `src/pages/EditProduct.tsx` (`/products/:slug/edit`)
+- Storefront View: `src/pages/ProductDetail.tsx` (`/products/:slug`)
 
 ---
 
 # Overview
 
-The Products module is the heart of FreshFlow. It manages every product a business sells through the platform.
+The Products module manages all culinary dishes, halal meats, and packaged goods sold through the **Shah's Halal** storefront and managed within the **Shop** administrative ERP.
 
-Products created in this module become available throughout the system, including the marketplace, shopping cart, orders, inventory, dashboards, and reports.
-
-The module is designed to keep product management simple so that any business owner can quickly add and manage products without requiring technical knowledge.
-
-Version 1.0 focuses on providing an easy and reliable product management experience while keeping the architecture ready for future business growth.
+Dishes configured in this module populate the storefront homepage, category catalog, guest shopping cart, orders, inventory stock registers, and GST invoices.
 
 ---
 
@@ -24,13 +24,11 @@ Version 1.0 focuses on providing an easy and reliable product management experie
 
 The purpose of this module is to:
 
-* Create products.
-* Manage product information.
-* Organize products into categories.
-* Display products in the marketplace.
-* Control product availability.
-* Manage product images.
-* Maintain a single source of truth for product information.
+* Maintain the catalog of authentic Halal dishes, platter combinations, and side orders.
+* Control dish pricing, descriptions, images, category associations, and Halal tags.
+* Manage marketplace visibility (`isActive`) and stock thresholds.
+* Provide an intuitive administrative management interface for adding, editing, and archiving products.
+
 
 ---
 

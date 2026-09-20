@@ -1,29 +1,45 @@
 # Database Migrations
 
-FreshFlow uses Drizzle ORM for schema management and migrations.
+**Version:** 2.0
 
-## Production Migrations
+**Status:** Active
 
-The intended deployment workflow in Docker executes Drizzle migrations automatically during container startup, requiring zero manual intervention.
+**Last Updated:** 2026-09-20
 
-- The backend (Hono server) runs migrations programmatically before listening for requests.
-- This is implemented in `api/boot.ts` using the `drizzle-orm/node-postgres/migrator` package.
-- The `DATABASE_URL` environment variable is required to execute these migrations.
+---
 
-## Local Development & CLI Usage
+## 1. Production Boot Migrations
 
-During local development, you can use the standard `drizzle-kit` CLI commands:
+When running in production mode (`env.isProduction`), the application executes Drizzle migrations programmatically during container startup in `api/boot.ts` before binding the HTTP server on port 3000:
 
-- `npm run db:generate` - Generate new migration files based on schema changes.
-- `npm run db:migrate` - Execute pending migrations against the database.
-- `npm run db:push` - Push schema changes directly to the database (use with caution, typically only for rapid prototyping).
+- **Migrator:** Utilizes `drizzle-orm/node-postgres/migrator` (`migrate` function).
+- **Migrations Folder:** Targets the generated SQL migration files in `db/migrations/`.
+- **Database Target:** Obtained via `getDb()` from `api/queries/connection.ts`.
+- **Resilience Fallback:** If `DATABASE_URL` is missing or the PostgreSQL server is unreachable, the startup block catches the error and issues a warning (`Database migrations skipped or failed — running with in-memory database:`), allowing the application to boot safely using the mock database proxy (`mockDbInstance`).
 
-## Baselining Existing Databases
+---
 
-FreshFlow must never silently modify migration history during startup (e.g., auto-baselining). If a database was initially set up using `drizzle-kit push` and needs to be transitioned to a migration-based workflow:
+## 2. CLI Migration Workflows
 
-- Use the manual script `npm run db:baseline` (which executes `db/baseline.ts`) to baseline existing databases.
+The following npm scripts defined in `package.json` manage schema synchronization:
 
-## Handling Inconsistencies
+```bash
+# Generate SQL migration files in db/migrations from db/schema.ts
+npm run db:generate
 
-Do not suppress or ignore database migration errors (e.g., 'already exists'). Production migrations must fail if the migration history is inconsistent. Never modify historical SQL migration files or migration metadata to fix inconsistencies. Stop and report the root cause rather than masking the error.
+# Execute pending migrations against the configured DATABASE_URL
+npm run db:migrate
+
+# Push schema changes directly to the database without generating SQL migration files
+npm run db:push
+
+# Baseline existing database tables transitioned to Drizzle migrations
+npm run db:baseline
+```
+
+---
+
+## 3. Consistency & Baselining
+
+- **`db/baseline.ts`:** Used to establish initial migration records for pre-existing databases that were set up without historical migration files.
+- **Migration History:** Tracked in the `__drizzle_migrations` table inside PostgreSQL. Historical migration files must remain immutable; schema adjustments require generating a new sequential migration step.

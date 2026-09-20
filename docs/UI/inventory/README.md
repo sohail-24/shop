@@ -1,20 +1,18 @@
 # Inventory Module
 
-Version: 1.0
+**Version:** 2.0
 
-Status: Approved Design
+**Status:** Active
 
-Module: Inventory
+**Module:** Inventory (`src/pages/Inventory.tsx`)
 
 ---
 
 # Overview
 
-The Inventory module manages the stock of products available within FreshFlow.
+The Inventory module manages the stock of food items, ingredients, and packaged goods across **Shah's Halal** and the **Shop** administrative ERP.
 
-It is responsible for tracking product quantities, monitoring stock availability, and maintaining accurate inventory records. The module works closely with the Products module while keeping inventory management separate from product information.
-
-Version 1.0 focuses on providing simple and reliable stock management. Advanced inventory features such as warehouse management, batch tracking, expiry tracking, and stock transfers are planned for future releases.
+It tracks on-hand stock quantities, reserved inventory for active orders, reorder thresholds, and warehouse stock movements. The module interfaces with the `inventories` and `warehouse_stock_movements` database tables to guarantee accurate stock visibility and prevent overselling.
 
 ---
 
@@ -22,13 +20,12 @@ Version 1.0 focuses on providing simple and reliable stock management. Advanced 
 
 The purpose of this module is to:
 
-* Manage product stock.
-* Track available inventory.
-* Monitor stock availability.
-* Support inventory adjustments.
-* Prevent inventory inconsistencies.
-* Provide accurate inventory information to other modules.
-* Maintain a single source of truth for stock information.
+* Monitor on-hand, reserved, and available stock levels.
+* Support stock adjustments with logged movement reasons (Inbound, Outbound, Transfer, Adjustment).
+* Interface with the Warehouse module (`/warehouse`) for multi-location physical inventory.
+* Alert managers when stock levels drop below configured reorder points.
+* Provide reliable inventory availability signals to the storefront.
+
 
 ---
 

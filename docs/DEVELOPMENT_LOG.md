@@ -1,19 +1,36 @@
-# FreshFlow Development Log
+# FreshFlow / Shah's Halal Development Log
 
-## Current Status: Production Launch Readiness
+## Current Status: Customer Storefront Expansion & Full Documentation Refresh
 
 ### Summary
-FreshFlow has completed its core feature set and is now prepared for a real production launch.
-The application has a real domain (amfruits.shop) and a real payment gateway (Razorpay),
-and the website is planned to go live tomorrow.
+Shah's Halal storefront customer experience has been enriched with a dedicated About Page and bottom navigation integration. Concurrently, a complete codebase-truth documentation refresh was completed across all architectural, API, authentication, database, UI, and readiness documents.
 
-### Recent Implementations
-- **Payment Integration:** Razorpay payment flow with secure HMAC-SHA256 signature verification.
-- **Production Infrastructure:** Docker Compose orchestration, Node 22-slim backend, PostgreSQL 15-alpine database, Nginx reverse proxy.
-- **HTTPS/Domain:** Nginx configured for `amfruits.shop` with Let's Encrypt SSL via Certbot.
-- **Authentication:** Local authentication with bcryptjs, JWTs, HTTP-only cookies, and mobile OTP support.
-- **Role System:** Centralized role system separating Business Owner (ERP) and Buyer (Marketplace) workspaces.
-- **Readiness:** All configurations, environment variables, health checks, logging limits, and database migrations are fully set up for production.
+---
+
+## 2026-09-20 Customer About Page & Code-Truth Documentation Refresh
+
+### Summary
+Designed and integrated the customer-facing About page for Shah's Halal storefront, refined the customer navigation hierarchy, and performed a comprehensive codebase audit to synchronize all repository documentation with real code facts.
+
+### 1. Customer About Page Implementation
+- **Dedicated Storefront Route:** Built `src/pages/AboutPage.tsx` with high-contrast, clean Halal restaurant branding.
+- **Brand Story & Halal Heritage:** Articulated the Shah's Halal ethos ("Fresh Food · Pure Taste") without inventing unverified claims.
+- **Halal Verification Standards:** Emphasized 100% Zabiha Halal practices, strict cross-contamination protocols, daily farm-fresh sourcing, and transparent vendor audits.
+- **Quality Pillars:** 4 structured cards featuring Halal Meats, Farm-Fresh Produce, Proprietary Spice Blends, and Fresh Daily Preparation.
+- **Interactive FAQ Accordion:** Clean expand/collapse questions covering Halal sourcing, cross-contamination, delivery packaging, and catering services.
+- **Store Contact & Hours:** Verified pickup, delivery, hours, and direct phone/email contact module.
+- **Header Refinement:** Removed redundant top navigation/action bar to keep a clean, single-point navigation via `CustomerBottomNav` (Home, Categories, Cart, About).
+
+### 2. Comprehensive Documentation Overhaul
+- **`docs/DOCUMENTATION_STRUCTURE.md`:** Updated to Version 5.0, mapping all 14 UI module directories, core system docs, and database specs.
+- **`docs/ARCHITECTURE.md`:** Overhauled to reflect current dual-layer architecture (Customer Storefront "Shah's Halal" vs. Admin ERP "Shop"), 17 tRPC routers, 18 Drizzle schema tables, and mock database resilience proxy.
+- **`docs/API.md`:** Updated to Version 2.0 with all 17 registered domain routers, admin session procedures, guest cart behavior, and legacy router classification.
+- **`docs/AUTHENTICATION.md`:** Documented active admin authentication (JWT, HTTP-only cookies, timing-safe validation) and guest storefront shopping mode.
+- **`docs/database/SCHEMA.md` & `MIGRATIONS.md`:** Full inventory of all 18 tables, custom pgEnums, programmatic boot migration flow, and mock database fallback.
+- **`docs/PRODUCTION_READINESS.md` & `ROADMAP.md`:** Realigned production status, environment variable specs, and strategic milestone roadmap.
+- **`docs/UI/` Modules:** Audited and synchronized UI and API documents for all business and storefront modules.
+
+---
 
 ## 2026-08-10 Production-Hardening Razorpay Payment Flow
 

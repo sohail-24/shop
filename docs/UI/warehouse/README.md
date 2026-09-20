@@ -1,20 +1,18 @@
-# Warehouse
+# Warehouse Module
 
-Version: 1.0
+**Version:** 2.0
 
-Status: Approved Design
+**Status:** Active
 
-Module: Warehouse
+**Module:** Warehouse (`src/pages/Warehouse.tsx`)
 
 ---
 
 # Overview
 
-The Warehouse module manages the physical storage location of inventory within FreshFlow.
+The Warehouse module manages physical storage facilities, inventory allocations, and stock transfers across the **Shop** / **FreshFlow** operations infrastructure.
 
-It is responsible for organizing where products are stored, tracking stock movement within the warehouse, and providing warehouse information to other business modules. The module works closely with the Inventory module while maintaining a clear separation between stock quantities and physical storage.
-
-Version 1.0 focuses on supporting a single warehouse per company to keep warehouse management simple and efficient. The architecture is designed to support multiple warehouses and advanced warehouse operations in future releases without requiring major structural changes.
+It maintains records for physical warehouses (location name, facility code, address, active status) and logs all inbound, outbound, transfer, and adjustment movements into the immutable `warehouse_stock_movements` ledger.
 
 ---
 
@@ -22,12 +20,11 @@ Version 1.0 focuses on supporting a single warehouse per company to keep warehou
 
 The purpose of this module is to:
 
-* Manage warehouse information.
-* Store products in a physical warehouse.
-* Track stock movement within the warehouse.
-* Support inventory management.
-* Provide warehouse information to other business modules.
-* Maintain a single source of truth for warehouse operations.
+* Manage multiple physical storage facilities and fulfillment centers.
+* Record immutable stock movement transactions (`Inbound`, `Outbound`, `Transfer`, `Adjustment`).
+* Track stock quantities per warehouse facility.
+* Connect physical stock locations to regional delivery zones and shipping methods.
+
 
 ---
 

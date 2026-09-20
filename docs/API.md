@@ -1,77 +1,115 @@
-# FreshFlow API Standards
+# Shah's Halal / Shop API Standards
 
-**Version:** 1.1
+**Version:** 2.0
 
 **Status:** Active
 
-**Last Updated:** 2026-07-27
+**Last Updated:** 2026-09-20
 
 ---
 
 # Purpose
 
-This document defines the official API standards for the FreshFlow project.
+This document defines the official API architecture and standards for the Shah's Halal / Shop project.
 
-It does not document individual business module APIs.
-
-Each business module is responsible for maintaining its own `API.md` document.
-
-This document serves as the project-wide API standard that every backend service and module must follow.
+The API exposes backend functionality exclusively through **tRPC 11** mounted over **Hono 4** at `/trpc`. All business operations are organized into typed domain routers with runtime input validation using Zod and serialization via SuperJSON.
 
 ---
 
-# API Architecture
+# Registered tRPC Router Surface
 
-FreshFlow exposes backend functionality through **tRPC**.
-
-Business logic is organised into independent routers.
-
-Current implemented routers:
+The root application router (`api/router.ts`) aggregates 17 domain routers:
 
 ```text
-address
-auth
-cart
-category
-company
-customer
-deliveryZone
-gst
-inventory
-invoice
-order
-product
-profile
-report
-shipping
-warehouse
+api/
+├── router.ts             # Root router aggregating all 17 sub-routers
+├── auth-router.ts        # authRouter (active admin) + legacyAuthRouter (preserved)
+├── productRouter.ts      # product
+├── categoryRouter.ts     # category
+├── cartRouter.ts         # cart
+├── orderRouter.ts        # order
+├── inventoryRouter.ts    # inventory
+├── companyRouter.ts      # company
+├── warehouseRouter.ts    # warehouse
+├── invoiceRouter.ts      # invoice
+├── reportRouter.ts       # report
+├── profileRouter.ts      # profile
+├── customerRouter.ts     # customer
+├── deliveryZoneRouter.ts # deliveryZone
+├── gstRouter.ts          # gst
+├── shippingRouter.ts     # shipping
+└── addressRouter.ts      # address
 ```
-
-Each router owns its own business operations.
 
 ---
 
-# Module Ownership
+# Router Specifications & Key Procedures
 
-Each business module maintains its own API documentation.
+### 1. `ping`
+- **Purpose:** Root health check procedure.
+- **Procedures:**
+  - `ping` (Query, Public): Returns `{ ok: true, timestamp: string }`.
 
-Example:
+### 2. `auth` (`api/auth-router.ts`)
+- **Active Implementation:** Admin authentication router.
+- **Procedures:**
+  - `me` (Query, Public): Returns the current authenticated admin user or `null`.
+  - `loginAdmin` (Mutation, Public): Validates email and password against `ADMIN_EMAIL` and `ADMIN_PASSWORD` with timing-safe comparison. Returns signed JWT access token and sets HTTP-only cookies (`shop_admin_access`, `shop_admin_refresh`).
+  - `refresh` (Mutation, Public): Refreshes the admin session using the refresh token cookie.
+  - `logout` (Mutation, Public): Clears admin cookies and terminates the session.
+- **Deactivated State Note:** The legacy buyer authentication router (`legacyAuthRouter`) supporting registration, email login, and mobile OTP challenges is preserved in `api/auth-router.ts` for architectural reversibility, but is intentionally not registered in the active API.
 
-```text
-docs/UI/categories/API.md
-docs/UI/company/API.md
-docs/UI/inventory/API.md
-docs/UI/invoices/API.md
-docs/UI/orders/API.md
-docs/UI/products/API.md
-docs/UI/reports/API.md
-docs/UI/user-profile/API.md
-docs/UI/warehouse/API.md
-```
+### 3. `product` (`api/productRouter.ts`)
+- **Public Storefront Queries:**
+  - `list`: Browse catalog items with category, search, grade, and pagination filters.
+  - `bySlug`: Fetch detailed product data by URL slug.
+  - `byId`: Fetch detailed product data by numeric ID.
+  - `featured`: Fetch items marked as featured for the hero and showcase sections.
+  - `freshDeals`: Fetch active discounted or promotional items.
+  - `count`: Returns total catalog count matching filter criteria.
+- **Admin Management Procedures:**
+  - `create`, `update`, `delete`, `updateMarketplace`, `marketplaceById`, `stats`.
 
-Project-level API standards belong only in this document.
+### 4. `category` (`api/categoryRouter.ts`)
+- **Public Storefront Queries:**
+  - `list`: Retrieves active halal food categories with display order and icons.
+  - `bySlug`: Retrieves category details by URL slug.
+  - `byId`: Retrieves category details by ID.
+- **Admin Management Procedures:**
+  - `create`, `update`, `delete`.
 
-Business-specific endpoints belong inside the corresponding module.
+### 5. `cart` (`api/cartRouter.ts`)
+- **Storefront Behavior:**
+  - Unauthenticated customers use the guest cart (`src/lib/guestCart.ts`), which persists line items in browser `localStorage`.
+  - Authenticated users synchronize with server cart tables (`cartItems`).
+- **Procedures:**
+  - `list` (Query, Authed): Returns active cart items with calculated totals.
+  - `add` (Mutation, Authed): Adds a product quantity to the user's cart.
+  - `update` (Mutation, Authed): Updates quantity or line-item notes.
+  - `remove` (Mutation, Authed): Removes a specific line item.
+  - `clear` (Mutation, Authed): Empties the user's cart.
+
+### 6. `order` (`api/orderRouter.ts`)
+- **Procedures:**
+  - `list` (Query, Authed): Retrieves order history for the active user or admin.
+  - `quote` (Query, Authed): Computes shipping fees, GST, and total quote.
+  - `detail` (Query, Authed): Retrieves itemized order details.
+  - `createRazorpayOrder` (Mutation, Authed): Generates a short-lived Razorpay order ID.
+  - `create` (Mutation, Authed): Finalizes order creation after verifying payment signature.
+  - `status`, `deliveryEstimate`, `cancel`, `stats`, `recent`.
+
+### 7. Operations & ERP Routers (`OwnerProcedure` / `AdminProcedure`)
+- **`inventory`:** Multi-warehouse stock tracking, batch numbers, reorder alerts, and stock adjustments.
+- **`warehouse`:** Physical storage facilities, capacities, stock movements, and receipts/dispatches.
+- **`invoice`:** GST-compliant tax invoices, itemized tax rates, and printable views.
+- **`report`:** Business intelligence, revenue summaries, period filters, and valuation analytics.
+- **`customer`:** B2B customer directory and credit terms.
+- **`deliveryZone`:** State-level delivery zones, delivery time estimates, and fee schedules.
+- **`gst`:** Category-mapped GST rules, HSN codes, and calculation helpers.
+- **`shipping`:** Shipping methods, rates, and free shipping thresholds.
+- **`company`:** Company directory and supplier/buyer profiles.
+- **`profile`:** User personal profile and theme preferences.
+- **`address`:** Saved user delivery addresses.
 
 ---
 

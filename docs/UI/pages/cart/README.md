@@ -1,20 +1,18 @@
-# Shopping Cart
+# Shopping Cart / Shah's Halal
 
-**Version:** 1.0
+**Version:** 2.0
 
-**Status:** Approved Design
+**Status:** Active
 
-**Page:** Shopping Cart
+**Page:** Shopping Cart (`src/pages/CartPage.tsx`)
 
 ---
 
 # Overview
 
-The Shopping Cart page allows buyers to review the products they intend to purchase before proceeding to checkout.
+The Shopping Cart page allows customers to review their selected halal dishes and items before proceeding to checkout.
 
-It provides a consolidated view of selected products, quantities, pricing, supplier information, and order totals. Buyers can update quantities, remove products, continue shopping, or proceed to checkout.
-
-The Shopping Cart serves as the final review stage before an order is created.
+It displays line items, quantities, dish prices, subtotal, estimated taxes/delivery, and order totals. Customers can increment/decrement quantities, remove line items, empty the cart, continue shopping, or proceed directly to checkout.
 
 ---
 
@@ -22,42 +20,35 @@ The Shopping Cart serves as the final review stage before an order is created.
 
 The Shopping Cart page exists to:
 
-* Display all selected products.
-* Allow buyers to review their purchase.
-* Update product quantities.
-* Remove unwanted products.
-* Display order summary and totals.
-* Present delivery information.
-* Continue shopping.
-* Proceed to checkout.
+* Display all selected dishes and merchandise.
+* Allow customers to review line items and custom dish notes.
+* Update item quantities with real-time total recalculation.
+* Remove unwanted items or clear the entire cart.
+* Display itemized order breakdown (subtotal, shipping estimate, GST).
+* Seamlessly transition to the checkout and payment stage.
 
 ---
 
-# Users
+# User Roles & Capabilities
 
-## Guest Visitor
+## Guest Customer (Default Experience)
 
 Can:
 
-* View the shopping cart.
-* Review selected products.
-
-Cannot:
-
-* Proceed to checkout.
-
-Guests attempting to checkout are redirected to the Authentication page.
+* View all items stored in the browser's guest cart (`localStorage` under `guest_cart`).
+* Adjust quantities (increment / decrement).
+* Delete specific items or clear the cart.
+* Proceed directly to `/checkout` without forced authentication.
+* Continue shopping by returning to the menu (`/` or `/categories`).
 
 ---
 
-## Buyer
+## Administrator
 
 Can:
 
-* View all cart items.
-* Update product quantities.
-* Remove products.
-* Continue shopping.
+* Access the cart page as a customer would to verify checkout mechanics.
+* Access administrative dashboards via `/dashboard`.
 * View supplier information.
 * View order summary.
 * Proceed to checkout.

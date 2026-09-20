@@ -1,20 +1,18 @@
-# Checkout
+# Checkout / Shah's Halal
 
-**Version:** 1.0
+**Version:** 2.0
 
-**Status:** Approved Design
+**Status:** Active
 
-**Page:** Checkout
+**Page:** Checkout (`src/pages/Checkout.tsx`)
 
 ---
 
 # Overview
 
-The Checkout page is the final step in the purchasing journey before an order is created.
+The Checkout page is the final step in the customer purchasing journey before an order is placed.
 
-It allows buyers to review their order, provide delivery information, confirm delivery details, and submit their purchase request.
-
-The page combines shipping information, delivery preferences, order summary, and confirmation into a single streamlined workflow designed for wholesale purchasing.
+It collects customer delivery details (full name, phone number, delivery address, city, pincode), calculates final shipping and tax totals, and triggers the **Razorpay** payment modal. Upon successful client-side authorization, the payment signature is cryptographically verified on the backend before the order is persisted.
 
 ---
 
@@ -22,41 +20,33 @@ The page combines shipping information, delivery preferences, order summary, and
 
 The Checkout page exists to:
 
-* Collect delivery information.
-* Validate delivery eligibility.
-* Review the complete order.
-* Display order summary.
-* Allow buyers to add delivery notes.
-* Confirm delivery information.
-* Create a purchase order.
+* Collect customer delivery contact information.
+* Display the itemized order summary, delivery fee, and applicable GST.
+* Initiate the Razorpay checkout process via `trpc.order.createRazorpayOrder`.
+* Securely process payments with timing-safe HMAC-SHA256 signature verification.
+* Provide an immediate order confirmation and receipt upon completion.
 
 ---
 
-# Users
+# User Roles & Capabilities
 
-## Guest Visitor
-
-Cannot access the Checkout page.
-
-Guests attempting to continue from the Shopping Cart are redirected to the Authentication page.
-
----
-
-## Buyer
+## Guest Customer (Default Experience)
 
 Can:
 
-* Enter delivery information.
-* Select delivery location.
-* Choose an optional delivery slot.
-* Add delivery notes.
-* Review the complete order.
-* Confirm delivery information.
-* Place an order.
+* Access `/checkout` with items from the guest cart.
+* Input delivery address and contact information.
+* Initiate payment through Razorpay modal.
+* Complete order placement and view the order confirmation summary.
 
 ---
 
-## Business Owner
+## Administrator
+
+Can:
+
+* Complete test checkouts to verify payment processing and order pipeline integrity.
+* Inspect all completed orders within the `/orders` administrative dashboard.
 
 Business Owners do not place customer orders through this page.
 

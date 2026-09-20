@@ -1,24 +1,19 @@
 # User Profile Module
 
-Version: 1.0
+**Version:** 2.0
 
-Status: Design Phase
+**Status:** Active
 
-Owner: Mohammed Sohail
+**Module:** Profile (`src/pages/Profile.tsx`)
 
 ---
 
 # Overview
 
-The User Profile module allows authenticated users to manage their personal account information within FreshFlow.
+The User Profile module allows authenticated administrators and users to view and update their account information within **Shop** / **FreshFlow**.
 
-It serves as the central location for maintaining personal identity, contact information, profile preferences, and account security settings.
+It provides management of personal identity, display name, contact phone number, and profile preferences via `trpc.profile.get` and `trpc.profile.update`.
 
-The module is shared by all authenticated users regardless of role.
-
-Although the user experience differs slightly between Business Owners and Buyers, the underlying profile architecture remains consistent across the platform.
-
-The User Profile module does **not** manage business information. Company data belongs to the Company module.
 
 ---
 

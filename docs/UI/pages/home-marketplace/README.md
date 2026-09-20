@@ -1,22 +1,20 @@
-# Home Marketplace
+# Home Marketplace / Shah's Halal Storefront
 
-**Version:** 1.0
+**Version:** 2.0
 
-**Status:** Approved Design
+**Status:** Active
 
-**Page:** Home Marketplace
+**Page:** Home Marketplace (`src/pages/LandingPage.tsx`)
 
 ---
 
 # Overview
 
-The Home Marketplace is the public entry point of FreshFlow.
+The Home Marketplace is the customer-facing storefront entry point for **Shah's Halal** ("Fresh Food · Pure Taste").
 
-It allows visitors and buyers to discover wholesale products, browse categories, search the catalogue, and begin the purchasing journey before authentication.
+It allows visitors and food lovers to explore the halal menu, browse categories, discover chef's specials, search dishes, and add items directly to their shopping cart without mandatory registration.
 
-Unlike a traditional ecommerce landing page, the Home Marketplace focuses on product discovery rather than marketing content. Users should be able to find products quickly with minimal navigation.
-
-This page serves as the gateway to the marketplace while maintaining a clean, professional, and business-oriented experience.
+The storefront is fully responsive and integrates with a persistent bottom navigation bar on mobile and desktop viewports.
 
 ---
 
@@ -24,80 +22,48 @@ This page serves as the gateway to the marketplace while maintaining a clean, pr
 
 The Home Marketplace exists to:
 
-* Introduce FreshFlow to new visitors.
-* Display available wholesale products.
-* Help buyers discover products quickly.
-* Provide category-based product browsing.
-* Allow product searching before login.
-* Encourage purchasing without forcing immediate authentication.
-* Direct users into the shopping and ordering workflow.
+* Showcase authentic Shah's Halal cuisine and halal-certified meats immediately.
+* Provide frictionless product browsing with category filtering and real-time search.
+* Enable instant purchasing through an unauthenticated guest cart (`localStorage`).
+* Highlight featured specials, fresh platters, gyros, and biryani.
+* Direct customers effortlessly to categories, cart checkout, and the brand story (About page).
 
 ---
 
-# Users
+# User Roles & Capabilities
 
-## Guest Visitor
+## Guest Customer (Default Storefront Visitor)
 
 Can:
 
-* Browse products.
-* Search products.
-* Browse categories.
-* View product details.
-* View supplier information.
-* Register or sign in.
-
-Cannot:
-
-* Add products to the cart.
-* Place orders.
-* View buyer dashboard.
+* Browse halal dishes, ingredients, and categories.
+* Search the catalog by dish name, description, or halal tag.
+* View item details, spice level, preparation notes, and pricing.
+* **Add items directly to the shopping cart** (persisted locally via `src/lib/guestCart.ts`).
+* Update quantities or remove items from the cart.
+* Proceed to checkout and pay via Razorpay.
+* Access the About page to review Halal certification and store hours.
 
 ---
 
-## Buyer
+## Administrator (Store Manager / Owner)
 
 Can:
 
-* Browse products.
-* Search products.
-* Filter products by category.
-* View product details.
-* Add products to the cart.
-* Continue shopping.
-* Access buyer features after authentication.
+* Navigate to `/admin/login` to access the administrative ERP portal (`/dashboard`).
+* Manage product listings, update prices, upload food images, and control marketplace visibility.
+* Adjust multi-warehouse stock levels, inspect orders, and view financial reports.
 
 ---
 
-## Business Owner
+# Page Navigation & Structure
 
-Can:
+Customers navigate via the unified **CustomerBottomNav** (`src/components/CustomerBottomNav.tsx`):
 
-* View the public marketplace.
-* Access owner workspace after authentication.
-
-The Home Marketplace is not intended for product management or administrative tasks.
-
----
-
-# Page Goals
-
-The Home Marketplace aims to:
-
-* Showcase wholesale products immediately.
-* Reduce the time required to discover products.
-* Promote product browsing before login.
-* Create a simple purchasing journey.
-* Support both desktop and mobile users.
-* Maintain a professional B2B marketplace experience.
-
----
-
-# Navigation
-
-Users can navigate to:
-
-* Product Details
+1. **Home (`/`):** Returns to this storefront landing page.
+2. **Categories (`/categories`):** Navigates to the full Halal food taxonomy grid.
+3. **Cart (`/cart`):** Navigates to the shopping cart review with line-item totals and dynamic badge count.
+4. **About (`/about`):** Navigates to the brand story, Halal certification standards, FAQ, and contact info.
 * Product Catalog
 * Categories
 * Login

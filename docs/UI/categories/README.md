@@ -1,22 +1,18 @@
 # Categories Module
 
-Version: 1.0
+**Version:** 2.0
 
-Status: Approved Design
+**Status:** Active
 
-Module: Categories
+**Module:** Categories (`src/pages/Categories.tsx`)
 
 ---
 
 # Overview
 
-The Categories module organizes products into logical groups throughout FreshFlow.
+The Categories module organizes dishes and grocery products into culinary classifications across **Shah's Halal** and the **Shop** administrative platform.
 
-It provides a simple and consistent way to classify products, making them easier to browse, search, manage, and report across the platform.
-
-Categories act as the foundation for product organization and are shared by multiple business modules, including the marketplace, inventory, orders, dashboards, and reports.
-
-Version 1.0 focuses on simple category management while keeping the architecture flexible for future business expansion.
+In the customer-facing storefront, categories serve as the primary browsing mechanism (e.g., Fresh Halal Meats, Biryani & Rice, Platters, Gyros & Sandwiches, Appetizers, Beverages, Sauces & Condiments). In the administrative ERP, managers can create, update, reorder, or archive categories to control menu availability.
 
 ---
 
@@ -24,12 +20,11 @@ Version 1.0 focuses on simple category management while keeping the architecture
 
 The purpose of this module is to:
 
-* Organize products into logical categories.
-* Simplify product management.
-* Improve product discovery.
-* Support filtering and searching.
-* Maintain a single source of truth for product classification.
-* Provide a scalable foundation for future product organization.
+* Structure the Halal food and restaurant menu into logical, appetizing groups.
+* Provide quick-filtering pills on the storefront home and dedicated category pages.
+* Support administrative CRUD via `trpc.category` router procedures.
+* Enable or disable categories dynamically based on seasonal or daily kitchen availability.
+
 
 ---
 

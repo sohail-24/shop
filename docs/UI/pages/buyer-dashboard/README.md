@@ -1,60 +1,41 @@
-# Buyer Dashboard
+# Buyer Dashboard (Customer Experience)
 
-**Version:** 1.0
+**Version:** 2.0
 
-**Status:** Approved Design
+**Status:** Planned / Integrated into Storefront
 
-**Page:** Buyer Dashboard
+**Page:** Customer Storefront (`/`, `/categories`, `/cart`, `/about`)
 
 ---
 
 # Overview
 
-The Buyer Dashboard is the primary workspace for authenticated buyers within FreshFlow.
+In the current implementation, customer buyers interact directly with the **Shah's Halal** storefront in an unauthenticated guest mode. All purchasing capabilities (product catalog discovery, filtering, dish details, cart additions, and Razorpay checkout) are available without requiring a dedicated buyer dashboard.
 
-It provides quick access to products, categories, shopping activities, recent orders, saved items, and account information. The dashboard is designed to help buyers efficiently discover products, manage purchases, and continue their wholesale buying journey.
-
-Version 1.0 focuses on delivering a clean, responsive, and productive buying experience.
+The authenticated buyer dashboard concept described herein is archived for Phase 4, when customer registration, address books, and loyalty accounts are re-activated.
 
 ---
 
-# Purpose
+# Current vs. Future State
 
-The Buyer Dashboard exists to:
-
-* Welcome authenticated buyers.
-* Provide personalized shopping access.
-* Display available products.
-* Enable product search and filtering.
-* Provide quick access to shopping activities.
-* Allow buyers to continue purchasing efficiently.
-* Serve as the central navigation hub for buyer activities.
+| Feature | Current State (v2.0) | Future State (Phase 4) |
+| --- | --- | --- |
+| **Catalog Browsing** | Public Storefront (`LandingPage.tsx`) | Personalized Storefront & Recommendations |
+| **Cart Storage** | Client `localStorage` (`guest_cart`) | Server-synced Buyer Cart |
+| **Order History** | Receipt on order completion | Historical Orders List & Status Tracker |
+| **Addresses** | Direct input at Checkout | Saved Address Book (`user_addresses`) |
+| **Authentication** | Guest Mode (No login required) | Mobile OTP / Password Login |
 
 ---
 
-# Users
+# Phase 4 Planned Capabilities
 
-## Guest Visitor
+When customer authentication is re-enabled, the Buyer Dashboard will provide:
+1. **Order Timeline:** Real-time order status tracking (Received, Preparing, Dispatched, Delivered).
+2. **Saved Addresses:** Ability to manage default delivery locations.
+3. **Repeat Orders:** One-click re-ordering of favorite halal platters and family combos.
+4. **Loyalty Balance:** Display accrued rewards points and promotional discounts.
 
-Cannot access the Buyer Dashboard.
-
-Guests are redirected to the Authentication page.
-
----
-
-## Buyer
-
-Can:
-
-* Browse products.
-* Search products.
-* Filter products.
-* View product details.
-* Add products to the shopping cart.
-* Access orders.
-* Access wishlist (Future).
-* Manage profile.
-* View notifications.
 
 ---
 

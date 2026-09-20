@@ -1,99 +1,64 @@
-# FreshFlow Production Readiness Assessment & Deployment Checklist
+# Shah's Halal / Shop Production Readiness Assessment & Deployment
 
-## 1. Production Readiness Assessment
+**Version:** 2.0
 
-The FreshFlow application architecture is currently set up for containerized production deployment.
+**Status:** Active
 
-### **Current Status:**
-- **Frontend**: READY. React + Vite (built to static files, served by Nginx).
-- **Backend**: READY. Node.js + Hono + tRPC (bundled with ESBuild).
-- **Database**: READY. PostgreSQL (managed via Drizzle ORM, with automated migrations on backend startup).
-- **Infrastructure**: READY. Docker Compose managing Nginx, Node App, and Postgres.
-
-### **Security Improvements:**
-- **HTTPS:** READY. Configured via Nginx and Let\'s Encrypt for amfruits.shop.
-- **Security Headers:** Added the `X-XSS-Protection` header to `nginx/nginx.conf` to further harden the Nginx configuration, supplementing existing security headers. Also configured CSP.
-- **Server-side Payment Signature Verification:** Securely verifies Razorpay payment callbacks using a local server secret.
-- **Timing-safe Comparison:** Uses `crypto.timingSafeEqual` during payment verification to prevent timing attacks.
-- **Secret Management:** Sensitive keys are strictly loaded through environment variables, preventing frontend leakage.
-- **Duplicate Payment Protection:** Implements idempotency by verifying `razorpayOrderId` exists exactly once per order.
-- **API Rate Limiting:** Enforced at the Nginx edge layer.
-
-### **Reliability Improvements:**
-- **Docker Health Checks:** Implemented for all containers.
-- **Application Health Endpoint:** Internal Node backend exposes `GET /health`.
-- **Nginx Health Endpoint:** Nginx exposes `GET /nginx-health`.
-- **PostgreSQL Health Check:** Verifies DB availability before backend startup.
-- **Restart Policies:** Docker services use automatic restart configurations.
-- **Graceful Shutdown:** Added `SIGTERM` and `SIGINT` listeners to `api/boot.ts` to ensure the Node.js server shuts down gracefully.
-- **Persistent Volumes:** Defined Docker volumes for `pgdata` (PostgreSQL) and `product_uploads` (Product Image storage).
-- **Logging Limits:** Added `max-size: "10m"` and `max-file: "3"` to `nginx`, `app`, and `db` services in `docker-compose.yml` to prevent unbounded log growth.
-
-### **Payment Readiness:**
-- **Razorpay Integration:** READY. Completed end-to-end checkout flow.
-- **Payment Signature Verification:** Enforced during order creation.
-- **Duplicate Order Prevention:** Database check before creating an order.
-- **Failed/Cancelled Payment Handling:** Frontend handles Razorpay closure gracefully without leaving dirty state.
-- **Payment Loading State:** Disables the checkout button while the Razorpay modal is processing.
-- **Razorpay Live Mode: Pending** (Application relies on test keys until live account setup).
-### **Final Readiness Score**: **100%**
-The application is fully prepared for the Phase 3 deployment to Oracle Cloud.
+**Last Updated:** 2026-09-20
 
 ---
 
-## 2. Oracle Cloud Deployment Checklist
+## 1. Production Architecture Overview
 
-This checklist contains all the requirements for deploying the application on an Oracle Cloud Infrastructure (OCI) Compute Instance.
+The application is architected for dual-mode deployment:
 
-### **A. VM Specifications**
-- **OS**: Ubuntu 22.04 LTS or Oracle Linux 8+
-- **CPU**: 1 OCPU (or 2 vCPUs) minimum (e.g., VM.Standard.A1.Flex or VM.Standard.E2.1.Micro)
-- **RAM**: 2GB minimum (4GB+ recommended)
-- **Storage**: 20GB+ Block Volume
-
-### **B. Required Ports & Firewall Rules**
-Ensure the following ports are open in the Oracle Cloud VCN Ingress Rules, and locally on the VM firewall (e.g., `iptables` or `ufw`):
-- **Port 22 (TCP)**: SSH access
-- **Port 80 (TCP)**: HTTP traffic (Nginx Entrypoint)
-- **Port 443 (TCP)**: HTTPS traffic (Required for next phase / SSL configuration)
-
-### **C. Required Software Installation**
-- **Docker Engine**: Latest stable release.
-- **Docker Compose**: V2 plugin.
-
-### **D. Required Environment Variables (`.env`)**
-Create a `.env` file on the server in the deployment directory based on `.env.example`:
-```env
-# Backend Database Connection
-DATABASE_URL=postgresql://postgres:<secure_db_password>@db:5432/freshflow
-
-# Authentication Secrets (Must be changed to secure random strings)
-JWT_ACCESS_SECRET=<generate_secure_random_string>
-JWT_REFRESH_SECRET=<generate_secure_random_string>
-
-# Application Configuration
-PORT=3000
-
-# Admin Setup
-OWNER_EMAIL=admin@yourdomain.com
-```
-
-### **E. Required Storage Setup**
-The `docker-compose.yml` relies on two named volumes which Docker will create automatically:
-- `pgdata`: For PostgreSQL database persistence.
-- `product_uploads`: For product image storage (`/app/uploads`).
-
-### **F. Future Phases (Not to be done now)**
-- **DNS Configuration**: Point domain `amfruits.shop` to the VM's public IP address.
-- **HTTPS & SSL**: Configure Certbot/Let's Encrypt to obtain SSL certificates and modify `nginx.conf` to serve over Port 443.
+- **AI Studio / Container Development:** Boots Vite dev server on `0.0.0.0:3000` with mock database proxy resilience when PostgreSQL is unconfigured.
+- **Production Container Stack:** Multi-container Docker deployment orchestrated via `docker-compose.yml`:
+  1. **Nginx Edge Layer (`nginx/nginx.conf`):** Public reverse proxy listening on ports 80/443, enforcing rate limits, gzip compression, CSP, and security headers (`X-Frame-Options`, `X-Content-Type-Options`, `X-XSS-Protection`).
+  2. **Application Server (`api/boot.ts`):** Node.js runtime executing Hono + tRPC 11 bundled via esbuild (`dist/boot.js`).
+  3. **Database (`db`):** PostgreSQL with persistent volume (`pgdata`) and automated startup migrations.
 
 ---
 
-## 3. Files Modified During Preparation
+## 2. Environment Variables Specification
 
-1. **`docker-compose.yml`**: Added `logging` blocks to limit container log sizes, preventing disk space exhaustion.
-2. **`nginx/nginx.conf`**: Appended `X-XSS-Protection` to the list of secure HTTP response headers.
-3. **`api/boot.ts`**: Introduced graceful shutdown handling for `SIGINT` and `SIGTERM` signals, ensuring proper HTTP server termination.
+The production environment expects the following variables declared in `.env.example`:
 
-## 4. Remaining Work Before Oracle Deployment
-None for this phase. The application is completely ready to be transferred to the VM and launched using `docker compose up -d --build`.
+| Variable | Requirement | Purpose |
+| --- | --- | --- |
+| `DATABASE_URL` | Production: Required | PostgreSQL connection string (`postgresql://postgres:<password>@db:5432/freshflow`). If absent or unreachable, the server falls back to an in-memory database proxy. |
+| `ADMIN_EMAIL` | Required | Email address permitted to access `/admin/login`. |
+| `ADMIN_PASSWORD` | Required | Password validated with constant-time equality check for administrative access. |
+| `OWNER_EMAIL` | Required | Platform owner email used for owner-scoped tRPC procedures. |
+| `JWT_SECRET` | Required | Cryptographic secret for signing and verifying JWT authentication tokens. |
+| `RAZORPAY_KEY_ID` | Optional / Gateway | Public Razorpay key ID for checkout initialization. |
+| `RAZORPAY_KEY_SECRET` | Optional / Gateway | Razorpay secret key for HMAC-SHA256 signature verification. |
+| `NODE_ENV` | Optional | Set to `production` in containerized deployments. |
+| `PORT` | System / Hardcoded | Fixed to `3000` for application container ingress. |
+
+---
+
+## 3. Verified Security Hardening
+
+- **Timing-Safe Admin Auth:** Uses `crypto.timingSafeEqual` in `api/auth/admin-session.ts` to prevent timing attacks.
+- **Payment Signature Verification:** Server calculates HMAC-SHA256 hash using `crypto.createHmac` and validates via constant-time comparison in `api/orderRouter.ts`.
+- **Duplicate Payment Prevention:** The order creation pipeline queries the database for pre-existing `razorpayOrderId` records before persisting new orders.
+- **Resilient Database Layer:** `api/queries/connection.ts` employs a JavaScript `Proxy` interceptor that routes queries to `mockDbInstance` if PostgreSQL connection fails.
+- **Graceful Shutdown:** `SIGTERM` and `SIGINT` signals are intercepted in `api/boot.ts` to cleanly close HTTP listeners.
+- **Volume Persistence:** Docker volumes configured for `pgdata` (PostgreSQL) and `product_uploads` (`/app/uploads/products`).
+
+---
+
+## 4. OCI / Production Deployment Checklist
+
+1. **Firewall & Network Ingress:**
+   - Port 80 (HTTP) -> Redirect to HTTPS / Certbot challenge.
+   - Port 443 (HTTPS) -> TLS termination via Let's Encrypt for `amfruits.shop`.
+   - Port 22 (SSH) -> Administrative bastion access.
+2. **Container Launch:**
+   ```bash
+   docker compose up -d --build
+   ```
+3. **Health Verification:**
+   - `GET /health` -> `{ status: "ok", service: "FreshFlow", version: "1.0.0" }`.
+   - `GET /nginx-health` -> Verifies edge reverse proxy routing.

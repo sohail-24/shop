@@ -1,22 +1,21 @@
 # Reports Module
 
-Version: 1.0
+**Version:** 2.0
 
-Status: Approved Design
+**Status:** Active
 
-Module: Reports
+**Module:** Reports (`src/pages/Reports.tsx`)
 
 ---
 
 # Purpose
 
-The Reports module transforms business data into meaningful information that helps Business Owners understand, monitor, and improve daily operations.
+The Reports module transforms raw transactional and inventory data into actionable business intelligence for administrators of **Shop** / **FreshFlow**.
 
-Unlike operational modules such as Products, Orders, or Inventory, the Reports module does not create or modify business data.
+It aggregates metrics from completed orders, invoices, and warehouse stock levels to present revenue summaries, top-selling dishes, inventory valuation, and sales trend charts.
 
-Instead, it collects information from existing modules and presents it in a clear, organized, and actionable format.
+Access is restricted to authenticated administrators who log in via `/admin/login`.
 
-The Reports module serves as the Business Intelligence (BI) layer of the FreshFlow platform.
 
 ---
 

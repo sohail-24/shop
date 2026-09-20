@@ -1,20 +1,18 @@
-# Product Details
+# Product / Dish Details — Shah's Halal
 
-**Version:** 1.0
+**Version:** 2.0
 
-**Status:** Approved Design
+**Status:** Active
 
-**Page:** Product Details
+**Page:** Product Details (`src/pages/ProductDetail.tsx`)
 
 ---
 
 # Overview
 
-The Product Details page provides complete information about a single product available in the FreshFlow marketplace.
+The Product Details page provides comprehensive culinary and purchasing details for an individual halal dish or menu item in the **Shah's Halal** storefront.
 
-It allows buyers to review product information, supplier details, pricing, stock availability, minimum order quantity, and purchasing options before making a buying decision.
-
-The page acts as the primary decision point in the purchasing journey by giving buyers all the information required to confidently add a product to the shopping cart or proceed directly to checkout.
+It displays dish photography, halal certification badges, spice indicators, detailed descriptions, preparation notes, pricing, and stock status. Customers can select desired quantities and add items directly to their shopping cart.
 
 ---
 
@@ -22,41 +20,34 @@ The page acts as the primary decision point in the purchasing journey by giving 
 
 The Product Details page exists to:
 
-* Display complete product information.
-* Help buyers make informed purchasing decisions.
-* Present supplier information.
-* Display pricing and stock availability.
-* Allow buyers to select purchase quantity.
-* Add products to the shopping cart.
-* Support direct purchasing through Buy Now.
-* Encourage continued product discovery.
+* Present authentic imagery and appetizing dish descriptions.
+* Highlight 100% Halal certification and ingredient transparency.
+* Provide accurate unit pricing and portion sizing.
+* Allow customers to choose quantity and add the dish to their cart.
+* Keep customers oriented with back navigation to categories or the main menu.
 
 ---
 
-# Users
+# User Roles & Capabilities
 
-## Guest Visitor
+## Guest Customer (Default Storefront Visitor)
 
 Can:
 
-* View product information.
-* View product images.
-* Read product description.
-* View supplier information.
-* Share product.
-* Browse related products.
-
-Cannot:
-
-* Add products to the cart.
-* Purchase products.
-* Access checkout.
+* View complete dish photography and descriptions.
+* Verify Halal certification standards.
+* Select quantity and **add directly to the guest cart** (`localStorage`).
+* Review updated cart total badge in the persistent `CustomerBottomNav`.
+* Proceed to `/cart` or continue browsing.
 
 ---
 
-## Buyer
+## Administrator
 
 Can:
+
+* Inspect public dish presentation and verify image rendering.
+* Update dish details, descriptions, or prices via `/products` in the admin dashboard.
 
 * View complete product information.
 * Change purchase quantity.

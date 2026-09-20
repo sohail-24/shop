@@ -1,20 +1,23 @@
-# Company
+# Company & Settings Module
 
-**Version:** 1.1
+**Version:** 2.0
 
-**Status:** Approved Design
+**Status:** Active
 
-**Module:** Company
+**Module:** Company / Business Settings
+- Business Settings: `src/pages/Settings.tsx` (`/settings`)
+- Delivery Zones: `src/pages/DeliveryZones.tsx` (`/delivery-zones`)
+- GST Configuration: `src/pages/GstRules.tsx` (`/gst-rules`)
+- Shipping Rules: `src/pages/ShippingRules.tsx` (`/shipping-rules`)
 
 ---
 
 # Overview
 
-The Company module manages the core business information and operational settings required to operate FreshFlow.
+The Company & Settings module manages core business identity, operational policies, tax configurations, and fulfillment parameters for **Shop** / **FreshFlow**.
 
-It serves as the business identity and central configuration module for the platform, providing company information and business settings that are shared across all modules.
+It controls the business profile, default shipping fees, state-based delivery zones, and GST rate structures shared by checkout, invoicing, and reporting modules.
 
-Version 1.1 introduces **Delivery Settings**, allowing business owners to define the geographical areas where customers can place orders. This enables startups to launch in selected regions while supporting future expansion.
 
 ---
 

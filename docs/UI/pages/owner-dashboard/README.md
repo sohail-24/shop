@@ -1,22 +1,20 @@
-# Owner Dashboard
+# Owner / Administrative Dashboard
 
-**Version:** 1.0
+**Version:** 2.0
 
-**Status:** Approved Design
+**Status:** Active
 
-**Page:** Owner Dashboard
+**Page:** Owner Dashboard (`src/pages/Dashboard.tsx`)
 
 ---
 
 # Overview
 
-The Owner Dashboard is the primary workspace for Business Owners within FreshFlow.
+The Owner Dashboard is the primary operational workspace for platform administrators and business operators of **Shop** / **FreshFlow**.
 
-It provides a complete operational overview of the wholesale business, enabling owners to monitor business performance, manage daily operations, and quickly navigate to every business module.
+It provides an executive overview of daily business operations, enabling managers to track revenue, manage orders, review stock levels across physical warehouses, generate tax invoices, configure tax and delivery rules, and drill down into individual business modules.
 
-Rather than performing individual business operations, the dashboard acts as the central control centre where owners gain immediate visibility into sales, inventory, customers, orders, revenue, and overall system health.
-
-Version 1.0 focuses on providing a clean, responsive, and information-rich business management experience.
+Access is restricted to authenticated administrators who log in via `/admin/login`.
 
 ---
 
@@ -24,40 +22,36 @@ Version 1.0 focuses on providing a clean, responsive, and information-rich busin
 
 The Owner Dashboard exists to:
 
-* Provide a complete business overview.
-* Display key business metrics.
-* Monitor daily operations.
-* Highlight important business alerts.
-* Provide quick access to all management modules.
-* Improve operational decision making.
-* Reduce navigation effort.
+* Provide complete operational visibility into daily restaurant and wholesale performance.
+* Display key metrics (Total Revenue, Active Orders, Low Stock Alerts, Total Customers).
+* Enable quick navigation to all 12 operational sub-modules:
+  - Products (`/products`, `/products/new`)
+  - Categories (`/categories`)
+  - Orders (`/orders`)
+  - Invoices (`/invoices`)
+  - Inventory (`/inventory`)
+  - Warehouse Management (`/warehouse`)
+  - Customers (`/customers`)
+  - Delivery Zones (`/delivery-zones`)
+  - GST Configuration (`/gst-rules`)
+  - Shipping Rules (`/shipping-rules`)
+  - Business Reports (`/reports`)
+  - Settings (`/settings`)
 
 ---
 
-# Users
+# User Roles & Security
 
-## Guest Visitor
+## Guest Customer
 
-Cannot access the Owner Dashboard.
-
-Guests are redirected to the Authentication page.
+Cannot access the Owner Dashboard. Attempts to visit `/dashboard` redirect unauthenticated visitors to `/admin/login`.
 
 ---
 
-## Buyer
+## Administrator (Store Manager / Owner)
 
-Buyers use the Buyer Dashboard.
+Authenticated via `trpc.auth.loginAdmin`. Has full read/write access to all management modules, analytics reports, and system settings.
 
-They cannot access owner features.
-
----
-
-## Business Owner
-
-Can:
-
-* Monitor business performance.
-* Manage products.
 * Manage inventory.
 * Manage customer orders.
 * Manage customers.
