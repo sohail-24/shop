@@ -45,6 +45,7 @@ export function buyerProductVisibilityConditions(): SQL[] {
     eq(products.status, "active"),
     eq(products.marketplaceVisible, true),
     eq(inventory.isActive, true),
+    eq(categories.isActive, true),
     gte(inventory.quantityAvailable, products.minimumOrderQuantity),
   ];
 }
@@ -247,7 +248,7 @@ async function findProductDetailBySlug(slug: string, visibilityConditions: SQL[]
       }).catch(() => null),
     ]);
 
-    const realName = adminUser?.name || activeWarehouse?.name || "AM Fruits";
+    const realName = adminUser?.name || activeWarehouse?.name || "Shah's Halal Food";
     const realPhone = adminUser?.phone || activeWarehouse?.contactNumber || null;
     const realAddressLine1 = activeWarehouse?.address || adminUser?.addressLine1 || null;
     const realCity = activeWarehouse?.city || adminUser?.city || null;
@@ -258,7 +259,7 @@ async function findProductDetailBySlug(slug: string, visibilityConditions: SQL[]
     return {
       ...row,
       supplierName: realName,
-      supplierSlug: "am-fruits",
+      supplierSlug: "shahs-halal-food",
       supplierPhone: realPhone,
       supplierAddressLine1: realAddressLine1,
       supplierAddressLine2: null,
@@ -463,6 +464,10 @@ export async function findBuyerProductById(id: number) {
       inventory,
       eq(inventory.productId, products.id),
     )
+    .innerJoin(
+      categories,
+      eq(products.categoryId, categories.id),
+    )
     .where(and(eq(products.id, id), ...buyerProductVisibilityConditions()))
     .limit(1);
 
@@ -537,6 +542,10 @@ export async function countProducts(filters?: {
     .innerJoin(
       inventory,
       eq(inventory.productId, products.id),
+    )
+    .innerJoin(
+      categories,
+      eq(products.categoryId, categories.id),
     )
     .where(and(...conditions));
 

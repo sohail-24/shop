@@ -21,37 +21,21 @@ import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import {
   ArrowLeft,
-  ArrowDown,
-  ArrowUp,
-  Barcode,
-  Boxes,
+  CheckCircle2,
+  DollarSign,
+  Flame,
   ImagePlus,
-  IndianRupee,
-  Leaf,
   Package,
   Save,
+  Sparkles,
   Star,
   Tag,
   UploadCloud,
-  Warehouse,
+  Utensils,
   X,
-  Scale,
-  ShoppingBag,
-  Weight,
-  Grape,
-  CircleDot,
+  ChefHat,
+  Eye,
 } from "lucide-react";
-
-const unitStyles: Record<string, { icon: any; color: string; bg: string }> = {
-  kg: { icon: Scale, color: "text-emerald-500", bg: "bg-emerald-500/10" },
-  box: { icon: Package, color: "text-blue-600", bg: "bg-blue-600/10" },
-  case: { icon: Boxes, color: "text-purple-500", bg: "bg-purple-500/10" },
-  bag: { icon: ShoppingBag, color: "text-orange-500", bg: "bg-orange-500/10" },
-  lb: { icon: Weight, color: "text-red-500", bg: "bg-red-500/10" },
-  pallet: { icon: Warehouse, color: "text-cyan-500", bg: "bg-cyan-500/10" },
-  bunch: { icon: Grape, color: "text-pink-500", bg: "bg-pink-500/10" },
-  each: { icon: CircleDot, color: "text-yellow-500", bg: "bg-yellow-500/10" },
-};
 
 type ImagePreview = {
   id: string;
@@ -68,7 +52,10 @@ async function uploadProductImage(file: File): Promise<string> {
     method: "POST",
     body: formData,
   });
-  const payload = await response.json().catch(() => ({})) as { error?: string; url?: string };
+  const payload = (await response.json().catch(() => ({}))) as {
+    error?: string;
+    url?: string;
+  };
   if (!response.ok || !payload.url) {
     throw new Error(payload.error || `Could not upload ${file.name}.`);
   }
@@ -82,40 +69,40 @@ export default function AddProduct() {
   const [isDragging, setIsDragging] = useState(false);
   const [isUploadingImages, setIsUploadingImages] = useState(false);
   const [images, setImages] = useState<ImagePreview[]>([]);
+  const [imageUrlInput, setImageUrlInput] = useState("");
   const [primaryImageId, setPrimaryImageId] = useState<string | null>(null);
   const [attemptedSubmit, setAttemptedSubmit] = useState(false);
-  const [publish, setPublish] = useState(false);
+  const [publish, setPublish] = useState(true);
+
+  // Restaurant menu form fields
   const [form, setForm] = useState({
     name: "",
-    sku: "",
-    barcode: "",
     categoryId: "",
-    supplierId: "",
     description: "",
-    purchasePrice: "",
-    wholesalePrice: "",
+    unitSize: "1 Platter",
     sellingPrice: "",
-    discount: "0",
-    openingStock: "0",
-    availableStock: "",
-    reservedStock: "0",
-    minimumStock: "10",
-    reorderQuantity: "100",
-    warehouse: "Main Warehouse",
-    batchNumber: "",
-    unitType: "kg",
-    unitSize: "",
-    minimumOrderQuantity: "1",
-    grade: "grade_a",
-    organic: false,
-    tags: "",
+    compareAtPrice: "",
+    purchasePrice: "",
+    dailyStock: "100",
+    isHalal: true,
+    isVegetarian: false,
+    spiceLevel: "mild",
+    isFeatured: false,
+    tags: "halal, fresh, platter",
+    // Backend technical compatibility fields
+    sku: "",
+    supplierId: "",
+    warehouse: "Shah's Halal Kitchen",
   });
 
   const utils = trpc.useUtils();
   const categoriesQuery = trpc.category.list.useQuery(undefined, { retry: false });
   const companiesQuery = trpc.company.list.useQuery(undefined, { retry: false });
-  const suppliers = (companiesQuery.data ?? []).filter((company) => company.type === "supplier" || company.type === "both");
+  const suppliers = (companiesQuery.data ?? []).filter(
+    (company) => company.type === "supplier" || company.type === "both"
+  );
   const activeCategories = categoriesQuery.data ?? [];
+
   const createProduct = trpc.product.create.useMutation({
     onSuccess: async () => {
       await Promise.all([
@@ -124,38 +111,34 @@ export default function AddProduct() {
         utils.inventory.list.invalidate(),
         utils.inventory.stats.invalidate(),
       ]);
-      toast.success("Product published successfully.");
+      toast.success("Menu item added successfully!");
       navigate("/products");
     },
     onError: (error) => {
-      toast.error(error.message || "Could not save product. Please try again.");
+      toast.error(error.message || "Could not save menu item. Please try again.");
     },
   });
-  const margin = useMemo(() => {
-    const selling = toNumber(form.sellingPrice);
-    const purchase = toNumber(form.purchasePrice);
-    if (!selling) return 0;
-    return ((selling - purchase) / selling) * 100;
-  }, [form.purchasePrice, form.sellingPrice]);
-  const errors = {
-    name: form.name.trim() ? "" : "Product name is required.",
-    sku: form.sku.trim() ? "" : "SKU is required.",
-    categoryId: form.categoryId ? "" : "Category is required.",
-    purchasePrice: toNumber(form.purchasePrice) > 0 ? "" : "Purchase price must be greater than zero.",
-    sellingPrice: toNumber(form.sellingPrice) > 0 ? "" : "Selling price must be greater than zero.",
-    warehouse: form.warehouse.trim() ? "" : "Warehouse is required.",
-    supplierId: form.supplierId ? "" : "Supplier is required.",
-    minimumOrderQuantity: toNumber(form.minimumOrderQuantity) > 0 ? "" : "MOQ must be greater than zero.",
-  };
-  const isFormValid = Object.values(errors).every((error) => !error);
 
+  // Auto-select Shah's Halal supplier if available
   useEffect(() => {
-    if (!form.supplierId && suppliers[0]) {
-      setForm((current) => ({ ...current, supplierId: String(suppliers[0].id) }));
+    if (!form.supplierId && suppliers.length > 0) {
+      const shahsSupplier = suppliers.find((s) => s.name.toLowerCase().includes("shah"));
+      const defaultSupplier = shahsSupplier || suppliers[0];
+      if (defaultSupplier) {
+        setForm((curr) => ({ ...curr, supplierId: String(defaultSupplier.id) }));
+      }
     }
   }, [form.supplierId, suppliers]);
 
-  const updateField = (field: keyof typeof form, value: string) => {
+  // Validation rules
+  const errors = {
+    name: form.name.trim() ? "" : "Menu item name is required.",
+    categoryId: form.categoryId ? "" : "Category is required.",
+    sellingPrice: toNumber(form.sellingPrice) > 0 ? "" : "Selling price must be greater than $0.00.",
+  };
+  const isFormValid = Object.values(errors).every((error) => !error);
+
+  const updateField = (field: keyof typeof form, value: string | boolean) => {
     setForm((current) => ({ ...current, [field]: value }));
   };
 
@@ -173,7 +156,7 @@ export default function AddProduct() {
           name: file.name,
           size: file.size,
           url: await uploadProductImage(file),
-        })),
+        }))
       );
 
       setImages((current) => {
@@ -182,10 +165,31 @@ export default function AddProduct() {
         return merged;
       });
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Could not upload product images.");
+      toast.error(error instanceof Error ? error.message : "Could not upload food images.");
     } finally {
       setIsUploadingImages(false);
     }
+  };
+
+  const addImageUrl = () => {
+    const trimmed = imageUrlInput.trim();
+    if (!trimmed) return;
+    if (!trimmed.startsWith("http://") && !trimmed.startsWith("https://")) {
+      toast.error("Please enter a valid HTTP or HTTPS image URL.");
+      return;
+    }
+    const newImage: ImagePreview = {
+      id: nanoid(),
+      name: "Web Image",
+      size: 1024,
+      url: trimmed,
+    };
+    setImages((curr) => {
+      const updated = [...curr, newImage];
+      if (!primaryImageId) setPrimaryImageId(newImage.id);
+      return updated;
+    });
+    setImageUrlInput("");
   };
 
   const removeImage = (id: string) => {
@@ -196,27 +200,14 @@ export default function AddProduct() {
     });
   };
 
-  const moveImage = (id: string, direction: "up" | "down") => {
-    setImages((current) => {
-      const index = current.findIndex((image) => image.id === id);
-      const swapIndex = direction === "up" ? index - 1 : index + 1;
-      if (index < 0 || swapIndex < 0 || swapIndex >= current.length) return current;
-      const next = [...current];
-      const [item] = next.splice(index, 1);
-      if (!item) return current;
-      next.splice(swapIndex, 0, item);
-      return next;
-    });
-  };
-
   const saveProduct = (status: "draft" | "active") => {
     setAttemptedSubmit(true);
     if (isUploadingImages) {
-      toast.error("Wait for product images to finish uploading.");
+      toast.error("Please wait for images to finish uploading.");
       return;
     }
     if (!isFormValid) {
-      toast.error("Complete the required product fields before saving.");
+      toast.error("Please complete all required fields (Name, Category, Selling Price).");
       return;
     }
 
@@ -224,34 +215,54 @@ export default function AddProduct() {
       ...images.filter((image) => image.id === primaryImageId),
       ...images.filter((image) => image.id !== primaryImageId),
     ];
+
+    // Compute tags with dietary flags
+    const tagList = form.tags
+      .split(",")
+      .map((t) => t.trim().toLowerCase())
+      .filter(Boolean);
+    if (form.isHalal && !tagList.includes("halal")) tagList.push("halal");
+    if (form.isVegetarian && !tagList.includes("vegetarian")) tagList.push("vegetarian");
+    if (form.isFeatured && !tagList.includes("featured")) tagList.push("featured");
+    if (form.spiceLevel && !tagList.includes(form.spiceLevel)) tagList.push(form.spiceLevel);
+
+    // Auto-generate safe SKU if not given
+    const cleanNameSlug = form.name.toLowerCase().replace(/[^a-z0-9]+/g, "-");
+    const safeSku = form.sku.trim() || `SHAH-${cleanNameSlug.slice(0, 20).toUpperCase()}-${nanoid(4).toUpperCase()}`;
+
+    // Estimated prep cost (purchase price)
+    const selling = toNumber(form.sellingPrice);
+    const purchase = toNumber(form.purchasePrice) > 0
+      ? toNumber(form.purchasePrice)
+      : Math.max(1, +(selling * 0.35).toFixed(2));
+
+    const portions = Math.max(1, Math.floor(toNumber(form.dailyStock) || 50));
+
     createProduct.mutate({
-      name: form.name,
-      sku: form.sku,
-      barcode: form.barcode || undefined,
+      name: form.name.trim(),
+      sku: safeSku,
       categoryId: Number(form.categoryId),
-      supplierId: Number(form.supplierId),
-      description: form.description || undefined,
-      purchasePrice: toNumber(form.purchasePrice),
-      wholesalePrice: form.wholesalePrice ? toNumber(form.wholesalePrice) : undefined,
-      sellingPrice: toNumber(form.sellingPrice),
-      discount: toNumber(form.discount),
-      openingStock: Math.max(0, Math.floor(toNumber(form.openingStock))),
-      availableStock: form.availableStock.trim()
-        ? Math.max(0, Math.floor(toNumber(form.availableStock)))
-        : undefined,
-      reservedStock: Math.max(0, Math.floor(toNumber(form.reservedStock))),
-      minimumStock: Math.max(0, Math.floor(toNumber(form.minimumStock))),
-      reorderQuantity: Math.max(0, Math.floor(toNumber(form.reorderQuantity))),
-      warehouse: form.warehouse,
-      batchNumber: form.batchNumber || undefined,
+      supplierId: form.supplierId ? Number(form.supplierId) : undefined,
+      description: form.description.trim() || undefined,
+      purchasePrice: purchase,
+      sellingPrice: selling,
+      discount: toNumber(form.compareAtPrice) > selling
+        ? Math.round(((toNumber(form.compareAtPrice) - selling) / toNumber(form.compareAtPrice)) * 100)
+        : 0,
+      openingStock: portions,
+      availableStock: portions,
+      reservedStock: 0,
+      minimumStock: 5,
+      reorderQuantity: 20,
+      warehouse: form.warehouse.trim() || "Shah's Halal Kitchen",
       status,
-      unitType: form.unitType as any,
-      unitSize: form.unitSize || undefined,
-      minimumOrderQuantity: Math.max(1, Math.floor(toNumber(form.minimumOrderQuantity))),
-      grade: form.grade as any,
-      organic: form.organic,
+      unitType: "each",
+      unitSize: form.unitSize.trim() || "1 Portion",
+      minimumOrderQuantity: 1,
+      grade: "grade_a",
+      organic: form.isVegetarian,
       images: orderedImages.map((image) => image.url),
-      tags: form.tags.split(",").map((tag) => tag.trim()).filter(Boolean),
+      tags: tagList,
     });
   };
 
@@ -259,48 +270,70 @@ export default function AddProduct() {
     <div className="mx-auto flex w-full max-w-[1300px] flex-col gap-5">
       <section className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
         <div>
-          <Link to="/products" className="mb-3 inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground">
+          <Link
+            to="/products"
+            className="mb-3 inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground"
+          >
             <ArrowLeft className="h-4 w-4" />
-            Products
+            Back to Catalog
           </Link>
-          <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">Add Product</h1>
+          <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">Add Menu Item</h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            Create a wholesale SKU with images, pricing, stock controls, and warehouse placement.
+            Add a new dish to Shah's Halal restaurant menu with photos, pricing, ingredients, and dietary options.
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <div className="flex items-center gap-2 rounded-lg border bg-card px-3 py-2">
             <Switch checked={publish} onCheckedChange={setPublish} id="publish-switch" />
-            <Label htmlFor="publish-switch" className="text-sm">{publish ? "Publish" : "Draft"}</Label>
+            <Label htmlFor="publish-switch" className="text-sm cursor-pointer">
+              {publish ? "Active on Menu" : "Save as Draft"}
+            </Label>
           </div>
-          <Button variant="outline" onClick={() => saveProduct("draft")} disabled={!isFormValid || createProduct.isPending}>
+          <Button
+            variant="outline"
+            onClick={() => saveProduct("draft")}
+            disabled={createProduct.isPending}
+          >
             <Save className="mr-2 h-4 w-4" />
             Save Draft
           </Button>
-          <Button onClick={() => saveProduct(publish ? "active" : "draft")} disabled={!isFormValid || createProduct.isPending}>
-            <UploadCloud className="mr-2 h-4 w-4" />
-            {createProduct.isPending ? "Saving..." : publish ? "Publish Product" : "Save Product"}
+          <Button
+            className="bg-primary hover:bg-primary/90"
+            onClick={() => saveProduct(publish ? "active" : "draft")}
+            disabled={createProduct.isPending}
+          >
+            <Sparkles className="mr-2 h-4 w-4" />
+            {createProduct.isPending ? "Adding Item..." : publish ? "Publish Menu Item" : "Save Item"}
           </Button>
         </div>
       </section>
 
       <section className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_360px]">
         <div className="space-y-5">
+          {/* Section 1: Item Details */}
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-base">
-                <Package className="h-4 w-4" />
-                Product Details
+                <Utensils className="h-4 w-4 text-primary" />
+                Dish Details
               </CardTitle>
             </CardHeader>
             <CardContent className="grid gap-4 md:grid-cols-2">
-              <Field label="Product Name" required error={attemptedSubmit ? errors.name : ""}>
-                <Input value={form.name} onChange={(event) => updateField("name", event.target.value)} placeholder="Premium Alphonso Mango" />
+              <Field label="Dish Name" required error={attemptedSubmit ? errors.name : ""}>
+                <Input
+                  value={form.name}
+                  onChange={(event) => updateField("name", event.target.value)}
+                  placeholder="e.g. Chicken Over Rice Platter, Lamb Gyro Pita"
+                />
               </Field>
-              <Field label="Category" required error={attemptedSubmit ? errors.categoryId : ""}>
-                <Select value={form.categoryId} onValueChange={(value) => updateField("categoryId", value)}>
+
+              <Field label="Menu Category" required error={attemptedSubmit ? errors.categoryId : ""}>
+                <Select
+                  value={form.categoryId}
+                  onValueChange={(value) => updateField("categoryId", value)}
+                >
                   <SelectTrigger>
-                    <SelectValue placeholder="Select category" />
+                    <SelectValue placeholder="Select menu category" />
                   </SelectTrigger>
                   <SelectContent>
                     {activeCategories.length ? (
@@ -310,130 +343,167 @@ export default function AddProduct() {
                         </SelectItem>
                       ))
                     ) : (
-                      <SelectItem value="none" disabled>No categories available.</SelectItem>
+                      <SelectItem value="none" disabled>
+                        No categories found
+                      </SelectItem>
                     )}
                   </SelectContent>
                 </Select>
-                {!categoriesQuery.isLoading && activeCategories.length === 0 && (
-                  <div className="flex items-center justify-between rounded-md border border-amber-200 bg-amber-50 p-2 text-xs text-amber-900 dark:border-amber-400/20 dark:bg-amber-400/10 dark:text-amber-100">
-                    <span>No categories available.</span>
-                    <Link to="/categories">
-                      <Button size="sm" variant="outline" className="h-7 bg-background">
-                        Create Category
-                      </Button>
-                    </Link>
-                  </div>
-                )}
               </Field>
-              <Field label="Supplier" required error={attemptedSubmit ? errors.supplierId : ""}>
-                <Select value={form.supplierId} onValueChange={(value) => updateField("supplierId", value)}>
+
+              <Field label="Serving Portion / Size">
+                <Input
+                  value={form.unitSize}
+                  onChange={(event) => updateField("unitSize", event.target.value)}
+                  placeholder="e.g. 1 Platter with Rice & Salad, 1 Pita Wrap, 6 pcs"
+                />
+              </Field>
+
+              <Field label="Spice Level">
+                <Select
+                  value={form.spiceLevel}
+                  onValueChange={(value) => updateField("spiceLevel", value)}
+                >
                   <SelectTrigger>
-                    <SelectValue placeholder="Select supplier" />
+                    <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    {suppliers.map((supplier) => (
-                      <SelectItem key={supplier.id} value={String(supplier.id)}>
-                        {supplier.name}
-                      </SelectItem>
-                    ))}
+                    <SelectItem value="mild">Mild (No heat)</SelectItem>
+                    <SelectItem value="medium">Medium</SelectItem>
+                    <SelectItem value="hot">Hot (Red hot sauce)</SelectItem>
+                    <SelectItem value="extra-hot">Extra Hot 🔥</SelectItem>
                   </SelectContent>
                 </Select>
               </Field>
-              <Field label="SKU" required error={attemptedSubmit ? errors.sku : ""}>
-                <Input value={form.sku} onChange={(event) => updateField("sku", event.target.value)} placeholder="FRU-MANG-0001" />
-              </Field>
-              <Field label="Barcode">
-                <div className="relative">
-                  <Barcode className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                  <Input value={form.barcode} onChange={(event) => updateField("barcode", event.target.value)} placeholder="8901234567890" className="pl-9" />
-                </div>
-              </Field>
+
               <div className="md:col-span-2">
-                <Field label="Description">
+                <Field label="Description & Ingredients">
                   <Textarea
                     value={form.description}
                     onChange={(event) => updateField("description", event.target.value)}
-                    placeholder="Describe grade, origin, shelf life, packaging, and wholesale handling notes."
-                    className="min-h-28"
+                    placeholder="e.g. Tender marinated grilled chicken served over seasoned yellow basmati rice with fresh crisp salad, toasted pita bread, and our famous signature white and hot sauces."
+                    className="min-h-24"
                   />
                 </Field>
               </div>
+
+              {/* Dietary Flags */}
+              <div className="md:col-span-2 grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1">
+                <div className="flex items-center justify-between rounded-lg border bg-card p-3">
+                  <Label htmlFor="halal-switch" className="flex items-center gap-2 text-sm cursor-pointer">
+                    <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+                    100% Halal
+                  </Label>
+                  <Switch
+                    id="halal-switch"
+                    checked={form.isHalal}
+                    onCheckedChange={(checked) => updateField("isHalal", checked)}
+                  />
+                </div>
+
+                <div className="flex items-center justify-between rounded-lg border bg-card p-3">
+                  <Label htmlFor="veg-switch" className="flex items-center gap-2 text-sm cursor-pointer">
+                    <Sparkles className="h-4 w-4 text-emerald-600" />
+                    Vegetarian
+                  </Label>
+                  <Switch
+                    id="veg-switch"
+                    checked={form.isVegetarian}
+                    onCheckedChange={(checked) => updateField("isVegetarian", checked)}
+                  />
+                </div>
+
+                <div className="flex items-center justify-between rounded-lg border bg-card p-3">
+                  <Label htmlFor="featured-switch" className="flex items-center gap-2 text-sm cursor-pointer">
+                    <Star className="h-4 w-4 text-amber-500 fill-amber-400" />
+                    Chef's Special
+                  </Label>
+                  <Switch
+                    id="featured-switch"
+                    checked={form.isFeatured}
+                    onCheckedChange={(checked) => updateField("isFeatured", checked)}
+                  />
+                </div>
+              </div>
+
               <div className="md:col-span-2">
-                <Field label="Tags">
-                  <Input value={form.tags} onChange={(event) => updateField("tags", event.target.value)} placeholder="seasonal, bulk, premium" />
+                <Field label="Search & Filter Tags">
+                  <Input
+                    value={form.tags}
+                    onChange={(event) => updateField("tags", event.target.value)}
+                    placeholder="e.g. popular, platter, rice, chicken, gyro, lunch"
+                  />
                 </Field>
               </div>
             </CardContent>
           </Card>
 
+          {/* Section 2: Pricing & Availability */}
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-base">
-                <Tag className="h-4 w-4" />
-                Wholesale Selling Rules
+                <DollarSign className="h-4 w-4 text-emerald-600" />
+                Pricing & Menu Availability
               </CardTitle>
             </CardHeader>
-            <CardContent className="grid gap-4 md:grid-cols-3">
-              <Field label="Unit">
-                <Select value={form.unitType} onValueChange={(value) => updateField("unitType", value)}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    {["kg", "box", "case", "bag", "lb", "pallet", "bunch", "each"].map((unit) => {
-                      const style = unitStyles[unit];
-                      const Icon = style?.icon;
-                      return (
-                        <SelectItem key={unit} value={unit}>
-                          <div className="flex items-center gap-2">
-                            {Icon && (
-                              <div className={`flex h-6 w-6 items-center justify-center rounded-md ${style.bg} ${style.color}`}>
-                                <Icon className="h-4 w-4" />
-                              </div>
-                            )}
-                            <span>{unit}</span>
-                          </div>
-                        </SelectItem>
-                      );
-                    })}
-                  </SelectContent>
-                </Select>
+            <CardContent className="grid gap-4 sm:grid-cols-3">
+              <Field label="Menu Selling Price ($)" required error={attemptedSubmit ? errors.sellingPrice : ""}>
+                <div className="relative">
+                  <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 font-semibold text-muted-foreground">
+                    $
+                  </span>
+                  <Input
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    value={form.sellingPrice}
+                    onChange={(event) => updateField("sellingPrice", event.target.value)}
+                    placeholder="11.99"
+                    className="pl-8"
+                  />
+                </div>
               </Field>
-              <Field label="Unit Size">
-                <Input value={form.unitSize} onChange={(event) => updateField("unitSize", event.target.value)} placeholder="5 kg crate" />
+
+              <Field label="Compare At / Original Price ($)">
+                <div className="relative">
+                  <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 font-semibold text-muted-foreground">
+                    $
+                  </span>
+                  <Input
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    value={form.compareAtPrice}
+                    onChange={(event) => updateField("compareAtPrice", event.target.value)}
+                    placeholder="13.99"
+                    className="pl-8"
+                  />
+                </div>
               </Field>
-              <Field label="MOQ" required error={attemptedSubmit ? errors.minimumOrderQuantity : ""}>
-                <Input type="number" min="1" value={form.minimumOrderQuantity} onChange={(event) => updateField("minimumOrderQuantity", event.target.value)} />
+
+              <Field label="Daily Portion Stock">
+                <Input
+                  type="number"
+                  min="0"
+                  value={form.dailyStock}
+                  onChange={(event) => updateField("dailyStock", event.target.value)}
+                  placeholder="100"
+                />
               </Field>
-              <Field label="Grade">
-                <Select value={form.grade} onValueChange={(value) => updateField("grade", value)}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="premium">Premium</SelectItem>
-                    <SelectItem value="grade_a">Grade A</SelectItem>
-                    <SelectItem value="grade_b">Grade B</SelectItem>
-                    <SelectItem value="standard">Standard</SelectItem>
-                  </SelectContent>
-                </Select>
-              </Field>
-              <div className="flex items-center justify-between rounded-lg border bg-card px-3 py-2">
-                <Label htmlFor="add-organic-switch" className="flex items-center gap-2 text-sm">
-                  <Leaf className="h-4 w-4 text-emerald-600" />
-                  Organic
-                </Label>
-                <Switch id="add-organic-switch" checked={form.organic} onCheckedChange={(checked) => setForm((current) => ({ ...current, organic: checked }))} />
-              </div>
             </CardContent>
           </Card>
 
+          {/* Section 3: Food Photos */}
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-base">
-                <ImagePlus className="h-4 w-4" />
-                Product Images
+                <ImagePlus className="h-4 w-4 text-primary" />
+                Dish Photos
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div
-                className={`flex min-h-44 cursor-pointer flex-col items-center justify-center rounded-lg border border-dashed p-6 text-center transition-colors ${
+                className={`flex min-h-36 cursor-pointer flex-col items-center justify-center rounded-lg border border-dashed p-6 text-center transition-colors ${
                   isDragging ? "border-primary bg-primary/5" : "bg-muted/30 hover:bg-muted/50"
                 }`}
                 onClick={() => inputRef.current?.click()}
@@ -448,9 +518,9 @@ export default function AddProduct() {
                   addFiles(event.dataTransfer.files);
                 }}
               >
-                <UploadCloud className="mb-3 h-8 w-8 text-muted-foreground" />
-                <p className="text-sm font-medium">Drop product images here or click to upload</p>
-                <p className="mt-1 text-xs text-muted-foreground">Upload up to 8 images for gallery, labels, and packaging.</p>
+                <UploadCloud className="mb-2 h-7 w-7 text-muted-foreground" />
+                <p className="text-sm font-medium">Drop food photo here or click to browse</p>
+                <p className="mt-1 text-xs text-muted-foreground">Upload appetizing photos of the dish</p>
                 <input
                   ref={inputRef}
                   type="file"
@@ -463,48 +533,46 @@ export default function AddProduct() {
                   }}
                 />
               </div>
+
+              {/* Or paste image URL */}
+              <div className="flex gap-2">
+                <Input
+                  value={imageUrlInput}
+                  onChange={(e) => setImageUrlInput(e.target.value)}
+                  placeholder="Or paste an image URL (https://images.unsplash.com/...)"
+                  className="text-xs"
+                />
+                <Button type="button" variant="outline" size="sm" onClick={addImageUrl}>
+                  Add URL
+                </Button>
+              </div>
+
               {images.length > 0 && (
-                <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+                <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
                   {images.map((image) => (
                     <div key={image.id} className="group relative overflow-hidden rounded-lg border bg-muted">
                       <img src={image.url} alt={image.name} className="aspect-square w-full object-cover" />
                       <button
                         onClick={() => removeImage(image.id)}
-                        className="absolute right-2 top-2 flex h-7 w-7 items-center justify-center rounded-md bg-background/90 opacity-0 shadow-sm transition-opacity group-hover:opacity-100"
+                        className="absolute right-2 top-2 flex h-7 w-7 items-center justify-center rounded-md bg-background/90 opacity-0 shadow-sm transition-opacity group-hover:opacity-100 text-destructive"
                         aria-label="Remove image"
                       >
                         <X className="h-4 w-4" />
                       </button>
-                      <div className="absolute left-2 top-2 flex gap-1 opacity-0 transition-opacity group-hover:opacity-100">
-                        <button
-                          onClick={() => setPrimaryImageId(image.id)}
-                          className="flex h-7 w-7 items-center justify-center rounded-md bg-background/90 shadow-sm"
-                          aria-label="Set primary image"
-                        >
-                          <Star className={`h-4 w-4 ${primaryImageId === image.id ? "fill-amber-400 text-amber-500" : ""}`} />
-                        </button>
-                        <button
-                          onClick={() => moveImage(image.id, "up")}
-                          className="flex h-7 w-7 items-center justify-center rounded-md bg-background/90 shadow-sm"
-                          aria-label="Move image earlier"
-                        >
-                          <ArrowUp className="h-4 w-4" />
-                        </button>
-                        <button
-                          onClick={() => moveImage(image.id, "down")}
-                          className="flex h-7 w-7 items-center justify-center rounded-md bg-background/90 shadow-sm"
-                          aria-label="Move image later"
-                        >
-                          <ArrowDown className="h-4 w-4" />
-                        </button>
-                      </div>
-                      <div className="absolute inset-x-0 bottom-0 bg-background/90 p-2 text-xs">
-                        <p className="truncate font-medium">
-                          {image.name}
-                          {primaryImageId === image.id && <span className="ml-1 text-amber-600">Primary</span>}
-                        </p>
-                        <p className="text-muted-foreground">{Math.round(image.size / 1024)} KB</p>
-                      </div>
+                      <button
+                        onClick={() => setPrimaryImageId(image.id)}
+                        className={`absolute left-2 top-2 flex h-7 w-7 items-center justify-center rounded-md bg-background/90 shadow-sm ${
+                          primaryImageId === image.id ? "opacity-100" : "opacity-0 group-hover:opacity-100"
+                        }`}
+                        aria-label="Set primary image"
+                      >
+                        <Star className={`h-4 w-4 ${primaryImageId === image.id ? "fill-amber-400 text-amber-500" : "text-muted-foreground"}`} />
+                      </button>
+                      {primaryImageId === image.id && (
+                        <div className="absolute inset-x-0 bottom-0 bg-amber-500/90 py-1 text-center text-[10px] font-semibold text-white">
+                          Cover Photo
+                        </div>
+                      )}
                     </div>
                   ))}
                 </div>
@@ -512,97 +580,94 @@ export default function AddProduct() {
             </CardContent>
           </Card>
 
+          {/* Section 4: Kitchen & Stock Controls */}
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-base">
-                <IndianRupee className="h-4 w-4" />
-                Pricing
+              <CardTitle className="flex items-center gap-2 text-base text-muted-foreground">
+                <ChefHat className="h-4 w-4" />
+                Kitchen & Inventory Settings
               </CardTitle>
             </CardHeader>
-            <CardContent className="grid gap-4 md:grid-cols-4">
-              <Field label="Purchase Price" required error={attemptedSubmit ? errors.purchasePrice : ""}>
-                <Input type="number" value={form.purchasePrice} onChange={(event) => updateField("purchasePrice", event.target.value)} placeholder="1200" />
+            <CardContent className="grid gap-4 sm:grid-cols-2">
+              <Field label="Kitchen Location">
+                <Input
+                  value={form.warehouse}
+                  onChange={(event) => updateField("warehouse", event.target.value)}
+                  placeholder="Shah's Halal Kitchen"
+                />
               </Field>
-              <Field label="Wholesale Price">
-                <Input type="number" value={form.wholesalePrice} onChange={(event) => updateField("wholesalePrice", event.target.value)} placeholder="1400" />
-              </Field>
-              <Field label="Selling Price" required error={attemptedSubmit ? errors.sellingPrice : ""}>
-                <Input type="number" value={form.sellingPrice} onChange={(event) => updateField("sellingPrice", event.target.value)} placeholder="1600" />
-              </Field>
-              <Field label="Discount %">
-                <Input type="number" min="0" max="100" value={form.discount} onChange={(event) => updateField("discount", event.target.value)} />
-              </Field>
-              <div className="rounded-lg border bg-muted/40 p-3">
-                <p className="text-sm text-muted-foreground">Gross Margin</p>
-                <p className="mt-2 text-2xl font-semibold">{Number.isFinite(margin) ? margin.toFixed(1) : "0.0"}%</p>
-                <p className="mt-1 text-xs text-muted-foreground">
-                  {formatCurrency(toNumber(form.sellingPrice) - toNumber(form.purchasePrice))} per unit
-                </p>
-              </div>
-            </CardContent>
-          </Card>
 
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-base">
-                <Warehouse className="h-4 w-4" />
-                Inventory
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="grid gap-4 md:grid-cols-3">
-              <Field label="Opening Stock">
-                <Input type="number" value={form.openingStock} onChange={(event) => updateField("openingStock", event.target.value)} />
-              </Field>
-              <Field label="Available Stock">
-                <Input type="number" value={form.availableStock} onChange={(event) => updateField("availableStock", event.target.value)} />
-              </Field>
-              <Field label="Reserved Stock">
-                <Input type="number" value={form.reservedStock} onChange={(event) => updateField("reservedStock", event.target.value)} />
-              </Field>
-              <Field label="Minimum Stock">
-                <Input type="number" value={form.minimumStock} onChange={(event) => updateField("minimumStock", event.target.value)} />
-              </Field>
-              <Field label="Reorder Quantity">
-                <Input type="number" value={form.reorderQuantity} onChange={(event) => updateField("reorderQuantity", event.target.value)} />
-              </Field>
-              <Field label="Warehouse" required error={attemptedSubmit ? errors.warehouse : ""}>
-                <Input value={form.warehouse} onChange={(event) => updateField("warehouse", event.target.value)} />
-              </Field>
-              <Field label="Batch Number">
-                <Input value={form.batchNumber} onChange={(event) => updateField("batchNumber", event.target.value)} />
+              <Field label="Item SKU (Auto-generated if blank)">
+                <Input
+                  value={form.sku}
+                  onChange={(event) => updateField("sku", event.target.value)}
+                  placeholder="e.g. SHAH-CHK-PLTR-01"
+                />
               </Field>
             </CardContent>
           </Card>
         </div>
 
+        {/* Sidebar: Readiness & Preview */}
         <aside className="space-y-5">
           <Card>
             <CardHeader>
-              <CardTitle className="text-base">Product Readiness</CardTitle>
+              <CardTitle className="text-base">Menu Readiness</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <ReadinessRow label="Product details" complete={!!form.name && !!form.sku && !!form.categoryId} />
-              <ReadinessRow label="Images" complete={images.length > 0} />
-              <ReadinessRow label="Pricing" complete={!!form.purchasePrice && !!form.sellingPrice} />
-              <ReadinessRow label="Inventory" complete={toNumber(form.openingStock) >= 0 && !!form.warehouse} />
+              <ReadinessRow label="Dish name" complete={!!form.name.trim()} />
+              <ReadinessRow label="Category selected" complete={!!form.categoryId} />
+              <ReadinessRow label="Selling price" complete={toNumber(form.sellingPrice) > 0} />
+              <ReadinessRow label="Photo added" complete={images.length > 0} />
               <Separator />
               <div className="rounded-lg bg-muted/50 p-3">
-                <p className="text-sm font-medium">Status</p>
-                <Badge className="mt-2 rounded-md" variant={publish ? "default" : "secondary"}>
-                  {publish ? "Ready to publish" : "Draft"}
-                </Badge>
+                <p className="text-xs text-muted-foreground">Publishing Status</p>
+                <div className="mt-1 flex items-center justify-between">
+                  <Badge variant={publish ? "default" : "secondary"}>
+                    {publish ? "Ready to Serve (Active)" : "Draft (Hidden)"}
+                  </Badge>
+                  {form.isFeatured && (
+                    <Badge className="bg-amber-500/15 text-amber-700 dark:text-amber-400 border-amber-500/30 text-xs">
+                      Special
+                    </Badge>
+                  )}
+                </div>
               </div>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader>
-              <CardTitle className="text-base">Inventory Snapshot</CardTitle>
+              <CardTitle className="text-base">Storefront Preview</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
-              <Snapshot icon={Boxes} label="Opening stock" value={form.openingStock || "0"} />
-              <Snapshot icon={Warehouse} label="Warehouse" value={form.warehouse || "Not set"} />
-              <Snapshot icon={IndianRupee} label="Selling price" value={form.sellingPrice ? formatCurrency(form.sellingPrice) : "Not set"} />
+              <div className="overflow-hidden rounded-lg border bg-muted">
+                {images.length > 0 ? (
+                  <img
+                    src={(images.find((i) => i.id === primaryImageId) || images[0]).url}
+                    alt="Preview"
+                    className="aspect-video w-full object-cover"
+                  />
+                ) : (
+                  <div className="flex aspect-video w-full items-center justify-center bg-muted/60 text-muted-foreground text-xs">
+                    No photo uploaded
+                  </div>
+                )}
+              </div>
+              <div className="space-y-1">
+                <p className="font-semibold text-foreground text-sm">{form.name || "Delicious Halal Dish"}</p>
+                <p className="text-xs text-muted-foreground line-clamp-2">
+                  {form.description || "Freshly prepared halal ingredients with signature sauces."}
+                </p>
+                <div className="flex items-center justify-between pt-1">
+                  <span className="font-bold text-emerald-600 dark:text-emerald-400 text-base">
+                    {form.sellingPrice ? formatCurrency(form.sellingPrice) : "$0.00"}
+                  </span>
+                  <Badge variant="outline" className="text-[10px] text-emerald-700 dark:text-emerald-400 border-emerald-400/30">
+                    100% Halal
+                  </Badge>
+                </div>
+              </div>
             </CardContent>
           </Card>
         </aside>
@@ -623,8 +688,8 @@ function Field({
   children: React.ReactNode;
 }) {
   return (
-    <div className="space-y-2">
-      <Label>
+    <div className="space-y-1.5">
+      <Label className="text-xs font-medium">
         {label}
         {required && <span className="ml-1 text-destructive">*</span>}
       </Label>
@@ -637,24 +702,10 @@ function Field({
 function ReadinessRow({ label, complete }: { label: string; complete: boolean }) {
   return (
     <div className="flex items-center justify-between gap-3 text-sm">
-      <span className="text-muted-foreground">{label}</span>
-      <Badge variant={complete ? "default" : "outline"} className="rounded-md">
-        {complete ? "Complete" : "Needed"}
+      <span className="text-muted-foreground text-xs">{label}</span>
+      <Badge variant={complete ? "default" : "outline"} className="text-xs h-5 py-0">
+        {complete ? "Ready" : "Needed"}
       </Badge>
-    </div>
-  );
-}
-
-function Snapshot({ icon: Icon, label, value }: { icon: typeof Boxes; label: string; value: string }) {
-  return (
-    <div className="flex items-center gap-3 rounded-lg border p-3">
-      <div className="flex h-9 w-9 items-center justify-center rounded-md bg-primary/10 text-primary">
-        <Icon className="h-4 w-4" />
-      </div>
-      <div className="min-w-0">
-        <p className="text-xs text-muted-foreground">{label}</p>
-        <p className="truncate text-sm font-medium">{value}</p>
-      </div>
     </div>
   );
 }

@@ -7,6 +7,12 @@ import { ThemeProvider } from "@/providers/theme";
 import { Toaster } from "@/components/ui/sonner";
 import App from "./App.tsx";
 
+// Gracefully handle dynamic import chunk mismatches across deploys
+window.addEventListener("vite:preloadError", (event) => {
+  event.preventDefault();
+  window.location.reload();
+});
+
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <ThemeProvider>

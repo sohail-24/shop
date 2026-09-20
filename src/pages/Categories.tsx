@@ -67,21 +67,33 @@ export default function Categories() {
   const activeCategories = categories.filter((category) => category.isActive);
   const createCategory = trpc.category.create.useMutation({
     onSuccess: async () => {
-      await utils.category.list.invalidate();
+      await Promise.all([
+        utils.category.list.invalidate(),
+        utils.product.list.invalidate(),
+        utils.product.stats.invalidate(),
+      ]);
       toast.success("Category created.");
     },
     onError: (error) => toast.error(error.message || "Could not create category."),
   });
   const updateCategory = trpc.category.update.useMutation({
     onSuccess: async () => {
-      await utils.category.list.invalidate();
+      await Promise.all([
+        utils.category.list.invalidate(),
+        utils.product.list.invalidate(),
+        utils.product.stats.invalidate(),
+      ]);
       toast.success("Category updated.");
     },
     onError: (error) => toast.error(error.message || "Could not update category."),
   });
   const deleteCategory = trpc.category.delete.useMutation({
     onSuccess: async () => {
-      await utils.category.list.invalidate();
+      await Promise.all([
+        utils.category.list.invalidate(),
+        utils.product.list.invalidate(),
+        utils.product.stats.invalidate(),
+      ]);
       toast.success("Category marked inactive.");
     },
     onError: (error) => toast.error(error.message || "Could not delete category."),
@@ -242,15 +254,12 @@ export default function Categories() {
                       </div>
                     </TableCell>
                     <TableCell className="pr-4">
-                      <div className="flex justify-end gap-1">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-8 w-8"
-                          onClick={() => updateCategory.mutate({ id: category.id, isActive: !category.isActive })}
-                        >
-                          <Switch checked={category.isActive} aria-label="Toggle active state" />
-                        </Button>
+                      <div className="flex items-center justify-end gap-1">
+                        <Switch
+                          checked={category.isActive}
+                          onCheckedChange={(checked) => updateCategory.mutate({ id: category.id, isActive: checked })}
+                          aria-label="Toggle active state"
+                        />
                         <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => openEdit(category)}>
                           <Edit className="h-4 w-4" />
                         </Button>

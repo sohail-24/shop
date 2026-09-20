@@ -159,10 +159,16 @@ const roleNavigation: Record<AppRole, NavGroup[]> = {
 };
 
 export default function AppLayout() {
-  const { isLoading } = useAuth();
+  const { user, isLoading } = useAuth();
 
   if (isLoading) {
     return <AuthLayoutSkeleton />;
+  }
+
+  // Public storefront pages share this route outlet but must not expose the
+  // admin sidebar or wrap public pages in the SidebarProvider flex-wrapper.
+  if (!user) {
+    return <Outlet />;
   }
 
   return (
@@ -189,7 +195,7 @@ function AppLayoutContent() {
 
   const company = companyQuery.data ?? null;
   const role = getAppRole(user);
-  const businessName = company?.name ?? "AM Fruits";
+  const businessName = company?.name ?? "Shah's Halal Food";
   const initials = (user?.name ?? businessName)
     .split(" ")
     .map((part) => part[0])
@@ -197,8 +203,6 @@ function AppLayoutContent() {
     .slice(0, 2)
     .toUpperCase();
 
-  // Public storefront pages share this route outlet but must not expose the
-  // preserved FreshFlow buyer-account navigation.
   if (!user) {
     return <Outlet />;
   }
@@ -270,8 +274,8 @@ function AppLayoutContent() {
         <SidebarFooter className="border-t border-sidebar-border p-3">
           {user ? (
             <UserMenu
-              initials={initials || "AM"}
-              userName={user.name ?? "AM Fruits User"}
+              initials={initials || "SH"}
+              userName={user.name ?? "Shah's Halal Admin"}
               userDetail={user.email ?? user.phone ?? getRoleLabel(role)}
               role={role}
               onLogout={logout}
@@ -302,8 +306,8 @@ function AppLayoutContent() {
           <div className="relative hidden min-w-[260px] max-w-xl flex-1 md:block">
             <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
-              aria-label="Search AM Fruits"
-              placeholder={role === "buyer" ? "Search products, suppliers, orders..." : "Search products, orders, inventory..."}
+              aria-label="Search Shah's Halal Food"
+              placeholder={role === "buyer" ? "Search dishes, platters, gyros, drinks..." : "Search menu items, orders, inventory..."}
               className="h-9 border-input bg-card pl-9 pr-10"
             />
             <div className="pointer-events-none absolute right-2 top-1/2 hidden -translate-y-1/2 items-center gap-1 rounded border bg-muted px-1.5 py-0.5 text-[10px] text-muted-foreground lg:flex">

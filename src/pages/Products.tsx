@@ -16,6 +16,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Drawer, DrawerContent, DrawerTrigger, DrawerTitle, DrawerHeader } from "@/components/ui/drawer";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Switch } from "@/components/ui/switch";
 import {
   ArrowLeft,
   ArrowRight,
@@ -33,6 +34,11 @@ import {
   SlidersHorizontal,
   Star,
   UserRound,
+  Eye,
+  Pencil,
+  Trash2,
+  Utensils,
+  Filter,
 } from "lucide-react";
 
 type CatalogProduct = {
@@ -56,140 +62,87 @@ type CatalogProduct = {
 };
 
 export interface FoodCategoryItem {
+  id: number;
   key: string;
   name: string;
   emoji: string;
   description: string;
   image: string;
-  dbCategorySlug?: string;
-  subSearch?: string;
+  slug: string;
 }
 
-export const FOOD_CATEGORIES: FoodCategoryItem[] = [
-  {
-    key: "platters",
-    name: "Platters",
+const CATEGORY_VISUALS: Record<string, { emoji: string; image: string; defaultDesc: string }> = {
+  platters: {
     emoji: "🍽",
-    description: "Hearty meals, full of flavor",
     image: "/products/chicken-platter.jpg",
-    dbCategorySlug: "platters",
+    defaultDesc: "Hearty meals, full of flavor",
   },
-  {
-    key: "gyros",
-    name: "Gyros",
+  gyros: {
     emoji: "🌯",
-    description: "Authentic & Delicious",
     image: "/products/combo-gyro.jpg",
-    dbCategorySlug: "gyros",
+    defaultDesc: "Authentic & Delicious",
   },
-  {
-    key: "burgers",
-    name: "Burgers",
+  "burgers-sandwiches": {
     emoji: "🍔",
-    description: "Juicy & Satisfying",
     image: "/products/cheeseburger.jpg",
-    subSearch: "burger",
+    defaultDesc: "Juicy & Satisfying",
   },
-  {
-    key: "party-wings",
-    name: "Party Wings",
+  "party-wings": {
     emoji: "🍗",
-    description: "Perfect for sharing",
     image: "/products/hot-wings.jpg",
-    dbCategorySlug: "party-wings",
+    defaultDesc: "Perfect for sharing",
   },
-  {
-    key: "rice-bowls",
-    name: "Rice Bowls",
-    emoji: "🍚",
-    description: "Fresh & Flavorful",
-    image: "/products/combo-platter.jpg",
-    dbCategorySlug: "platters",
-  },
-  {
-    key: "sandwiches",
-    name: "Sandwiches",
-    emoji: "🥪",
-    description: "Classic & Tasty",
-    image: "/products/chicken-sandwich.jpg",
-    subSearch: "sandwich",
-  },
-  {
-    key: "salads",
-    name: "Salads",
-    emoji: "🥗",
-    description: "Fresh & Healthy",
-    image: "/products/catering.jpg",
-    subSearch: "salad",
-  },
-  {
-    key: "sides",
-    name: "Sides",
+  sides: {
     emoji: "🍟",
-    description: "The perfect add-ons",
     image: "/products/fries.jpg",
-    dbCategorySlug: "sides",
+    defaultDesc: "The perfect add-ons",
   },
-  {
-    key: "beverages",
-    name: "Beverages",
+  drinks: {
     emoji: "🥤",
-    description: "Cool & Refreshing",
     image: "/products/soda-bottle.jpg",
-    dbCategorySlug: "drinks",
+    defaultDesc: "Cool & Refreshing",
   },
-  {
-    key: "desserts",
-    name: "Desserts",
-    emoji: "🍰",
-    description: "A sweet finish",
-    image: "/products/baklava.jpg",
-    subSearch: "dessert",
+  catering: {
+    emoji: "🍱",
+    image: "/products/catering.jpg",
+    defaultDesc: "Feast packages & party platters",
   },
-];
+};
+
+export function getCategoryVisual(category: {
+  id: number;
+  name: string;
+  slug?: string | null;
+  description?: string | null;
+}): FoodCategoryItem {
+  const slug = (category.slug || "").toLowerCase().trim();
+  const visual = CATEGORY_VISUALS[slug] || {
+    emoji: "🍽",
+    image: "/products/chicken-platter.jpg",
+    defaultDesc: "Fresh & delicious halal food",
+  };
+
+  return {
+    id: category.id,
+    key: slug || String(category.id),
+    name: category.name,
+    emoji: visual.emoji,
+    description: category.description || visual.defaultDesc,
+    image: visual.image,
+    slug: slug || String(category.id),
+  };
+}
 
 function matchesCategory(
   product: CatalogProduct,
   categoryKey: string,
-  categories: { id: number; slug?: string; name: string }[],
+  categories: FoodCategoryItem[],
 ): boolean {
   if (categoryKey === "all") return true;
-
-  const cat = FOOD_CATEGORIES.find((c) => c.key === categoryKey);
-  if (!cat) return true;
-
-  const pTags = (product.tags || "").toLowerCase();
-  const pName = product.name.toLowerCase();
-  const pDesc = (product.description || "").toLowerCase();
-
-  if (cat.key === "burgers") {
-    return pTags.includes("burger") || pName.includes("burger");
+  const match = categories.find((c) => c.key === categoryKey || c.slug === categoryKey || String(c.id) === categoryKey);
+  if (match) {
+    return product.categoryId === match.id;
   }
-  if (cat.key === "sandwiches") {
-    return (
-      pTags.includes("sandwich") ||
-      pName.includes("sandwich") ||
-      pTags.includes("cheesesteak") ||
-      pName.includes("cheesesteak") ||
-      (pTags.includes("shawarma") && !pTags.includes("platter") && !pTags.includes("gyro"))
-    );
-  }
-  if (cat.key === "rice-bowls") {
-    const platterCat = categories.find((c) => c.slug === "platters");
-    const isPlatter = platterCat ? product.categoryId === platterCat.id : false;
-    return isPlatter || pTags.includes("rice") || pName.includes("rice");
-  }
-  if (cat.key === "desserts") {
-    return pTags.includes("dessert") || pTags.includes("baklava") || pName.includes("baklava");
-  }
-  if (cat.key === "salads") {
-    return pTags.includes("salad") || pDesc.includes("garden salad") || pName.includes("salad");
-  }
-  if (cat.dbCategorySlug) {
-    const match = categories.find((c) => c.slug === cat.dbCategorySlug);
-    if (match && product.categoryId === match.id) return true;
-  }
-
   return false;
 }
 
@@ -222,10 +175,21 @@ function BuyerMarketplace() {
   const { user } = useAuth();
   const utils = trpc.useUtils();
 
+  const categoriesQuery = trpc.category.list.useQuery(undefined, { retry: false });
+
+  const displayCategories = useMemo(() => {
+    const list = categoriesQuery.data ?? [];
+    return list.map(getCategoryVisual);
+  }, [categoriesQuery.data]);
+
   const activeCategory = useMemo(() => {
     if (!categoryParam) return null;
-    return FOOD_CATEGORIES.find((c) => c.key === categoryParam) ?? null;
-  }, [categoryParam]);
+    return (
+      displayCategories.find(
+        (c) => c.key === categoryParam || c.slug === categoryParam || String(c.id) === categoryParam,
+      ) ?? null
+    );
+  }, [categoryParam, displayCategories]);
 
   const isCategoriesOverview = !activeCategory && !search.trim();
 
@@ -236,7 +200,6 @@ function BuyerMarketplace() {
     },
     { retry: false },
   );
-  const categoriesQuery = trpc.category.list.useQuery(undefined, { retry: false });
 
   const cartQuery = trpc.cart.list.useQuery(undefined, { retry: false });
   const guestCart = useGuestCart();
@@ -253,18 +216,17 @@ function BuyerMarketplace() {
   });
 
   const rawProducts = useMemo(() => (productsQuery.data ?? []) as CatalogProduct[], [productsQuery.data]);
-  const activeCategories = useMemo(() => categoriesQuery.data ?? [], [categoriesQuery.data]);
 
   const filteredProducts = useMemo(() => {
     if (activeCategory) {
       return rawProducts.filter(
         (p) =>
-          matchesCategory(p, activeCategory.key, activeCategories) &&
+          matchesCategory(p, activeCategory.key, displayCategories) &&
           matchesSearch(p, search),
       );
     }
     return rawProducts.filter((p) => matchesSearch(p, search));
-  }, [rawProducts, activeCategory, activeCategories, search]);
+  }, [rawProducts, activeCategory, displayCategories, search]);
 
   const sortedProducts = useMemo(() => {
     const list = [...filteredProducts];
@@ -391,11 +353,11 @@ function BuyerMarketplace() {
             </div>
           </div>
 
-          {/* 2-Column Responsive Grid of 10 Category Cards */}
+          {/* 2-Column Responsive Grid of Category Cards */}
           <div className="w-full grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2.5 sm:gap-3.5 box-border">
-            {FOOD_CATEGORIES.map((category) => (
+            {displayCategories.map((category) => (
               <button
-                key={category.key}
+                key={category.key || category.id}
                 id={`food-category-card-${category.key}`}
                 type="button"
                 onClick={() => {
@@ -1124,54 +1086,251 @@ function ProductCard({
 }
 function OwnerProductCatalog() {
   const [search, setSearch] = useState("");
-  const productsQuery = trpc.product.list.useQuery({ search: search || undefined, sortBy: "newest" }, { retry: false });
-  const products = useMemo(() => productsQuery.data ?? [], [productsQuery.data]);
+  const [selectedCategory, setSelectedCategory] = useState<string>("all");
+  const [selectedStatus, setSelectedStatus] = useState<string>("all");
+  const [featuredOnly, setFeaturedOnly] = useState<boolean>(false);
+
+  const utils = trpc.useUtils();
+  const categoriesQuery = trpc.category.list.useQuery(undefined, { retry: false });
+  const productsQuery = trpc.product.list.useQuery(
+    {
+      search: search || undefined,
+      categoryId: selectedCategory !== "all" ? Number(selectedCategory) : undefined,
+      status: selectedStatus !== "all" ? selectedStatus : undefined,
+      sortBy: "newest",
+    },
+    { retry: false }
+  );
+
+  const deleteProductMutation = trpc.product.delete.useMutation({
+    onSuccess: async () => {
+      await Promise.all([
+        utils.product.list.invalidate(),
+        utils.product.stats.invalidate(),
+      ]);
+      toast.success("Menu item removed successfully.");
+    },
+    onError: (err) => {
+      toast.error(err.message || "Failed to remove menu item.");
+    },
+  });
+
+  const rawProducts = useMemo(() => productsQuery.data ?? [], [productsQuery.data]);
+  const categories = useMemo(() => categoriesQuery.data ?? [], [categoriesQuery.data]);
+
+  const products = useMemo(() => {
+    let list = rawProducts;
+    if (featuredOnly) {
+      list = list.filter((p) => p.isFeatured || p.showInFreshDeals || (typeof p.tags === "string" && p.tags.includes("featured")));
+    }
+    return list;
+  }, [rawProducts, featuredOnly]);
+
   const stats = useMemo(() => ({
-    active: products.filter((product) => product.status === "active").length,
-    categories: new Set(products.map((product) => product.categoryId)).size,
-    avgPrice: products.length ? products.reduce((sum, product) => sum + toNumber(product.unitPrice), 0) / products.length : 0,
-  }), [products]);
+    total: rawProducts.length,
+    active: rawProducts.filter((product) => product.status === "active").length,
+    inactive: rawProducts.filter((product) => product.status !== "active" || (product.stock !== undefined && product.stock <= 0)).length,
+    featured: rawProducts.filter((product) => product.isFeatured || product.showInFreshDeals || (typeof product.tags === "string" && product.tags.includes("featured"))).length,
+  }), [rawProducts]);
+
+  const handleDelete = (id: number, name: string) => {
+    if (window.confirm(`Are you sure you want to remove "${name}" from the menu?`)) {
+      deleteProductMutation.mutate({ id });
+    }
+  };
 
   return (
     <div className="mx-auto flex w-full max-w-[1500px] flex-col gap-5">
       <section className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">Product Catalog</h1>
-          <p className="mt-1 text-sm text-muted-foreground">Manage wholesale SKUs, categories, pricing, and availability.</p>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Manage Shah's Halal food menu items, categories, pricing, and availability.
+          </p>
         </div>
-        <Link to="/products/new"><Button><Plus className="mr-2 h-4 w-4" />Add Product</Button></Link>
+        <Link to="/products/new">
+          <Button className="bg-primary hover:bg-primary/90 shadow-sm">
+            <Plus className="mr-2 h-4 w-4" />
+            Add Menu Item
+          </Button>
+        </Link>
       </section>
-      <section className="grid gap-3 md:grid-cols-4">
-        <MetricCard title="Products" value={products.length} loading={productsQuery.isLoading} />
-        <MetricCard title="Active SKUs" value={stats.active} loading={productsQuery.isLoading} />
-        <MetricCard title="Categories" value={stats.categories} loading={productsQuery.isLoading} />
-        <MetricCard title="Avg Selling Price" value={formatCurrency(stats.avgPrice)} loading={productsQuery.isLoading} />
+
+      <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <MetricCard title="Total Menu Items" value={stats.total} loading={productsQuery.isLoading} />
+        <MetricCard title="Active on Menu" value={stats.active} loading={productsQuery.isLoading} />
+        <MetricCard title="Out of Stock / Draft" value={stats.inactive} loading={productsQuery.isLoading} />
+        <MetricCard title="Featured Specials" value={stats.featured} loading={productsQuery.isLoading} />
       </section>
+
       <Card>
-        <CardContent className="p-4">
-          <div className="relative">
-            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <Input value={search} onChange={(event) => setSearch(event.target.value)} className="pl-9" placeholder="Search products, SKU, category, supplier..." />
+        <CardContent className="p-4 space-y-3">
+          <div className="flex flex-col gap-3 md:flex-row md:items-center">
+            <div className="relative flex-1">
+              <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                value={search}
+                onChange={(event) => setSearch(event.target.value)}
+                className="pl-9"
+                placeholder="Search dishes by name, ingredients, or category..."
+              />
+            </div>
+            <div className="flex flex-wrap items-center gap-2">
+              <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder="All Categories" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Categories</SelectItem>
+                  {categories.map((c) => (
+                    <SelectItem key={c.id} value={String(c.id)}>
+                      {c.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              <Select value={selectedStatus} onValueChange={setSelectedStatus}>
+                <SelectTrigger className="w-[150px]">
+                  <SelectValue placeholder="All Status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Status</SelectItem>
+                  <SelectItem value="active">Active / Serving</SelectItem>
+                  <SelectItem value="draft">Draft</SelectItem>
+                  <SelectItem value="archived">Out of Stock</SelectItem>
+                </SelectContent>
+              </Select>
+
+              <Button
+                variant={featuredOnly ? "default" : "outline"}
+                size="sm"
+                onClick={() => setFeaturedOnly(!featuredOnly)}
+                className="h-10 gap-1.5"
+              >
+                <Star className={`h-4 w-4 ${featuredOnly ? "fill-current" : ""}`} />
+                Featured Only
+              </Button>
+            </div>
           </div>
         </CardContent>
       </Card>
+
       <div className="space-y-3">
         {productsQuery.isLoading ? (
           Array.from({ length: 6 }).map((_, index) => <Skeleton key={index} className="h-20 rounded-xl" />)
         ) : products.length ? (
           products.map((product) => (
-            <Link key={product.id} to={`/products/${product.slug}`} className="grid gap-3 p-4 sm:p-6 rounded-xl border border-border bg-card shadow-sm hover:shadow-md transition-all md:grid-cols-[1fr_160px_120px_100px] items-center">
-              <div className="min-w-0">
-                <p className="truncate font-semibold">{product.name}</p>
-                <p className="text-xs text-muted-foreground mt-0.5">{product.categoryName ?? "Uncategorized"} · {product.supplierName ?? "Supplier"}</p>
+            <div
+              key={product.id}
+              className="flex flex-col gap-4 rounded-xl border border-border bg-card p-4 shadow-sm transition-all hover:shadow-md md:flex-row md:items-center md:justify-between"
+            >
+              <div className="flex items-center gap-3.5 min-w-0 flex-1">
+                <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-lg border bg-muted">
+                  {product.image ? (
+                    <img
+                      src={product.image}
+                      alt={product.name}
+                      className="h-full w-full object-cover"
+                      loading="lazy"
+                    />
+                  ) : (
+                    <div className="flex h-full w-full items-center justify-center bg-muted/60 text-muted-foreground">
+                      <Utensils className="h-6 w-6" />
+                    </div>
+                  )}
+                </div>
+                <div className="min-w-0 flex-1 space-y-1">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <Link
+                      to={`/products/${product.slug}`}
+                      className="truncate font-semibold text-foreground hover:text-primary transition-colors text-base"
+                    >
+                      {product.name}
+                    </Link>
+                    {product.isFeatured && (
+                      <Badge className="bg-amber-500/15 text-amber-700 dark:text-amber-400 border-amber-500/30 flex items-center gap-1 text-[11px] py-0 h-5">
+                        <Star className="h-3 w-3 fill-amber-400 text-amber-500" />
+                        Featured
+                      </Badge>
+                    )}
+                  </div>
+                  <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+                    <span className="font-medium text-foreground/80">
+                      {product.categoryName ?? "Halal Food"}
+                    </span>
+                    <span>•</span>
+                    <Badge variant="outline" className="text-[11px] py-0 h-4 border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 font-normal">
+                      100% Halal
+                    </Badge>
+                    {product.unitSize && (
+                      <>
+                        <span>•</span>
+                        <span>{product.unitSize}</span>
+                      </>
+                    )}
+                  </div>
+                </div>
               </div>
-              <p className="font-semibold text-primary">{formatCurrency(product.unitPrice)}</p>
-              <Badge variant="secondary" className="w-fit capitalize">{product.status}</Badge>
-              <p className="text-sm text-muted-foreground font-medium">MOQ {product.minimumOrderQuantity}</p>
-            </Link>
+
+              <div className="flex flex-wrap items-center justify-between gap-4 border-t pt-3 md:border-t-0 md:pt-0 md:justify-end">
+                <div className="text-left md:text-right">
+                  <p className="text-lg font-bold text-emerald-600 dark:text-emerald-400">
+                    {formatCurrency(product.unitPrice)}
+                  </p>
+                  {toNumber(product.compareAtPrice) > toNumber(product.unitPrice) && (
+                    <p className="text-xs text-muted-foreground line-through">
+                      {formatCurrency(product.compareAtPrice)}
+                    </p>
+                  )}
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <Badge
+                    variant={product.status === "active" ? "default" : "secondary"}
+                    className={`capitalize ${
+                      product.status === "active"
+                        ? "bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border-emerald-500/30"
+                        : "bg-muted text-muted-foreground"
+                    }`}
+                  >
+                    {product.status === "active" ? "Active" : product.status}
+                  </Badge>
+
+                  <Link to={`/products/${product.slug}/edit`}>
+                    <Button variant="outline" size="sm" className="h-8 gap-1 text-xs">
+                      <Pencil className="h-3.5 w-3.5" />
+                      Edit
+                    </Button>
+                  </Link>
+
+                  <Link to={`/products/${product.slug}`}>
+                    <Button variant="ghost" size="sm" className="h-8 gap-1 text-xs">
+                      <Eye className="h-3.5 w-3.5" />
+                      View
+                    </Button>
+                  </Link>
+
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-8 w-8 p-0 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+                    onClick={() => handleDelete(product.id, product.name)}
+                    disabled={deleteProductMutation.isPending}
+                    title="Delete menu item"
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </Button>
+                </div>
+              </div>
+            </div>
           ))
         ) : (
-          <div className="rounded-xl border border-dashed p-8 text-center text-sm text-muted-foreground bg-card">No products found.</div>
+          <div className="rounded-xl border border-dashed p-10 text-center text-sm text-muted-foreground bg-card space-y-2">
+            <Utensils className="mx-auto h-8 w-8 text-muted-foreground/40" />
+            <p className="font-medium text-foreground">No menu items found</p>
+            <p className="text-xs text-muted-foreground">Try adjusting your search query or filters.</p>
+          </div>
         )}
       </div>
     </div>

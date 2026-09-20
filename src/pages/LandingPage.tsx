@@ -199,7 +199,7 @@ export default function LandingPage() {
             <div className="flex items-center justify-center p-1 rounded-xl bg-white/10 backdrop-blur-xs border border-white/20 mb-1 shadow-xs">
               <img
                 src="/branding/am-fruits-logo.png"
-                alt="AM Fruits - Shah's Halal"
+                alt="Shah's Halal Food"
                 className="h-8 xs:h-9 w-auto object-contain"
               />
             </div>
