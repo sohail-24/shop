@@ -4,16 +4,10 @@ import { toast } from "sonner";
 import {
   Home,
   Utensils,
-  Beef,
-  Sandwich,
-  Flame,
-  Cookie,
-  CupSoda,
   LayoutGrid,
   Image as ImageIcon,
   Search,
   ShoppingCart,
-  Sparkles,
   Star,
   UserRound,
   Heart,
@@ -64,23 +58,25 @@ interface CategoryNavItem {
   name: string;
   icon: React.ElementType;
   emoji: string;
-  dbCategorySlug?: string;
-  subSearch?: string;
+  categoryId?: number;
 }
 
-const SIDEBAR_CATEGORIES: CategoryNavItem[] = [
-  { key: "all", name: "All Products", icon: LayoutGrid, emoji: "▦" },
-  { key: "platters", name: "Platters", icon: Utensils, emoji: "🍽", dbCategorySlug: "platters" },
-  { key: "gyros", name: "Gyros", icon: Beef, emoji: "🌯", dbCategorySlug: "gyros" },
-  { key: "burgers", name: "Burgers", icon: Sandwich, emoji: "🍔", subSearch: "burger" },
-  { key: "party-wings", name: "Party Wings", icon: Flame, emoji: "🍗", dbCategorySlug: "party-wings" },
-  { key: "rice-bowls", name: "Rice Bowls", icon: Utensils, emoji: "🍚", dbCategorySlug: "platters" },
-  { key: "sandwiches", name: "Sandwiches", icon: Sandwich, emoji: "🥪", subSearch: "sandwich" },
-  { key: "salads", name: "Salads", icon: Sparkles, emoji: "🥗", subSearch: "salad" },
-  { key: "sides", name: "Sides", icon: Cookie, emoji: "🍟", dbCategorySlug: "sides" },
-  { key: "beverages", name: "Beverages", icon: CupSoda, emoji: "🥤", dbCategorySlug: "drinks" },
-  { key: "desserts", name: "Desserts", icon: Cookie, emoji: "🍰", subSearch: "baklava" },
-];
+const ALL_PRODUCTS_CATEGORY: CategoryNavItem = {
+  key: "all",
+  name: "All Products",
+  icon: LayoutGrid,
+  emoji: "▦",
+};
+
+export function toCategoryNavItem(category: MarketplaceCategory): CategoryNavItem {
+  return {
+    key: `category-${category.id}`,
+    name: category.name,
+    icon: Utensils,
+    emoji: "🍽",
+    categoryId: category.id,
+  };
+}
 
 export default function LandingPage() {
   const { user, isAuthenticated } = useAuth();
@@ -97,31 +93,26 @@ export default function LandingPage() {
     () => (categoriesRaw ?? []) as MarketplaceCategory[],
     [categoriesRaw],
   );
-
-  const selectedNavItem = useMemo(
-    () => SIDEBAR_CATEGORIES.find((item) => item.key === selectedCategoryKey) ?? SIDEBAR_CATEGORIES[0],
-    [selectedCategoryKey],
+  const sidebarCategories = useMemo(
+    () => [ALL_PRODUCTS_CATEGORY, ...categories.map(toCategoryNavItem)],
+    [categories],
   );
 
-  const effectiveCategoryId = useMemo(() => {
-    if (selectedNavItem.key === "all" || !selectedNavItem.dbCategorySlug) return undefined;
-    const match = categories.find(
-      (c) =>
-        c.slug === selectedNavItem.dbCategorySlug ||
-        c.name.toLowerCase().includes(selectedNavItem.dbCategorySlug!),
-    );
-    return match ? match.id : undefined;
-  }, [categories, selectedNavItem]);
+  const selectedNavItem = useMemo(
+    () => sidebarCategories.find((item) => item.key === selectedCategoryKey) ?? ALL_PRODUCTS_CATEGORY,
+    [selectedCategoryKey, sidebarCategories],
+  );
 
-  const effectiveSearch = useMemo(() => {
-    const parts = [search.trim(), selectedNavItem.subSearch].filter(Boolean);
-    return parts.join(" ") || undefined;
-  }, [search, selectedNavItem]);
+  useEffect(() => {
+    if (selectedCategoryKey !== "all" && !sidebarCategories.some((item) => item.key === selectedCategoryKey)) {
+      setSelectedCategoryKey("all");
+    }
+  }, [selectedCategoryKey, sidebarCategories]);
 
   const productsQuery = trpc.product.list.useQuery(
     {
-      search: effectiveSearch,
-      categoryId: effectiveCategoryId,
+      search: search.trim() || undefined,
+      categoryId: selectedNavItem.categoryId,
       status: "active",
       sortBy: sort,
       sortOrder: sortOrder,
@@ -220,7 +211,7 @@ export default function LandingPage() {
 
           {/* Categories */}
           <nav className="flex flex-col gap-1 xs:gap-1.5">
-            {SIDEBAR_CATEGORIES.map((item) => {
+            {sidebarCategories.map((item) => {
               const isActive = selectedCategoryKey === item.key;
               const isAllProducts = item.key === "all";
               return (
@@ -299,7 +290,7 @@ export default function LandingPage() {
             <div className="px-3 pb-2 text-[11px] font-bold uppercase tracking-wider text-emerald-300/70">
               Menu Categories
             </div>
-            {SIDEBAR_CATEGORIES.map((item) => {
+            {sidebarCategories.map((item) => {
               const isActive = selectedCategoryKey === item.key;
               const isAllProducts = item.key === "all";
               const Icon = item.icon;
@@ -1104,4 +1095,3 @@ function EmptyState({ message }: { message: string }) {
     </div>
   );
 }
-

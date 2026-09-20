@@ -28,13 +28,17 @@ import { findAllInventory, updateInventory } from "./queries/inventory";
 const unitTypeSchema = z.enum(["kg", "lb", "case", "pallet", "each", "bunch", "box", "bag"]);
 const gradeSchema = z.enum(["premium", "grade_a", "grade_b", "standard"]);
 const statusSchema = z.enum(["draft", "active", "archived"]);
+export function isSupportedProductImageUrl(value: string) {
+  return value.startsWith("/api/uploads/") || value.startsWith("/products/") || /^https?:\/\//i.test(value);
+}
+
 const productImageUrlSchema = z
   .string()
   .trim()
   .max(2048)
   .refine(
-    (value) => value.startsWith("/api/uploads/") || /^https?:\/\//i.test(value),
-    "Product images must be uploaded files or HTTP(S) URLs.",
+    isSupportedProductImageUrl,
+    "Product images must be uploaded files, supported local product assets, or HTTP(S) URLs.",
   );
 
 const productMutationSchema = z.object({

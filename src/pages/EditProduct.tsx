@@ -42,6 +42,23 @@ type ImageRow = {
   failed?: boolean;
 };
 
+type ProductCategory = {
+  id: number;
+  name: string;
+  isActive: boolean;
+};
+
+export function categoriesForProductEdit(
+  categories: ProductCategory[],
+  currentCategoryId?: number | null,
+) {
+  // Active categories are assignable. Keep a product's existing inactive
+  // category in view so an unrelated edit does not silently clear it.
+  return categories.filter(
+    (category) => category.isActive || category.id === currentCategoryId,
+  );
+}
+
 async function uploadProductImage(file: File): Promise<string> {
   const formData = new FormData();
   formData.append("image", file);
@@ -113,7 +130,7 @@ export default function EditProduct() {
   });
 
   const productQuery = trpc.product.bySlug.useQuery({ slug: slug! }, { enabled: !!slug, retry: false });
-  const categoriesQuery = trpc.category.list.useQuery(undefined, { retry: false });
+  const categoriesQuery = trpc.category.list.useQuery({ includeInactive: true }, { retry: false });
   const companiesQuery = trpc.company.list.useQuery(undefined, { retry: false });
   const productId = productQuery.data?.id;
   const inventoryQuery = trpc.inventory.byProduct.useQuery(
@@ -139,7 +156,10 @@ export default function EditProduct() {
   });
 
   const product = productQuery.data;
-  const categories = categoriesQuery.data ?? [];
+  const categories = useMemo(
+    () => categoriesForProductEdit(categoriesQuery.data ?? [], product?.categoryId),
+    [categoriesQuery.data, product?.categoryId],
+  );
   const suppliers = (companiesQuery.data ?? []).filter(
     (company) => company.type === "supplier" || company.type === "both"
   );
@@ -253,7 +273,9 @@ export default function EditProduct() {
       id: product.id,
       name: form.name.trim(),
       sku: form.sku.trim() || undefined,
-      categoryId: Number(form.categoryId),
+      // The API accepts only active categories for a reassignment. Omitting an
+      // unchanged legacy inactive category preserves the existing relationship.
+      categoryId: Number(form.categoryId) === product.categoryId ? undefined : Number(form.categoryId),
       supplierId: form.supplierId ? Number(form.supplierId) : undefined,
       description: form.description.trim() || undefined,
       purchasePrice: purchase,
@@ -358,11 +380,23 @@ export default function EditProduct() {
                     <SelectValue placeholder="Select category" />
                   </SelectTrigger>
                   <SelectContent>
-                    {categories.map((category) => (
-                      <SelectItem key={category.id} value={String(category.id)}>
-                        {category.name}
-                      </SelectItem>
-                    ))}
+                    {categoriesQuery.isLoading ? (
+                      <SelectItem value="loading" disabled>Loading categories…</SelectItem>
+                    ) : categoriesQuery.isError ? (
+                      <SelectItem value="error" disabled>Could not load categories</SelectItem>
+                    ) : categories.length ? (
+                      categories.map((category) => (
+                        <SelectItem
+                          key={category.id}
+                          value={String(category.id)}
+                          disabled={!category.isActive}
+                        >
+                          {category.name}{category.isActive ? "" : " (inactive)"}
+                        </SelectItem>
+                      ))
+                    ) : (
+                      <SelectItem value="none" disabled>No active categories found</SelectItem>
+                    )}
                   </SelectContent>
                 </Select>
               </Field>
