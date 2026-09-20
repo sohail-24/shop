@@ -1,13 +1,12 @@
-import { useMemo, useState } from "react";
-import { Link } from "react-router";
+import { useEffect, useMemo, useState } from "react";
+import { Link, useSearchParams } from "react-router";
 import { toast } from "sonner";
 import { trpc } from "@/providers/trpc";
 import { useAuth } from "@/hooks/useAuth";
-import { addGuestCartItem } from "@/lib/guestCart";
+import { addGuestCartItem, useGuestCart } from "@/lib/guestCart";
 import { formatCurrency, toNumber, unitLabels } from "@/lib/i18n";
 import { getAppRole } from "@/lib/roles";
 import { MetricCard } from "@/components/freshflow/MetricCard";
-import { QuantitySelector } from "@/components/freshflow/QuantitySelector";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -19,14 +18,21 @@ import { Drawer, DrawerContent, DrawerTrigger, DrawerTitle, DrawerHeader } from 
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   ArrowLeft,
-  Eye,
+  ArrowRight,
+  ArrowUpDown,
+  CheckCircle2,
+  Heart,
+  Home,
   Image as ImageIcon,
+  LayoutGrid,
+  Minus,
   Package,
   Plus,
   Search,
   ShoppingCart,
   SlidersHorizontal,
   Star,
+  UserRound,
 } from "lucide-react";
 
 type CatalogProduct = {
@@ -38,13 +44,163 @@ type CatalogProduct = {
   categoryName?: string | null;
   supplierName?: string | null;
   unitPrice?: unknown;
+  compareAtPrice?: unknown;
   unitType?: string | null;
   unitSize?: string | null;
   minimumOrderQuantity?: number | null;
   status?: string | null;
   stock?: number | null;
   rating?: string | number | null;
+  tags?: string | null;
+  description?: string | null;
 };
+
+export interface FoodCategoryItem {
+  key: string;
+  name: string;
+  emoji: string;
+  description: string;
+  image: string;
+  dbCategorySlug?: string;
+  subSearch?: string;
+}
+
+export const FOOD_CATEGORIES: FoodCategoryItem[] = [
+  {
+    key: "platters",
+    name: "Platters",
+    emoji: "🍽",
+    description: "Hearty meals, full of flavor",
+    image: "/products/chicken-platter.jpg",
+    dbCategorySlug: "platters",
+  },
+  {
+    key: "gyros",
+    name: "Gyros",
+    emoji: "🌯",
+    description: "Authentic & Delicious",
+    image: "/products/combo-gyro.jpg",
+    dbCategorySlug: "gyros",
+  },
+  {
+    key: "burgers",
+    name: "Burgers",
+    emoji: "🍔",
+    description: "Juicy & Satisfying",
+    image: "/products/cheeseburger.jpg",
+    subSearch: "burger",
+  },
+  {
+    key: "party-wings",
+    name: "Party Wings",
+    emoji: "🍗",
+    description: "Perfect for sharing",
+    image: "/products/hot-wings.jpg",
+    dbCategorySlug: "party-wings",
+  },
+  {
+    key: "rice-bowls",
+    name: "Rice Bowls",
+    emoji: "🍚",
+    description: "Fresh & Flavorful",
+    image: "/products/combo-platter.jpg",
+    dbCategorySlug: "platters",
+  },
+  {
+    key: "sandwiches",
+    name: "Sandwiches",
+    emoji: "🥪",
+    description: "Classic & Tasty",
+    image: "/products/chicken-sandwich.jpg",
+    subSearch: "sandwich",
+  },
+  {
+    key: "salads",
+    name: "Salads",
+    emoji: "🥗",
+    description: "Fresh & Healthy",
+    image: "/products/catering.jpg",
+    subSearch: "salad",
+  },
+  {
+    key: "sides",
+    name: "Sides",
+    emoji: "🍟",
+    description: "The perfect add-ons",
+    image: "/products/fries.jpg",
+    dbCategorySlug: "sides",
+  },
+  {
+    key: "beverages",
+    name: "Beverages",
+    emoji: "🥤",
+    description: "Cool & Refreshing",
+    image: "/products/soda-bottle.jpg",
+    dbCategorySlug: "drinks",
+  },
+  {
+    key: "desserts",
+    name: "Desserts",
+    emoji: "🍰",
+    description: "A sweet finish",
+    image: "/products/baklava.jpg",
+    subSearch: "dessert",
+  },
+];
+
+function matchesCategory(
+  product: CatalogProduct,
+  categoryKey: string,
+  categories: { id: number; slug?: string; name: string }[],
+): boolean {
+  if (categoryKey === "all") return true;
+
+  const cat = FOOD_CATEGORIES.find((c) => c.key === categoryKey);
+  if (!cat) return true;
+
+  const pTags = (product.tags || "").toLowerCase();
+  const pName = product.name.toLowerCase();
+  const pDesc = (product.description || "").toLowerCase();
+
+  if (cat.key === "burgers") {
+    return pTags.includes("burger") || pName.includes("burger");
+  }
+  if (cat.key === "sandwiches") {
+    return (
+      pTags.includes("sandwich") ||
+      pName.includes("sandwich") ||
+      pTags.includes("cheesesteak") ||
+      pName.includes("cheesesteak") ||
+      (pTags.includes("shawarma") && !pTags.includes("platter") && !pTags.includes("gyro"))
+    );
+  }
+  if (cat.key === "rice-bowls") {
+    const platterCat = categories.find((c) => c.slug === "platters");
+    const isPlatter = platterCat ? product.categoryId === platterCat.id : false;
+    return isPlatter || pTags.includes("rice") || pName.includes("rice");
+  }
+  if (cat.key === "desserts") {
+    return pTags.includes("dessert") || pTags.includes("baklava") || pName.includes("baklava");
+  }
+  if (cat.key === "salads") {
+    return pTags.includes("salad") || pDesc.includes("garden salad") || pName.includes("salad");
+  }
+  if (cat.dbCategorySlug) {
+    const match = categories.find((c) => c.slug === cat.dbCategorySlug);
+    if (match && product.categoryId === match.id) return true;
+  }
+
+  return false;
+}
+
+function matchesSearch(product: CatalogProduct, query: string): boolean {
+  if (!query.trim()) return true;
+  const q = query.trim().toLowerCase();
+  const name = product.name.toLowerCase();
+  const desc = (product.description || "").toLowerCase();
+  const tags = (product.tags || "").toLowerCase();
+  return name.includes(q) || desc.includes(q) || tags.includes(q);
+}
 
 export default function Products() {
   const { user } = useAuth();
@@ -59,21 +215,35 @@ export default function Products() {
 }
 
 function BuyerMarketplace() {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const categoryParam = searchParams.get("category");
   const [search, setSearch] = useState("");
-  const [categoryId, setCategoryId] = useState("all");
   const [sort, setSort] = useState("newest");
   const { user } = useAuth();
   const utils = trpc.useUtils();
+
+  const activeCategory = useMemo(() => {
+    if (!categoryParam) return null;
+    return FOOD_CATEGORIES.find((c) => c.key === categoryParam) ?? null;
+  }, [categoryParam]);
+
+  const isCategoriesOverview = !activeCategory && !search.trim();
+
   const productsQuery = trpc.product.list.useQuery(
     {
-      search: search || undefined,
-      categoryId: categoryId !== "all" ? Number(categoryId) : undefined,
       status: "active",
-      sortBy: sort === "price" ? "price" : "newest",
+      sortBy: sort === "price_asc" || sort === "price_desc" ? "price" : "newest",
     },
     { retry: false },
   );
   const categoriesQuery = trpc.category.list.useQuery(undefined, { retry: false });
+
+  const cartQuery = trpc.cart.list.useQuery(undefined, { retry: false });
+  const guestCart = useGuestCart();
+  const cartCount = user
+    ? (cartQuery.data?.items?.reduce((sum, item) => sum + item.quantity, 0) ?? 0)
+    : guestCart.items.reduce((sum, item) => sum + item.quantity, 0);
+
   const addToCart = trpc.cart.add.useMutation({
     onSuccess: async () => {
       await utils.cart.list.invalidate();
@@ -82,8 +252,33 @@ function BuyerMarketplace() {
     onError: (error) => toast.error(error.message || "Could not add product to cart."),
   });
 
-  const products = (productsQuery.data ?? []) as CatalogProduct[];
-  const activeCategories = categoriesQuery.data ?? [];
+  const rawProducts = useMemo(() => (productsQuery.data ?? []) as CatalogProduct[], [productsQuery.data]);
+  const activeCategories = useMemo(() => categoriesQuery.data ?? [], [categoriesQuery.data]);
+
+  const filteredProducts = useMemo(() => {
+    if (activeCategory) {
+      return rawProducts.filter(
+        (p) =>
+          matchesCategory(p, activeCategory.key, activeCategories) &&
+          matchesSearch(p, search),
+      );
+    }
+    return rawProducts.filter((p) => matchesSearch(p, search));
+  }, [rawProducts, activeCategory, activeCategories, search]);
+
+  const sortedProducts = useMemo(() => {
+    const list = [...filteredProducts];
+    if (sort === "price_asc") {
+      return list.sort((a, b) => toNumber(a.unitPrice) - toNumber(b.unitPrice));
+    }
+    if (sort === "price_desc") {
+      return list.sort((a, b) => toNumber(b.unitPrice) - toNumber(a.unitPrice));
+    }
+    if (sort === "rating") {
+      return list.sort((a, b) => (Number(b.rating) || 4.8) - (Number(a.rating) || 4.8));
+    }
+    return list;
+  }, [filteredProducts, sort]);
 
   function addProductToCart(product: CatalogProduct, quantity: number) {
     if (quantity > (product.stock ?? 0)) {
@@ -110,250 +305,818 @@ function BuyerMarketplace() {
     toast.success("Product added to cart.");
   }
 
-  return (
-    <div className="mx-auto flex w-full max-w-[1500px] flex-col gap-3 md:gap-4 pb-16 md:pb-0">
-      <section className="rounded-lg border bg-card shadow-sm">
-        <div className="flex flex-col gap-3 border-b p-4 lg:flex-row lg:items-center lg:justify-between">
-          <Link to="/" className="flex items-center gap-2 text-lg font-semibold">
-            <ArrowLeft className="h-4 w-4" />
-            Shah's Halal
-          </Link>
-          <div className="relative flex-1 lg:max-w-xl">
-            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <Input value={search} onChange={(event) => setSearch(event.target.value)} className="pl-9" placeholder="Search menu items..." />
+  // ─────────────────────────────────────────────────────────────
+  // 1. DEDICATED FOOD CATEGORIES PAGE (when no category is selected)
+  // ─────────────────────────────────────────────────────────────
+  if (isCategoriesOverview) {
+    return (
+      <div className="min-h-screen bg-slate-50/50 flex flex-col justify-between overflow-x-hidden">
+        {/* Header: Home Link + Shah's Halal Logo & Name + Profile + Cart */}
+        <header className="sticky top-0 z-30 bg-white/95 backdrop-blur-md border-b border-slate-200/80 px-2.5 py-2 sm:px-4 sm:py-2.5 shadow-xs">
+          <div className="flex items-center justify-between gap-2 max-w-[1500px] mx-auto">
+            <Link to="/" className="flex items-center gap-2 group">
+              <div className="flex h-7 w-7 sm:h-8 sm:w-8 items-center justify-center rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200/60 group-hover:bg-emerald-100 transition-colors">
+                <ArrowLeft className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+              </div>
+              <img
+                src="/branding/am-fruits-logo.png"
+                alt="Shah's Halal"
+                className="h-7 w-7 sm:h-8 sm:w-8 object-contain rounded-md border border-slate-100 bg-white p-0.5 shadow-xs"
+              />
+              <div>
+                <h1 className="text-xs sm:text-base font-extrabold text-slate-900 leading-tight">
+                  Shah's Halal
+                </h1>
+                <p className="text-[9px] sm:text-xs text-slate-500 font-medium leading-none mt-0.5">
+                  Fresh Food • Pure Taste
+                </p>
+              </div>
+            </Link>
+
+            <div className="flex items-center gap-1.5 sm:gap-2">
+              <Link
+                to="/admin/login"
+                id="header-user-button"
+                aria-label="Account Login"
+                className="flex h-8 w-8 sm:h-9 sm:w-9 items-center justify-center rounded-full bg-slate-100 text-slate-700 hover:bg-slate-200/80 transition-colors"
+              >
+                <UserRound className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-slate-700" />
+              </Link>
+              <Link
+                to="/cart"
+                id="header-cart-button"
+                aria-label="View shopping cart"
+                className="relative flex h-8 w-8 sm:h-9 sm:w-9 items-center justify-center rounded-full bg-slate-100 text-slate-700 hover:bg-slate-200/80 transition-colors"
+              >
+                <ShoppingCart className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-slate-700" />
+                {cartCount > 0 && (
+                  <span className="absolute -top-1 -right-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-emerald-600 px-1 text-[9px] font-bold text-white shadow-xs">
+                    {cartCount}
+                  </span>
+                )}
+              </Link>
+            </div>
           </div>
-          <div className="hidden lg:flex gap-2">
-            <Button variant="outline" size="icon"><ShoppingCart className="h-4 w-4" /></Button>
-            <Button variant="outline" size="icon"><Star className="h-4 w-4" /></Button>
+        </header>
+
+        {/* Categories Main Content */}
+        <main className="mx-auto flex w-full max-w-[1500px] flex-col gap-2.5 sm:gap-3 px-2.5 sm:px-4 pt-2.5 sm:pt-3.5 pb-28 md:pb-8 flex-1">
+          {/* Search Field */}
+          <div className="relative">
+            <Search className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 sm:h-4 sm:w-4 text-slate-400" />
+            <Input
+              value={search}
+              onChange={(event) => setSearch(event.target.value)}
+              className="h-9 sm:h-10 pl-9 pr-9 rounded-xl border-slate-200 bg-white focus:bg-white text-xs sm:text-sm placeholder:text-slate-400 focus-visible:ring-emerald-600 shadow-xs"
+              placeholder="Search for products, platters, burgers, and more..."
+            />
+            <Search className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 sm:h-4 sm:w-4 text-slate-400" />
           </div>
-        </div>
-        <div className="flex gap-2 overflow-x-auto p-3">
-          <Button
-            type="button"
-            variant={categoryId === "all" ? "default" : "ghost"}
-            className="shrink-0"
-            onClick={() => setCategoryId("all")}
-          >
-            All Products
-          </Button>
-          {activeCategories.map((category) => (
-            <Button
-              key={category.id}
-              type="button"
-              variant={categoryId === String(category.id) ? "default" : "ghost"}
-              className="shrink-0"
-              onClick={() => setCategoryId(String(category.id))}
+
+          {/* Section Title & Slogan */}
+          <div className="text-center pt-0.5 pb-0.5 space-y-0.5">
+            <div className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-extrabold uppercase tracking-wider text-emerald-900">
+              <span className="text-base leading-none">🌿</span>
+              <span>FOOD CATEGORIES</span>
+            </div>
+            <p className="text-[11px] sm:text-xs text-slate-500 font-medium">
+              Choose what you're craving
+            </p>
+
+            {/* Decorative Slogan */}
+            <div className="pt-0.5 text-center">
+              <p className="text-[11px] xs:text-xs font-serif italic text-emerald-800/80 tracking-wide">
+                Good Food Brings Good People
+              </p>
+            </div>
+          </div>
+
+          {/* 2-Column Responsive Grid of 10 Category Cards */}
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2.5 sm:gap-3.5">
+            {FOOD_CATEGORIES.map((category) => (
+              <button
+                key={category.key}
+                id={`food-category-card-${category.key}`}
+                type="button"
+                onClick={() => {
+                  setSearchParams({ category: category.key });
+                  window.scrollTo({ top: 0, behavior: "smooth" });
+                }}
+                className="group relative flex flex-col justify-end overflow-hidden rounded-xl sm:rounded-2xl h-36 xs:h-40 sm:h-44 md:h-48 w-full text-left shadow-xs hover:shadow-md transition-all active:scale-[0.98] border border-slate-200/80 cursor-pointer"
+              >
+                {/* Full Card Food Image */}
+                <img
+                  src={category.image}
+                  alt={category.name}
+                  className="absolute inset-0 h-full w-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out"
+                  loading="lazy"
+                />
+
+                {/* Dark Gradient Overlay: Transparent to Dark Green/Black */}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/50 via-40% to-transparent" />
+
+                {/* Text OVER the image at bottom */}
+                <div className="relative z-10 p-2.5 sm:p-3 flex flex-col justify-end w-full">
+                  <div className="flex items-center justify-between gap-1.5">
+                    <h3 className="text-xs xs:text-sm sm:text-base font-extrabold text-white tracking-tight flex items-center gap-1 drop-shadow-sm">
+                      <span className="text-sm sm:text-base">{category.emoji}</span>
+                      <span>{category.name}</span>
+                    </h3>
+                    <div className="flex h-5 w-5 xs:h-6 xs:w-6 sm:h-7 sm:w-7 shrink-0 items-center justify-center rounded-full border border-white/70 bg-black/30 text-white backdrop-blur-xs group-hover:bg-emerald-600 group-hover:border-emerald-600 transition-colors">
+                      <ArrowRight className="h-2.5 w-2.5 xs:h-3 xs:w-3 sm:h-3.5 sm:w-3.5" />
+                    </div>
+                  </div>
+                  <p className="text-[10px] xs:text-[11px] sm:text-xs font-medium text-emerald-100/90 line-clamp-1 mt-0.5 drop-shadow-xs">
+                    {category.description}
+                  </p>
+                </div>
+              </button>
+            ))}
+          </div>
+
+          {/* 100% Certified Halal Trust Banner */}
+          <div className="mt-1 rounded-xl border border-emerald-800/40 bg-gradient-to-r from-emerald-950 via-emerald-900 to-emerald-950 px-4 py-3 text-center text-white shadow-xs">
+            <div className="flex items-center justify-center gap-1.5 text-xs sm:text-sm font-extrabold tracking-wide text-amber-300 uppercase">
+              <span className="text-sm">☪</span>
+              <span>100% CERTIFIED HALAL</span>
+            </div>
+            <p className="text-[10px] sm:text-xs text-emerald-200/90 font-medium mt-0.5">
+              Fresh • Healthy • Pure Taste
+            </p>
+          </div>
+        </main>
+
+        {/* Mobile Bottom Navigation - Categories is ACTIVE GREEN */}
+        <nav
+          aria-label="Mobile Navigation"
+          className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-[#FFFFFF] border-t border-[#E5E7EB] shadow-[0_-1px_6px_rgba(0,0,0,0.04)] px-2 py-1 pb-[max(0.25rem,env(safe-area-inset-bottom))]"
+        >
+          <div className="grid grid-cols-4 items-center max-w-md mx-auto">
+            {/* 1. Home */}
+            <Link
+              to="/"
+              id="mobile-nav-home"
+              className="flex flex-col items-center justify-center py-0.5 text-slate-500 hover:text-slate-800 font-medium transition-colors group"
             >
-              {category.name}
-            </Button>
-          ))}
-        </div>
-      </section>
+              <Home className="h-5 w-5 text-slate-500 group-hover:text-slate-800 group-hover:scale-110 transition-all" />
+              <span className="text-[10px] xs:text-[11px] mt-0.5 leading-none">Home</span>
+            </Link>
 
-      <div className="grid gap-4 lg:grid-cols-[240px_minmax(0,1fr)]">
-        <aside className="hidden lg:block rounded-lg border bg-card p-4 shadow-sm">
-          <h2 className="mb-4 text-sm font-semibold uppercase text-muted-foreground">Filters</h2>
-          <div className="space-y-6">
-            <div className="space-y-3">
-              <Label>Category</Label>
-              <Select value={categoryId} onValueChange={setCategoryId}>
-                <SelectTrigger><SelectValue placeholder="Category" /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Categories</SelectItem>
-                  {activeCategories.map((category) => (
-                    <SelectItem key={category.id} value={String(category.id)}>{category.name}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <FilterCheck label="100% Certified Halal" checked />
-            <FilterCheck label="Platters Over Rice" />
-            <FilterCheck label="Pita Gyros & Wraps" />
-            <FilterCheck label="Wings & Sides" />
-            <div className="space-y-2">
-              <Label>Price Range</Label>
-              <div className="rounded-md border p-3 text-sm text-muted-foreground">$1.00 ───── $30.00</div>
-            </div>
-            <div className="space-y-2">
-              <Label>Restaurant</Label>
-              <Select defaultValue="all">
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent><SelectItem value="all">Shah's Halal Food</SelectItem></SelectContent>
-              </Select>
-            </div>
-            <FilterCheck label="Available to Order" checked />
-            <div className="space-y-2">
-              <Label>Rating</Label>
-              <div className="text-sm">★★★★★ 4.8+</div>
-              <div className="text-sm">★★★★☆ 4.0+</div>
-            </div>
-            <Button variant="outline" className="w-full" onClick={() => { setCategoryId("all"); setSearch(""); }}>Reset Filters</Button>
+            {/* 2. Categories - ACTIVE GREEN */}
+            <Link
+              to="/products"
+              id="mobile-nav-categories"
+              onClick={() => {
+                setSearchParams({});
+                setSearch("");
+                window.scrollTo({ top: 0, behavior: "smooth" });
+              }}
+              className="flex flex-col items-center justify-center py-0.5 text-emerald-700 font-bold transition-colors group"
+            >
+              <LayoutGrid className="h-5 w-5 text-emerald-700 group-hover:scale-110 transition-transform" />
+              <span className="text-[10px] xs:text-[11px] font-bold mt-0.5 leading-none">Categories</span>
+            </Link>
+
+            {/* 3. Cart */}
+            <Link
+              to="/cart"
+              id="mobile-nav-cart"
+              className="relative flex flex-col items-center justify-center py-0.5 text-slate-500 hover:text-slate-800 font-medium transition-colors group"
+            >
+              <div className="relative">
+                <ShoppingCart className="h-5 w-5 text-slate-500 group-hover:text-slate-800 group-hover:scale-110 transition-all" />
+                {!!cartCount && (
+                  <span className="absolute -top-1.5 -right-2.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-emerald-600 px-1 text-[9px] font-bold text-white shadow-xs">
+                    {cartCount}
+                  </span>
+                )}
+              </div>
+              <span className="text-[10px] xs:text-[11px] mt-0.5 leading-none">Cart</span>
+            </Link>
+
+            {/* 4. Login */}
+            <Link
+              to="/admin/login"
+              id="mobile-nav-login"
+              className="flex flex-col items-center justify-center py-0.5 text-slate-500 hover:text-slate-800 font-medium transition-colors group"
+            >
+              <UserRound className="h-5 w-5 text-slate-500 group-hover:text-slate-800 group-hover:scale-110 transition-all" />
+              <span className="text-[10px] xs:text-[11px] mt-0.5 leading-none">Login</span>
+            </Link>
           </div>
-        </aside>
+        </nav>
+      </div>
+    );
+  }
 
-        <main className="min-w-0 space-y-4">
-          <Card>
-            <CardContent className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between">
-              <div className="hidden md:flex flex-wrap gap-2">
-                <Select value={sort} onValueChange={setSort}>
-                  <SelectTrigger className="w-36"><SelectValue /></SelectTrigger>
+  // ─────────────────────────────────────────────────────────────
+  // 2. CATEGORY PRODUCTS VIEW (when category or search is active)
+  // ─────────────────────────────────────────────────────────────
+  return (
+    <div className="min-h-screen bg-slate-50/50 flex flex-col justify-between overflow-x-hidden">
+      {/* Header: Back to Categories + Shah's Halal + Profile + Cart */}
+      <header className="sticky top-0 z-30 bg-white/95 backdrop-blur-md border-b border-slate-200/80 px-2.5 py-2 sm:px-4 sm:py-2.5 shadow-xs">
+        <div className="flex items-center justify-between gap-2 max-w-[1500px] mx-auto">
+          <button
+            type="button"
+            onClick={() => {
+              setSearchParams({});
+              setSearch("");
+              window.scrollTo({ top: 0, behavior: "smooth" });
+            }}
+            className="flex items-center gap-2 group text-left"
+          >
+            <div className="flex h-7 w-7 sm:h-8 sm:w-8 items-center justify-center rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200/60 group-hover:bg-emerald-100 transition-colors">
+              <ArrowLeft className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+            </div>
+            <img
+              src="/branding/am-fruits-logo.png"
+              alt="Shah's Halal"
+              className="h-7 w-7 sm:h-8 sm:w-8 object-contain rounded-md border border-slate-100 bg-white p-0.5 shadow-xs"
+            />
+            <div>
+              <h1 className="text-xs sm:text-base font-extrabold text-slate-900 leading-tight">
+                Shah's Halal
+              </h1>
+              <p className="text-[9px] sm:text-xs text-slate-500 font-medium leading-none mt-0.5">
+                Fresh Food • Pure Taste
+              </p>
+            </div>
+          </button>
+
+          <div className="flex items-center gap-1.5 sm:gap-2">
+            <Link
+              to="/admin/login"
+              id="header-user-button"
+              aria-label="Account Login"
+              className="flex h-8 w-8 sm:h-9 sm:w-9 items-center justify-center rounded-full bg-slate-100 text-slate-700 hover:bg-slate-200/80 transition-colors"
+            >
+              <UserRound className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-slate-700" />
+            </Link>
+            <Link
+              to="/cart"
+              id="header-cart-button"
+              aria-label="View shopping cart"
+              className="relative flex h-8 w-8 sm:h-9 sm:w-9 items-center justify-center rounded-full bg-slate-100 text-slate-700 hover:bg-slate-200/80 transition-colors"
+            >
+              <ShoppingCart className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-slate-700" />
+              {cartCount > 0 && (
+                <span className="absolute -top-1 -right-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-emerald-600 px-1 text-[9px] font-bold text-white shadow-xs">
+                  {cartCount}
+                </span>
+              )}
+            </Link>
+          </div>
+        </div>
+      </header>
+
+      {/* Main Page Container */}
+      <div className="mx-auto flex w-full max-w-[1500px] flex-col gap-2.5 sm:gap-3.5 px-2.5 sm:px-4 pt-2 sm:pt-3 pb-32 md:pb-8 flex-1">
+        {/* Search Field */}
+        <div className="relative">
+          <Search className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 sm:h-4 sm:w-4 text-slate-400" />
+          <Input
+            value={search}
+            onChange={(event) => setSearch(event.target.value)}
+            className="h-8.5 sm:h-10 pl-9 pr-3 rounded-lg sm:rounded-xl border-slate-200 bg-white focus:bg-white text-xs sm:text-sm placeholder:text-slate-400 focus-visible:ring-emerald-600 shadow-xs"
+            placeholder={activeCategory ? `Search in ${activeCategory.name}...` : "Search menu items..."}
+          />
+        </div>
+
+        {/* Back to Categories Link Bar */}
+        <div className="flex items-center justify-between gap-2 pt-0.5">
+          <button
+            type="button"
+            onClick={() => {
+              setSearchParams({});
+              setSearch("");
+              window.scrollTo({ top: 0, behavior: "smooth" });
+            }}
+            className="inline-flex items-center gap-1.5 text-[11px] sm:text-xs font-bold text-emerald-800 hover:text-emerald-950 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200/80 px-2.5 py-1 rounded-lg transition-colors"
+          >
+            <ArrowLeft className="h-3.5 w-3.5" />
+            <span>All Categories</span>
+          </button>
+          <span className="inline-flex items-center gap-1 font-semibold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200/80 text-[10px] sm:text-xs">
+            <CheckCircle2 className="h-3 w-3 text-emerald-600" />
+            100% Certified Halal
+          </span>
+        </div>
+
+        {/* Category Title & Horizontal Scrolling Tabs */}
+        <div className="space-y-1.5 sm:space-y-2">
+          <div className="space-y-0.5">
+            <h2 className="text-xs sm:text-base font-extrabold uppercase tracking-wider text-emerald-900 flex items-center gap-1.5">
+              <span>{activeCategory ? activeCategory.emoji : "🔍"}</span>
+              <span>{activeCategory ? activeCategory.name : "Search Results"}</span>
+            </h2>
+            <p className="text-[10px] sm:text-xs text-slate-500 leading-tight">
+              {activeCategory ? activeCategory.description : `Showing results for "${search}"`}
+            </p>
+          </div>
+
+          {/* Horizontally scrollable row on mobile without wrapping */}
+          <div className="flex gap-1.5 sm:gap-2 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+            <button
+              type="button"
+              onClick={() => {
+                setSearchParams({});
+                setSearch("");
+                window.scrollTo({ top: 0, behavior: "smooth" });
+              }}
+              className="shrink-0 px-2.5 py-1.5 sm:px-3 sm:py-2 rounded-lg sm:rounded-xl text-[11px] sm:text-xs font-semibold transition-all whitespace-nowrap bg-slate-100 text-slate-700 hover:bg-slate-200 flex items-center gap-1 border border-slate-200"
+            >
+              <ArrowLeft className="h-3 w-3" />
+              <span>Categories</span>
+            </button>
+            {FOOD_CATEGORIES.map((category) => {
+              const isSelected = activeCategory?.key === category.key;
+              return (
+                <button
+                  key={category.key}
+                  id={`category-tab-${category.key}`}
+                  type="button"
+                  onClick={() => {
+                    setSearchParams({ category: category.key });
+                  }}
+                  className={`shrink-0 px-3 py-1.5 sm:px-3.5 sm:py-2 rounded-lg sm:rounded-xl text-[11px] sm:text-xs transition-all whitespace-nowrap flex items-center gap-1.5 ${
+                    isSelected
+                      ? "bg-emerald-700 text-white font-bold shadow-xs hover:bg-emerald-800 border border-emerald-700"
+                      : "bg-white text-slate-700 border border-slate-200 hover:bg-slate-50 hover:text-slate-950 font-medium"
+                  }`}
+                >
+                  <span className="text-xs sm:text-sm leading-none">{category.emoji}</span>
+                  <span>{category.name}</span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Product Count Row */}
+        <div className="flex items-center justify-between text-xs px-0.5 pt-0.5">
+          <span className="font-bold text-slate-900 text-xs sm:text-sm">
+            {sortedProducts.length} Products
+          </span>
+          <span className="inline-flex items-center gap-1 font-semibold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200/80 text-[10px] sm:text-xs">
+            <CheckCircle2 className="h-3 w-3 text-emerald-600" />
+            Fresh & Halal
+          </span>
+        </div>
+
+        {/* Main Catalog Content Area */}
+        <div className="grid gap-5 lg:grid-cols-[240px_minmax(0,1fr)]">
+          {/* Desktop Aside Filters (hidden on mobile) */}
+          <aside className="hidden lg:block rounded-xl border border-slate-200 bg-white p-4 shadow-xs self-start">
+            <h2 className="mb-4 text-xs font-bold uppercase tracking-wider text-slate-500">
+              Filters
+            </h2>
+            <div className="space-y-5">
+              <div className="space-y-2">
+                <Label className="text-xs font-semibold text-slate-700">Category</Label>
+                <Select
+                  value={activeCategory?.key ?? ""}
+                  onValueChange={(val) => {
+                    setSearchParams({ category: val });
+                  }}
+                >
+                  <SelectTrigger><SelectValue placeholder="Select Category" /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="newest">Newest</SelectItem>
-                    <SelectItem value="price">Price</SelectItem>
-                    <SelectItem value="rating">Rating</SelectItem>
+                    {FOOD_CATEGORIES.map((category) => (
+                      <SelectItem key={category.key} value={category.key}>
+                        {category.emoji} {category.name}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
-                <Button variant="outline"><SlidersHorizontal className="mr-2 h-4 w-4" />Price</Button>
-                <Button variant="outline"><Star className="mr-2 h-4 w-4" />Rating</Button>
               </div>
-              <p className="text-sm font-medium">{products.length} Products</p>
-            </CardContent>
-          </Card>
-
-          {productsQuery.isLoading ? (
-            <div className="grid grid-cols-2 gap-2 sm:gap-4 sm:grid-cols-2 xl:grid-cols-4">
-              {Array.from({ length: 8 }).map((_, index) => <Skeleton key={index} className="h-80" />)}
+              <FilterCheck label="100% Certified Halal" checked />
+              <FilterCheck label="Platters Over Rice" />
+              <FilterCheck label="Pita Gyros & Wraps" />
+              <FilterCheck label="Wings & Sides" />
+              <div className="space-y-2">
+                <Label className="text-xs font-semibold text-slate-700">Price Range</Label>
+                <div className="rounded-md border p-2.5 text-xs text-muted-foreground">$1.00 ───── $30.00</div>
+              </div>
+              <div className="space-y-2">
+                <Label className="text-xs font-semibold text-slate-700">Restaurant</Label>
+                <Select defaultValue="all">
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent><SelectItem value="all">Shah's Halal Food</SelectItem></SelectContent>
+                </Select>
+              </div>
+              <FilterCheck label="Available to Order" checked />
+              <Button
+                variant="outline"
+                className="w-full text-xs font-medium"
+                onClick={() => {
+                  setSearchParams({});
+                  setSearch("");
+                }}
+              >
+                Back to All Categories
+              </Button>
             </div>
-          ) : (
-            <div className="grid grid-cols-2 gap-2 sm:gap-4 sm:grid-cols-2 xl:grid-cols-4">
-              {products.map((product) => (
-                <ProductCard key={product.id} product={product} onAdd={(quantity) => addProductToCart(product, quantity)} pending={addToCart.isPending} />
-              ))}
-            </div>
-          )}
+          </aside>
 
-          {!productsQuery.isLoading && !products.length && (
-            <Card>
-              <CardContent className="flex min-h-60 flex-col items-center justify-center p-8 text-center">
-                <Package className="mb-3 h-10 w-10 text-muted-foreground/50" />
-                <h2 className="font-semibold">No active products found</h2>
-                <p className="mt-1 max-w-md text-sm text-muted-foreground">
-                  Products created and published by the business owner will appear here.
-                </p>
-              </CardContent>
-            </Card>
-          )}
-        </main>
+          {/* Product Grid Area */}
+          <main className="min-w-0 space-y-4">
+            {/* Desktop-only sort bar */}
+            <div className="hidden lg:flex items-center justify-between p-3 rounded-xl border border-slate-200 bg-white shadow-xs">
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-medium text-slate-500">Sort by:</span>
+                <Select value={sort} onValueChange={setSort}>
+                  <SelectTrigger className="w-44 h-8 text-xs"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="newest">Featured & Newest</SelectItem>
+                    <SelectItem value="price_asc">Price: Low to High</SelectItem>
+                    <SelectItem value="price_desc">Price: High to Low</SelectItem>
+                    <SelectItem value="rating">Highest Rated</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <p className="text-xs font-medium text-slate-600">{sortedProducts.length} Products displayed</p>
+            </div>
+
+            {/* 2 Products Per Row on Mobile (grid-cols-2) */}
+            {productsQuery.isLoading ? (
+              <div className="grid grid-cols-2 gap-2 sm:gap-4 md:grid-cols-3 xl:grid-cols-4">
+                {Array.from({ length: 8 }).map((_, index) => (
+                  <Skeleton key={index} className="h-56 sm:h-80 rounded-xl" />
+                ))}
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 gap-2 sm:gap-4 md:grid-cols-3 xl:grid-cols-4">
+                {sortedProducts.map((product) => (
+                  <ProductCard
+                    key={product.id}
+                    product={product}
+                    onAdd={(quantity) => addProductToCart(product, quantity)}
+                    pending={addToCart.isPending}
+                  />
+                ))}
+              </div>
+            )}
+
+            {!productsQuery.isLoading && !sortedProducts.length && (
+              <Card className="border-dashed border-2 border-slate-200 bg-white">
+                <CardContent className="flex min-h-60 flex-col items-center justify-center p-8 text-center">
+                  <Package className="mb-3 h-10 w-10 text-slate-300" />
+                  <h2 className="font-semibold text-slate-900">No products found</h2>
+                  <p className="mt-1 max-w-md text-xs sm:text-sm text-slate-500">
+                    Try selecting another category or adjusting your search keywords.
+                  </p>
+                  <Button
+                    variant="outline"
+                    className="mt-4 text-xs font-semibold"
+                    onClick={() => {
+                      setSearchParams({});
+                      setSearch("");
+                    }}
+                  >
+                    Browse All Categories
+                  </Button>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* 100% Certified Halal Trust Banner */}
+            <div className="mt-4 rounded-xl border border-emerald-800/40 bg-gradient-to-r from-emerald-950 via-emerald-900 to-emerald-950 px-4 py-3 text-center text-white shadow-xs">
+              <div className="flex items-center justify-center gap-1.5 text-xs sm:text-sm font-extrabold tracking-wide text-amber-300 uppercase">
+                <span className="text-sm">☪</span>
+                <span>100% CERTIFIED HALAL</span>
+              </div>
+              <p className="text-[10px] sm:text-xs text-emerald-200/90 font-medium mt-0.5">
+                Fresh • Healthy • Pure Taste
+              </p>
+            </div>
+          </main>
+        </div>
       </div>
-      {/* Mobile Bottom Filter Bar */}
-      <div className="fixed bottom-16 left-0 right-0 z-40 flex h-14 items-center justify-center gap-4 border-t bg-card px-4 shadow-[0_-4px_20px_-2px_rgba(0,0,0,0.1)] lg:hidden">
+
+      {/* Mobile Bottom Filter + Sort Bar (directly above bottom nav) */}
+      <div className="md:hidden fixed bottom-[calc(48px+max(0.25rem,env(safe-area-inset-bottom,0px)))] left-0 right-0 z-40 flex h-9.5 items-center justify-around border-t border-slate-200 bg-white/95 backdrop-blur-md shadow-xs">
         <Drawer>
           <DrawerTrigger asChild>
-            <Button variant="outline" className="flex-1">
-              <SlidersHorizontal className="mr-2 h-4 w-4" />
+            <button
+              type="button"
+              id="mobile-filter-button"
+              className="flex-1 flex items-center justify-center gap-1.5 h-full text-xs font-semibold text-slate-700 hover:text-slate-950 active:bg-slate-50 transition-colors"
+            >
+              <SlidersHorizontal className="h-3.5 w-3.5 text-slate-600" />
               Filters
-            </Button>
+            </button>
           </DrawerTrigger>
           <DrawerContent>
             <DrawerHeader>
               <DrawerTitle>Filters</DrawerTitle>
             </DrawerHeader>
-            <div className="p-4 space-y-6">
-              <div className="space-y-3">
-                <Label>Category</Label>
-                <Select value={categoryId} onValueChange={setCategoryId}>
-                  <SelectTrigger><SelectValue placeholder="Category" /></SelectTrigger>
+            <div className="p-4 space-y-5">
+              <div className="space-y-2">
+                <Label className="text-xs font-bold text-slate-700">Category</Label>
+                <Select
+                  value={activeCategory?.key ?? ""}
+                  onValueChange={(val) => {
+                    setSearchParams({ category: val });
+                  }}
+                >
+                  <SelectTrigger><SelectValue placeholder="Select Category" /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">All Categories</SelectItem>
-                    {activeCategories.map((category) => (
-                      <SelectItem key={category.id} value={String(category.id)}>{category.name}</SelectItem>
+                    {FOOD_CATEGORIES.map((category) => (
+                      <SelectItem key={category.key} value={category.key}>
+                        {category.emoji} {category.name}
+                      </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
               </div>
+              <FilterCheck label="100% Certified Halal" checked />
               <FilterCheck label="In Stock" checked />
-              <div className="space-y-2">
-                <Label>Rating</Label>
-                <div className="text-sm">★★★★★</div>
-                <div className="text-sm">★★★★☆</div>
-              </div>
-              <Button variant="outline" className="w-full">Reset Filters</Button>
+              <Button
+                variant="outline"
+                className="w-full text-xs font-semibold"
+                onClick={() => {
+                  setSearchParams({});
+                  setSearch("");
+                }}
+              >
+                Back to All Categories
+              </Button>
             </div>
           </DrawerContent>
         </Drawer>
-        <div className="h-6 w-px bg-border" />
+
+        <div className="h-5 w-px bg-slate-200 shrink-0" />
+
         <Drawer>
           <DrawerTrigger asChild>
-            <Button variant="outline" className="flex-1">
-              <Star className="mr-2 h-4 w-4" />
+            <button
+              type="button"
+              id="mobile-sort-button"
+              className="flex-1 flex items-center justify-center gap-1.5 h-full text-xs font-semibold text-slate-700 hover:text-slate-950 active:bg-slate-50 transition-colors"
+            >
+              <ArrowUpDown className="h-3.5 w-3.5 text-slate-600" />
               Sort
-            </Button>
+            </button>
           </DrawerTrigger>
           <DrawerContent>
             <DrawerHeader>
-              <DrawerTitle>Sort By</DrawerTitle>
+              <DrawerTitle>Sort Products</DrawerTitle>
             </DrawerHeader>
-            <div className="p-4 space-y-3">
-               <Select value={sort} onValueChange={setSort}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="newest">Newest</SelectItem>
-                    <SelectItem value="price">Price</SelectItem>
-                    <SelectItem value="rating">Rating</SelectItem>
-                  </SelectContent>
-                </Select>
+            <div className="p-4 space-y-2">
+              {[
+                { key: "newest", label: "Featured & Newest" },
+                { key: "price_asc", label: "Price: Low to High" },
+                { key: "price_desc", label: "Price: High to Low" },
+                { key: "rating", label: "Highest Rated (★)" },
+              ].map((opt) => (
+                <button
+                  key={opt.key}
+                  type="button"
+                  onClick={() => setSort(opt.key)}
+                  className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-xs sm:text-sm font-medium transition-colors ${
+                    sort === opt.key
+                      ? "bg-emerald-50 text-emerald-800 font-bold border border-emerald-200"
+                      : "text-slate-700 hover:bg-slate-100"
+                  }`}
+                >
+                  <span>{opt.label}</span>
+                  {sort === opt.key && <CheckCircle2 className="h-4 w-4 text-emerald-600" />}
+                </button>
+              ))}
             </div>
           </DrawerContent>
         </Drawer>
       </div>
+
+      {/* Mobile Bottom Navigation - Categories is ACTIVE GREEN */}
+      <nav
+        aria-label="Mobile Navigation"
+        className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-[#FFFFFF] border-t border-[#E5E7EB] shadow-[0_-1px_6px_rgba(0,0,0,0.04)] px-2 py-1 pb-[max(0.25rem,env(safe-area-inset-bottom))]"
+      >
+        <div className="grid grid-cols-4 items-center max-w-md mx-auto">
+          {/* 1. Home */}
+          <Link
+            to="/"
+            id="mobile-nav-home"
+            className="flex flex-col items-center justify-center py-0.5 text-slate-500 hover:text-slate-800 font-medium transition-colors group"
+          >
+            <Home className="h-5 w-5 text-slate-500 group-hover:text-slate-800 group-hover:scale-110 transition-all" />
+            <span className="text-[10px] xs:text-[11px] mt-0.5 leading-none">Home</span>
+          </Link>
+
+          {/* 2. Categories - ACTIVE GREEN */}
+          <Link
+            to="/products"
+            id="mobile-nav-categories"
+            onClick={() => {
+              setSearchParams({});
+              setSearch("");
+              window.scrollTo({ top: 0, behavior: "smooth" });
+            }}
+            className="flex flex-col items-center justify-center py-0.5 text-emerald-700 font-bold transition-colors group"
+          >
+            <LayoutGrid className="h-5 w-5 text-emerald-700 group-hover:scale-110 transition-transform" />
+            <span className="text-[10px] xs:text-[11px] font-bold mt-0.5 leading-none">Categories</span>
+          </Link>
+
+          {/* 3. Cart */}
+          <Link
+            to="/cart"
+            id="mobile-nav-cart"
+            className="relative flex flex-col items-center justify-center py-0.5 text-slate-500 hover:text-slate-800 font-medium transition-colors group"
+          >
+            <div className="relative">
+              <ShoppingCart className="h-5 w-5 text-slate-500 group-hover:text-slate-800 group-hover:scale-110 transition-all" />
+              {!!cartCount && (
+                <span className="absolute -top-1.5 -right-2.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-emerald-600 px-1 text-[9px] font-bold text-white shadow-xs">
+                  {cartCount}
+                </span>
+              )}
+            </div>
+            <span className="text-[10px] xs:text-[11px] mt-0.5 leading-none">Cart</span>
+          </Link>
+
+          {/* 4. Login */}
+          <Link
+            to="/admin/login"
+            id="mobile-nav-login"
+            className="flex flex-col items-center justify-center py-0.5 text-slate-500 hover:text-slate-800 font-medium transition-colors group"
+          >
+            <UserRound className="h-5 w-5 text-slate-500 group-hover:text-slate-800 group-hover:scale-110 transition-all" />
+            <span className="text-[10px] xs:text-[11px] mt-0.5 leading-none">Login</span>
+          </Link>
+        </div>
+      </nav>
     </div>
   );
 }
 
-
-function ProductCard({ product, onAdd, pending }: { product: CatalogProduct; onAdd: (quantity: number) => void; pending?: boolean }) {
+{/* ====================================================================== */}
+{/* RESTAURANT PRODUCT CARD COMPONENT                                       */}
+{/* ====================================================================== */}
+function ProductCard({
+  product,
+  onAdd,
+  pending,
+}: {
+  product: CatalogProduct;
+  onAdd: (quantity: number) => void;
+  pending?: boolean;
+}) {
   const price = toNumber(product.unitPrice);
+  const compareAt = toNumber((product as unknown as { compareAtPrice?: unknown }).compareAtPrice);
   const moq = product.minimumOrderQuantity ?? 1;
   const unit = product.unitType ?? "order";
-  const stock = typeof product.stock === 'number' ? product.stock : 100;
-  const isOutOfStock = stock < moq && typeof product.stock === 'number';
+  const stock = typeof product.stock === "number" ? product.stock : 100;
+  const isOutOfStock = stock < moq && typeof product.stock === "number";
   const [quantity, setQuantity] = useState(moq);
   const [imageFailed, setImageFailed] = useState(false);
+  const [isWishlisted, setIsWishlisted] = useState(false);
   const unitLabel = unitLabels[unit] ?? unit;
 
   return (
-    <Card className="overflow-hidden rounded-xl shadow-sm hover:shadow-premium sm:hover:-translate-y-1 transition-all duration-300 border-border flex flex-col justify-between">
-      <div>
-        <Link to={`/products/${product.slug}`} className="block relative">
-          <div className="flex aspect-[4/3] items-center justify-center bg-muted text-lg font-semibold text-muted-foreground overflow-hidden">
-            {product.image && !imageFailed ? <img src={product.image} alt={product.name} className="h-full w-full object-cover transition-transform duration-300 hover:scale-105" onError={() => setImageFailed(true)} /> : <ImageIcon className="h-8 w-8 sm:h-9 sm:w-9" />}
+    <Card
+      id={`product-card-${product.id}`}
+      className="group overflow-hidden rounded-xl border border-slate-200/90 bg-white shadow-xs hover:shadow-md hover:-translate-y-0.5 transition-all duration-300 flex flex-col justify-between p-0 py-0 gap-0"
+    >
+      <div className="flex flex-col flex-1">
+        {/* 1. Food Image - Compact on mobile (~35-40% of card) */}
+        <div className="relative aspect-[16/10] sm:aspect-[4/3] bg-slate-100 overflow-hidden shrink-0">
+          <Link to={`/products/${product.slug}`} className="block h-full w-full">
+            {product.image && !imageFailed ? (
+              <img
+                src={product.image}
+                alt={product.name}
+                className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                onError={() => setImageFailed(true)}
+              />
+            ) : (
+              <div className="flex h-full w-full items-center justify-center text-slate-400">
+                <ImageIcon className="h-6 w-6 sm:h-10 sm:w-10" />
+              </div>
+            )}
+          </Link>
+
+          {/* 2. Offer badge */}
+          {compareAt > price && (
+            <span className="absolute top-1.5 left-1.5 z-10 rounded-full bg-amber-500 px-1.5 py-0.5 text-[8px] sm:text-[10px] font-bold uppercase tracking-wider text-slate-950 shadow-xs leading-none">
+              Offer
+            </span>
+          )}
+
+          {/* Favorite heart toggle */}
+          <button
+            type="button"
+            aria-label="Save to favorites"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              setIsWishlisted(!isWishlisted);
+              if (!isWishlisted) {
+                toast.success(`Saved "${product.name}" to favorites`);
+              } else {
+                toast.info(`Removed "${product.name}" from favorites`);
+              }
+            }}
+            className="absolute top-1.5 right-1.5 z-10 flex h-6 w-6 sm:h-7 sm:w-7 items-center justify-center rounded-full bg-white/90 backdrop-blur-xs text-slate-700 shadow-xs transition-transform hover:scale-110 active:scale-95 hover:bg-white"
+          >
+            <Heart
+              className={`h-3 w-3 sm:h-3.5 sm:w-3.5 transition-colors ${
+                isWishlisted ? "fill-rose-500 text-rose-500" : "text-slate-600"
+              }`}
+            />
+          </button>
+        </div>
+
+        {/* Product Information */}
+        <div className="p-2 sm:p-3 flex flex-col gap-0.5 sm:gap-1 flex-1">
+          {/* 3. Product Name */}
+          <Link
+            id={`product-name-${product.id}`}
+            to={`/products/${product.slug}`}
+            className="font-bold text-[11px] xs:text-xs sm:text-sm text-slate-900 leading-tight line-clamp-2 hover:text-emerald-700 transition-colors break-words min-h-[26px] xs:min-h-[28px] sm:min-h-[36px]"
+          >
+            {product.name}
+          </Link>
+
+          {/* 4. "Shah's Halal Food" */}
+          <p className="text-[9px] xs:text-[10px] sm:text-xs font-normal text-slate-500 leading-none truncate">
+            {product.supplierName ?? "Shah's Halal Food"}
+          </p>
+
+          {/* 5. Selling price + original price */}
+          <div className="flex items-baseline justify-between gap-1 pt-0.5 min-w-0">
+            <span className="text-xs xs:text-sm sm:text-base font-extrabold text-emerald-700 leading-none shrink-0">
+              {formatCurrency(price)}
+            </span>
+            {compareAt > price ? (
+              <span className="text-[9px] xs:text-[10px] sm:text-xs text-slate-400 font-medium line-through leading-none truncate">
+                {formatCurrency(compareAt)}
+              </span>
+            ) : product.unitSize ? (
+              <span className="text-[8.5px] xs:text-[9px] text-slate-400 truncate">({product.unitSize})</span>
+            ) : null}
           </div>
-        </Link>
-        <CardContent className="space-y-1.5 p-2 sm:p-3 text-xs sm:text-sm">
-          <div className="min-h-[40px] sm:min-h-[48px]">
-            <Link to={`/products/${product.slug}`} className="text-sm font-semibold hover:text-primary line-clamp-2">{product.name}</Link>
-            <p className="mt-0.5 sm:mt-1 truncate text-[10px] sm:text-xs text-muted-foreground">{product.supplierName ?? "Shah's Halal Food"}</p>
-          </div>
-          <div className="grid gap-0.5 sm:gap-1 text-[10px] sm:text-xs text-muted-foreground">
-            <p className="flex items-baseline gap-1">
-              <span className="text-sm font-bold text-primary">{formatCurrency(price)}</span>
-              {product.unitSize ? (
-                <span className="text-muted-foreground">({product.unitSize})</span>
-              ) : unitLabel && unitLabel !== "item" && unitLabel !== "order" ? (
-                <span className="text-muted-foreground">/ {unitLabel}</span>
-              ) : null}
-            </p>
-            <div className="flex items-center justify-between text-[11px] pt-0.5">
-              <span className="font-medium text-emerald-600 dark:text-emerald-400">Certified Halal</span>
-              {product.rating && <div className="flex items-center gap-0.5 font-medium"><Star className="h-3 w-3 fill-amber-500 text-amber-500" /> {product.rating}</div>}
+
+          {/* 6. Rating + Certified Halal */}
+          <div className="flex items-center justify-between gap-0.5 pt-0.5 min-w-0">
+            <div className="flex items-center gap-0.5 text-[9px] xs:text-[10px] sm:text-xs font-bold text-slate-800 shrink-0">
+              <Star className="h-2.5 w-2.5 sm:h-3 sm:w-3 fill-amber-400 text-amber-400 shrink-0" />
+              <span>{product.rating ?? "4.8"}</span>
+            </div>
+            <div className="inline-flex items-center gap-0.5 rounded bg-emerald-50 border border-emerald-200/80 px-1 py-0.5 text-[7px] xs:text-[8px] sm:text-[9.5px] font-semibold text-emerald-700 shrink-0 whitespace-nowrap">
+              <CheckCircle2 className="h-2 w-2 xs:h-2.5 xs:w-2.5 text-emerald-600 shrink-0" />
+              <span>Halal</span>
             </div>
           </div>
-        </CardContent>
+        </div>
       </div>
-      <div className="p-2 sm:p-3 pt-0 space-y-2">
-        <QuantitySelector
-          quantity={quantity}
-          setQuantity={setQuantity}
-          moq={moq}
-          stock={stock}
-          isOutOfStock={isOutOfStock}
-          unitLabel={unitLabel}
-        />
-        <div className="grid gap-2">
-          <Button onClick={() => onAdd(quantity)} disabled={pending || isOutOfStock} size="sm" className="w-full h-8 sm:h-9 bg-primary hover:bg-primary/90 text-xs sm:text-sm">
-            <ShoppingCart className="mr-1.5 h-3.5 w-3.5" />
-            {isOutOfStock ? "Out of Stock" : "Add To Cart"}
-          </Button>
+
+      {/* 7. Quantity control + Add button (Contained within card, no overflow) */}
+      <div className="p-2 sm:p-3 pt-0">
+        <div className="flex items-center justify-between gap-1 min-w-0">
+          <div className="flex items-center rounded border border-slate-200 bg-slate-50 p-0.5 shrink-0">
+            <button
+              id={`product-qty-minus-${product.id}`}
+              type="button"
+              className="h-5 w-5 p-0 flex items-center justify-center rounded text-slate-600 hover:bg-white hover:text-slate-900 transition-colors disabled:opacity-30 disabled:pointer-events-none"
+              onClick={() => setQuantity(Math.max(moq, quantity - 1))}
+              disabled={quantity <= moq || isOutOfStock}
+              aria-label="Decrease quantity"
+            >
+              <Minus className="h-2.5 w-2.5" />
+            </button>
+            <span className="w-3.5 text-center text-[10px] sm:text-xs font-bold text-slate-800 leading-none select-none">
+              {quantity}
+            </span>
+            <button
+              id={`product-qty-plus-${product.id}`}
+              type="button"
+              className="h-5 w-5 p-0 flex items-center justify-center rounded text-slate-600 hover:bg-white hover:text-slate-900 transition-colors disabled:opacity-30 disabled:pointer-events-none"
+              onClick={() => {
+                if (quantity >= stock) {
+                  toast.error(`Only ${stock} available.`);
+                } else {
+                  setQuantity(quantity + 1);
+                }
+              }}
+              disabled={isOutOfStock}
+              aria-label="Increase quantity"
+            >
+              <Plus className="h-2.5 w-2.5" />
+            </button>
+          </div>
+
+          <button
+            id={`product-add-btn-${product.id}`}
+            type="button"
+            className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold h-6 sm:h-7 px-2 xs:px-2.5 text-[10px] sm:text-xs rounded shadow-xs active:scale-[0.98] shrink-0 flex items-center justify-center leading-none transition-colors disabled:opacity-50 disabled:pointer-events-none"
+            onClick={() => onAdd(quantity)}
+            disabled={pending || isOutOfStock}
+          >
+            {isOutOfStock ? "Out" : "Add"}
+          </button>
         </div>
       </div>
     </Card>
