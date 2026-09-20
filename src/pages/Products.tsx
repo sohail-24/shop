@@ -24,6 +24,7 @@ import {
   CheckCircle2,
   Home,
   Image as ImageIcon,
+  Info,
   LayoutGrid,
   Minus,
   Package,
@@ -462,14 +463,14 @@ function BuyerMarketplace() {
               <span className="text-[10px] xs:text-[11px] mt-0.5 leading-none">Cart</span>
             </Link>
 
-            {/* 4. Login */}
+            {/* 4. About */}
             <Link
-              to="/admin/login"
-              id="mobile-nav-login"
+              to="/about"
+              id="mobile-nav-about"
               className="flex flex-col items-center justify-center py-0.5 text-slate-500 hover:text-slate-800 font-medium transition-colors group"
             >
-              <UserRound className="h-5 w-5 text-slate-500 group-hover:text-slate-800 group-hover:scale-110 transition-all" />
-              <span className="text-[10px] xs:text-[11px] mt-0.5 leading-none">Login</span>
+              <Info className="h-5 w-5 text-slate-500 group-hover:text-slate-800 group-hover:scale-110 transition-all" />
+              <span className="text-[10px] xs:text-[11px] mt-0.5 leading-none">About</span>
             </Link>
           </div>
         </nav>
@@ -952,14 +953,14 @@ function BuyerMarketplace() {
             <span className="text-[10px] xs:text-[11px] mt-0.5 leading-none">Cart</span>
           </Link>
 
-          {/* 4. Login */}
+          {/* 4. About */}
           <Link
-            to="/admin/login"
-            id="mobile-nav-login"
+            to="/about"
+            id="mobile-nav-about"
             className="flex flex-col items-center justify-center py-0.5 text-slate-500 hover:text-slate-800 font-medium transition-colors group"
           >
-            <UserRound className="h-5 w-5 text-slate-500 group-hover:text-slate-800 group-hover:scale-110 transition-all" />
-            <span className="text-[10px] xs:text-[11px] mt-0.5 leading-none">Login</span>
+            <Info className="h-5 w-5 text-slate-500 group-hover:text-slate-800 group-hover:scale-110 transition-all" />
+            <span className="text-[10px] xs:text-[11px] mt-0.5 leading-none">About</span>
           </Link>
         </div>
       </nav>

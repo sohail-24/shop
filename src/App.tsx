@@ -31,6 +31,7 @@ const Profile = lazy(() => import("./pages/Profile"));
 const Settings = lazy(() => import("./pages/Settings"));
 const OwnerPlaceholder = lazy(() => import("./pages/OwnerPlaceholder"));
 const AdminLogin = lazy(() => import("./pages/AdminLogin"));
+const About = lazy(() => import("./pages/About"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 function PageLoader() {
@@ -99,6 +100,7 @@ function AppRoutes() {
       <Routes>
         {/* Public routes */}
         <Route path="/" element={<LandingPage />} />
+        <Route path="/about" element={<About />} />
         {/* Legacy customer login remains in source but is intentionally inactive. */}
         <Route path="/login" element={<Navigate to="/" replace />} />
         <Route path="/admin/login" element={<AdminLogin />} />

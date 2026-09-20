@@ -3,6 +3,7 @@ import { Link } from "react-router";
 import { toast } from "sonner";
 import {
   Home,
+  Info,
   Utensils,
   LayoutGrid,
   Image as ImageIcon,
@@ -382,6 +383,16 @@ export default function LandingPage() {
                   </Button>
                 </Link>
               )}
+              <Link to="/about">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-10 px-4 gap-2 border-slate-300 text-slate-800 hover:border-emerald-600 hover:text-emerald-700 font-semibold rounded-xl"
+                >
+                  <Info className="h-4 w-4 text-emerald-700" />
+                  <span>About</span>
+                </Button>
+              </Link>
               <Link to="/admin/login">
                 <Button
                   variant="outline"
@@ -576,14 +587,14 @@ export default function LandingPage() {
               <span className="text-[10px] xs:text-[11px] mt-0.5 leading-none">Cart</span>
             </Link>
 
-            {/* 4. Login */}
+            {/* 4. About */}
             <Link
-              to="/admin/login"
-              id="mobile-nav-login"
+              to="/about"
+              id="mobile-nav-about"
               className="flex flex-col items-center justify-center py-0.5 text-slate-500 hover:text-slate-800 font-medium transition-colors group"
             >
-              <UserRound className="h-5 w-5 text-slate-500 group-hover:text-slate-800 group-hover:scale-110 transition-all" />
-              <span className="text-[10px] xs:text-[11px] mt-0.5 leading-none">Login</span>
+              <Info className="h-5 w-5 text-slate-500 group-hover:text-slate-800 group-hover:scale-110 transition-all" />
+              <span className="text-[10px] xs:text-[11px] mt-0.5 leading-none">About</span>
             </Link>
           </div>
         </nav>

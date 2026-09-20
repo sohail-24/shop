@@ -1,11 +1,11 @@
 import { Link } from "react-router";
-import { Home, LayoutGrid, ShoppingCart, UserRound } from "lucide-react";
+import { Home, Info, LayoutGrid, ShoppingCart } from "lucide-react";
 import { trpc } from "@/providers/trpc";
 import { useAuth } from "@/hooks/useAuth";
 import { useGuestCart } from "@/lib/guestCart";
 
 interface CustomerBottomNavProps {
-  active?: "home" | "categories" | "cart" | "login" | "none";
+  active?: "home" | "categories" | "cart" | "about" | "login" | "none";
 }
 
 export function CustomerBottomNav({ active = "categories" }: CustomerBottomNavProps) {
@@ -110,25 +110,25 @@ export function CustomerBottomNav({ active = "categories" }: CustomerBottomNavPr
           </span>
         </Link>
 
-        {/* 4. Login */}
+        {/* 4. About */}
         <Link
-          to="/admin/login"
-          id="mobile-nav-login"
+          to="/about"
+          id="mobile-nav-about"
           className={`flex flex-col items-center justify-center py-0.5 transition-colors group ${
-            active === "login"
+            active === "about"
               ? "text-emerald-700 font-bold"
               : "text-slate-500 hover:text-slate-800 font-medium"
           }`}
         >
-          <UserRound
+          <Info
             className={`h-5 w-5 transition-all ${
-              active === "login"
+              active === "about"
                 ? "text-emerald-700 group-hover:scale-110"
                 : "text-slate-500 group-hover:text-slate-800 group-hover:scale-110"
             }`}
           />
-          <span className={`text-[10px] xs:text-[11px] mt-0.5 leading-none ${active === "login" ? "font-bold" : ""}`}>
-            Login
+          <span className={`text-[10px] xs:text-[11px] mt-0.5 leading-none ${active === "about" ? "font-bold" : ""}`}>
+            About
           </span>
         </Link>
       </div>
