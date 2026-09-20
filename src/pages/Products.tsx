@@ -310,7 +310,7 @@ function BuyerMarketplace() {
   // ─────────────────────────────────────────────────────────────
   if (isCategoriesOverview) {
     return (
-      <div className="min-h-screen bg-slate-50/50 flex flex-col justify-between overflow-x-hidden">
+      <div className="w-full min-h-screen bg-slate-50/50 flex flex-col justify-between overflow-x-hidden">
         {/* Header: Home Link + Shah's Halal Logo & Name + Profile + Cart */}
         <header className="sticky top-0 z-30 bg-white/95 backdrop-blur-md border-b border-slate-200/80 px-2.5 py-2 sm:px-4 sm:py-2.5 shadow-xs">
           <div className="flex items-center justify-between gap-2 max-w-[1500px] mx-auto">
@@ -360,9 +360,9 @@ function BuyerMarketplace() {
         </header>
 
         {/* Categories Main Content */}
-        <main className="mx-auto flex w-full max-w-[1500px] flex-col gap-2.5 sm:gap-3 px-2.5 sm:px-4 pt-2.5 sm:pt-3.5 pb-28 md:pb-8 flex-1">
+        <main className="w-full max-w-[1500px] mx-auto flex flex-col gap-2.5 sm:gap-3 px-2 sm:px-4 pt-2.5 sm:pt-3.5 pb-28 md:pb-8 flex-1 box-border">
           {/* Search Field */}
-          <div className="relative">
+          <div className="relative w-full">
             <Search className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 sm:h-4 sm:w-4 text-slate-400" />
             <Input
               value={search}
@@ -392,7 +392,7 @@ function BuyerMarketplace() {
           </div>
 
           {/* 2-Column Responsive Grid of 10 Category Cards */}
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2.5 sm:gap-3.5">
+          <div className="w-full grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2.5 sm:gap-3.5 box-border">
             {FOOD_CATEGORIES.map((category) => (
               <button
                 key={category.key}
@@ -513,7 +513,7 @@ function BuyerMarketplace() {
   // 2. CATEGORY PRODUCTS VIEW (when category or search is active)
   // ─────────────────────────────────────────────────────────────
   return (
-    <div className="min-h-screen bg-slate-50/50 flex flex-col justify-between overflow-x-hidden">
+    <div className="w-full min-h-screen bg-slate-50/50 flex flex-col justify-between overflow-x-hidden">
       {/* Header: Back to Categories + Shah's Halal + Profile + Cart */}
       <header className="sticky top-0 z-30 bg-white/95 backdrop-blur-md border-b border-slate-200/80 px-2.5 py-2 sm:px-4 sm:py-2.5 shadow-xs">
         <div className="flex items-center justify-between gap-2 max-w-[1500px] mx-auto">

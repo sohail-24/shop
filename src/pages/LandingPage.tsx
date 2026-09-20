@@ -70,7 +70,7 @@ interface CategoryNavItem {
 
 const SIDEBAR_CATEGORIES: CategoryNavItem[] = [
   { key: "all", name: "All Products", icon: LayoutGrid, emoji: "▦" },
-  { key: "platters", name: "Platters", icon: Utensils, emoji: "🍛", dbCategorySlug: "platters" },
+  { key: "platters", name: "Platters", icon: Utensils, emoji: "🍽", dbCategorySlug: "platters" },
   { key: "gyros", name: "Gyros", icon: Beef, emoji: "🌯", dbCategorySlug: "gyros" },
   { key: "burgers", name: "Burgers", icon: Sandwich, emoji: "🍔", subSearch: "burger" },
   { key: "party-wings", name: "Party Wings", icon: Flame, emoji: "🍗", dbCategorySlug: "party-wings" },
@@ -219,9 +219,10 @@ export default function LandingPage() {
           <div className="w-full my-2 border-b border-emerald-800/60" />
 
           {/* Categories */}
-          <nav className="space-y-0.5">
+          <nav className="flex flex-col gap-1 xs:gap-1.5">
             {SIDEBAR_CATEGORIES.map((item) => {
               const isActive = selectedCategoryKey === item.key;
+              const isAllProducts = item.key === "all";
               return (
                 <button
                   key={item.key}
@@ -234,6 +235,8 @@ export default function LandingPage() {
                     }
                   }}
                   className={`w-full flex items-center gap-1.5 px-1.5 xs:px-2 py-1.5 rounded-lg text-left transition-all ${
+                    isAllProducts ? "mb-3.5 xs:mb-4" : ""
+                  } ${
                     isActive
                       ? "bg-[#0b6e54] text-white font-bold shadow-xs ring-1 ring-emerald-400/50"
                       : "text-emerald-100/90 hover:bg-[#075c46]/60 hover:text-white"
@@ -292,12 +295,13 @@ export default function LandingPage() {
           </div>
 
           {/* Category Navigation Items */}
-          <nav className="mt-4 space-y-1">
+          <nav className="mt-4 flex flex-col gap-1.5">
             <div className="px-3 pb-2 text-[11px] font-bold uppercase tracking-wider text-emerald-300/70">
               Menu Categories
             </div>
             {SIDEBAR_CATEGORIES.map((item) => {
               const isActive = selectedCategoryKey === item.key;
+              const isAllProducts = item.key === "all";
               const Icon = item.icon;
               return (
                 <button
@@ -311,6 +315,8 @@ export default function LandingPage() {
                     }
                   }}
                   className={`w-full group flex items-center justify-between px-3.5 py-2 rounded-xl text-sm font-medium transition-all text-left ${
+                    isAllProducts ? "mb-4" : ""
+                  } ${
                     isActive
                       ? "bg-emerald-700 text-white font-semibold shadow-xs ring-1 ring-emerald-400/50"
                       : "text-emerald-100/80 hover:bg-emerald-800/60 hover:text-white"
