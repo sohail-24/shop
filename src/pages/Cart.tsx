@@ -26,8 +26,8 @@ export default function Cart() {
   return (
     <div className="mx-auto max-w-5xl space-y-6">
       <PageHeader
-        backTo="/products"
-        backLabel="Back to Products"
+        backTo="/"
+        backLabel="Back to Home"
         title="Cart"
         description="Review items before checkout."
         actions={items.length > 0 ? (
@@ -94,12 +94,10 @@ export default function Cart() {
             <CardHeader><CardTitle className="text-base">Order Summary</CardTitle></CardHeader>
             <CardContent className="space-y-4">
               <SummaryRow label="Subtotal" value={formatCurrency(subtotal)} />
-              <SummaryRow label="Shipping" value="Backend placeholder" muted />
-              <SummaryRow label="GST" value="Backend placeholder" muted />
               <Separator />
-              <SummaryRow label="Total" value="Backend total placeholder" strong />
+              <SummaryRow label="Total" value={formatCurrency(subtotal)} strong />
               <Link to="/checkout"><Button className="h-11 w-full bg-emerald-600 hover:bg-emerald-700">Checkout<ArrowRight className="ml-2 h-4 w-4" /></Button></Link>
-              <Link to="/products"><Button variant="outline" className="w-full">Continue Shopping</Button></Link>
+              <Link to="/"><Button variant="outline" className="w-full">Continue Shopping</Button></Link>
             </CardContent>
           </Card>
         </div>

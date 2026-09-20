@@ -203,12 +203,12 @@ export default function LandingPage() {
         className="md:hidden w-[28%] shrink-0 sticky top-0 h-screen border-r border-[#062E1F] text-white flex flex-col justify-between overflow-hidden z-30 select-none"
       >
         {/* Top Brand Header */}
-        <div className="shrink-0 p-1.5 xs:p-2 pt-2.5 xs:pt-3 pb-2 flex flex-col items-center text-center border-b border-emerald-800/60">
+        <div className="shrink-0 px-1.5 xs:px-2 pt-7 xs:pt-8 pb-2 flex flex-col items-center text-center border-b border-emerald-800/60">
           <Link to="/" className="flex flex-col items-center group">
             <img
               src="/branding/am-fruits-logo.png"
               alt="Shah's Halal"
-              className="h-7 xs:h-8 w-auto object-contain transition-transform group-hover:scale-105"
+              className="h-[33px] xs:h-[38px] w-auto object-contain transition-transform group-hover:scale-105"
             />
             <h2 className="mt-1 text-xs xs:text-sm font-extrabold tracking-tight text-white leading-tight">
               Shah&apos;s Halal
@@ -220,8 +220,8 @@ export default function LandingPage() {
         </div>
 
         {/* Scrollable Categories List */}
-        <div className="flex-1 min-h-0 overflow-y-auto hide-scrollbar p-1 xs:p-1.5 py-2">
-          <nav className="rounded-xl bg-black/20 border border-emerald-500/20 p-1 flex flex-col gap-0.5 shadow-inner">
+        <div className="flex-1 min-h-0 overflow-y-auto hide-scrollbar pt-[18px] pb-2">
+          <nav className="flex flex-col gap-1.5">
             {sidebarCategories.map((item) => {
               const isActive = selectedCategoryKey === item.key;
               const isAllProducts = item.key === "all";
@@ -236,21 +236,21 @@ export default function LandingPage() {
                         grid.scrollIntoView({ behavior: "smooth" });
                       }
                     }}
-                    className={`w-full flex items-center gap-1.5 xs:gap-2 px-1.5 xs:px-2 py-1.5 xs:py-2 rounded-lg text-left transition-all ${
+                    className={`w-full flex items-center gap-1.5 px-1.5 xs:px-2 py-2 text-left transition-colors border-l-2 ${
                       isActive
-                        ? "bg-[#107c57] text-white font-bold shadow-xs ring-1 ring-emerald-300/50"
-                        : "text-emerald-100/90 hover:bg-white/10 hover:text-white font-medium"
+                        ? "border-emerald-400 bg-white/10 text-white font-bold"
+                        : "border-transparent bg-transparent text-emerald-100/80 hover:text-white hover:bg-white/5 font-medium"
                     }`}
                   >
-                    <span className="text-sm xs:text-base w-5 xs:w-6 text-center select-none leading-none shrink-0">
+                    <span className="text-xs xs:text-sm w-4 shrink-0 text-center select-none leading-none">
                       {item.emoji}
                     </span>
-                    <span className="text-[11px] xs:text-xs font-semibold leading-tight truncate">
+                    <span className="text-[11.5px] xs:text-xs sm:text-[13px] tracking-tight leading-tight truncate">
                       {item.name}
                     </span>
                   </button>
                   {isAllProducts && (
-                    <div className="my-1 border-b border-emerald-500/25" />
+                    <div className="my-1 border-b border-emerald-500/20" />
                   )}
                 </Fragment>
               );
@@ -286,12 +286,12 @@ export default function LandingPage() {
         className="hidden md:flex md:w-64 lg:w-72 shrink-0 md:sticky md:top-0 md:h-screen border-r border-[#062E1F] text-white p-4 lg:p-5 flex-col justify-between overflow-hidden z-30 select-none"
       >
         {/* Top Brand Header */}
-        <div className="shrink-0 pb-3.5 flex flex-col items-center text-center border-b border-emerald-800/60">
+        <div className="shrink-0 pt-6 lg:pt-8 pb-3.5 flex flex-col items-center text-center border-b border-emerald-800/60">
           <Link to="/" className="group flex flex-col items-center">
             <img
               src="/branding/am-fruits-logo.png"
               alt="Shah's Halal"
-              className="h-10 lg:h-11 w-auto object-contain transition-transform group-hover:scale-105"
+              className="h-12 lg:h-[52px] w-auto object-contain transition-transform group-hover:scale-105"
             />
             <h2 className="mt-2 text-lg lg:text-xl font-extrabold tracking-tight text-white group-hover:text-emerald-300 transition-colors">
               Shah's Halal
@@ -303,8 +303,8 @@ export default function LandingPage() {
         </div>
 
         {/* Scrollable Categories List */}
-        <div className="flex-1 min-h-0 overflow-y-auto hide-scrollbar py-3">
-          <nav className="rounded-2xl bg-black/20 border border-emerald-500/20 p-2 flex flex-col gap-1 shadow-inner">
+        <div className="flex-1 min-h-0 overflow-y-auto hide-scrollbar pt-[18px] pb-3">
+          <nav className="flex flex-col gap-1.5 lg:gap-2">
             {sidebarCategories.map((item) => {
               const isActive = selectedCategoryKey === item.key;
               const isAllProducts = item.key === "all";
@@ -319,21 +319,21 @@ export default function LandingPage() {
                         grid.scrollIntoView({ behavior: "smooth" });
                       }
                     }}
-                    className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-left transition-all ${
+                    className={`w-full flex items-center gap-2.5 px-3 py-2 lg:py-2.5 text-left transition-colors border-l-2 ${
                       isActive
-                        ? "bg-[#107c57] text-white font-bold shadow-xs ring-1 ring-emerald-300/50"
-                        : "text-emerald-100/90 hover:bg-white/10 hover:text-white font-medium"
+                        ? "border-emerald-400 bg-white/10 text-white font-bold"
+                        : "border-transparent bg-transparent text-emerald-100/80 hover:text-white hover:bg-white/5 font-medium"
                     }`}
                   >
-                    <span className="text-lg lg:text-xl w-7 text-center shrink-0 select-none leading-none">
+                    <span className="text-base lg:text-lg w-6 lg:w-7 text-center shrink-0 select-none leading-none">
                       {item.emoji}
                     </span>
-                    <span className="text-sm lg:text-[15px] font-semibold leading-tight truncate">
+                    <span className="text-sm lg:text-[15px] leading-tight truncate">
                       {item.name}
                     </span>
                   </button>
                   {isAllProducts && (
-                    <div className="my-1.5 border-b border-emerald-500/25" />
+                    <div className="my-1.5 border-b border-emerald-500/20" />
                   )}
                 </Fragment>
               );

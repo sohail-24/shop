@@ -377,7 +377,7 @@ export default function Inventory() {
         </CardContent>
       </Card>
 
-      <Tabs defaultValue="overview" className="gap-4">
+      <Tabs defaultValue="overview" className="gap-4 min-w-0 max-w-full">
         <TabsList className="w-full justify-start overflow-x-auto rounded-lg border bg-card p-1 sm:w-fit">
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="stock-in">Stock In</TabsTrigger>
@@ -388,8 +388,8 @@ export default function Inventory() {
           <TabsTrigger value="low-stock">Low Stock</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="overview">
-          <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_380px]">
+        <TabsContent value="overview" className="min-w-0 max-w-full">
+          <div className="grid gap-4 min-w-0 max-w-full xl:grid-cols-[minmax(0,1fr)_380px]">
             <InventoryTable
               items={filtered}
               loading={inventoryQuery.isLoading}
@@ -467,7 +467,7 @@ export default function Inventory() {
             mode="history"
           />
         </TabsContent>
-        <TabsContent value="low-stock">
+        <TabsContent value="low-stock" className="min-w-0 max-w-full">
           <InventoryTable items={lowStockItems} loading={inventoryQuery.isLoading} emptyTitle="No low-stock items" />
         </TabsContent>
       </Tabs>
@@ -541,9 +541,9 @@ function InventoryTable({
   }
 
   return (
-    <Card>
-      <CardContent className="p-0">
-        <Table>
+    <Card className="min-w-0 max-w-full overflow-hidden">
+      <CardContent className="min-w-0 max-w-full overflow-x-auto p-0 [-webkit-overflow-scrolling:touch]">
+        <Table className="min-w-[850px]">
           <TableHeader>
             <TableRow>
               <TableHead className="pl-4">Product</TableHead>
@@ -638,7 +638,7 @@ function InventoryManager({
 }) {
   if (!item) {
     return (
-      <Card>
+      <Card className="min-w-0 max-w-full">
         <CardContent className="flex min-h-[420px] flex-col items-center justify-center p-6 text-center">
           <Warehouse className="mb-3 h-10 w-10 text-muted-foreground/50" />
           <h3 className="font-semibold">Select inventory</h3>
@@ -651,7 +651,7 @@ function InventoryManager({
   }
 
   return (
-    <Card>
+    <Card className="min-w-0 max-w-full">
       <CardHeader>
         <CardTitle className="text-base">Manage {item.productName ?? `Product #${item.productId}`}</CardTitle>
         <p className="text-sm text-muted-foreground">

@@ -109,8 +109,8 @@ export default function ProductDetail() {
         </div>
       </section>
 
-      <section className="grid gap-8 lg:grid-cols-[400px_1fr]">
-        <div className="overflow-hidden rounded-xl border bg-muted">
+      <section className="grid gap-8 lg:grid-cols-[330px_1fr]">
+        <div className="w-full max-w-[290px] sm:max-w-[330px] mx-auto lg:max-w-none overflow-hidden rounded-xl border bg-muted">
           <div className="flex aspect-square items-center justify-center text-xl font-semibold text-muted-foreground">
             {product.image && !imageFailed ? (
               <img src={product.image} alt={product.name} className="h-full w-full object-cover" onError={() => setImageFailed(true)} />
