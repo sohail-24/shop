@@ -22,7 +22,6 @@ import {
   ArrowRight,
   ArrowUpDown,
   CheckCircle2,
-  Heart,
   Home,
   Image as ImageIcon,
   LayoutGrid,
@@ -934,7 +933,6 @@ function ProductCard({
   const isOutOfStock = stock < moq && typeof product.stock === "number";
   const [quantity, setQuantity] = useState(moq);
   const [imageFailed, setImageFailed] = useState(false);
-  const [isWishlisted, setIsWishlisted] = useState(false);
   const unitLabel = unitLabels[unit] ?? unit;
 
   return (
@@ -966,29 +964,6 @@ function ProductCard({
               Offer
             </span>
           )}
-
-          {/* Favorite heart toggle */}
-          <button
-            type="button"
-            aria-label="Save to favorites"
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              setIsWishlisted(!isWishlisted);
-              if (!isWishlisted) {
-                toast.success(`Saved "${product.name}" to favorites`);
-              } else {
-                toast.info(`Removed "${product.name}" from favorites`);
-              }
-            }}
-            className="absolute top-1.5 right-1.5 z-10 flex h-6 w-6 sm:h-7 sm:w-7 items-center justify-center rounded-full bg-white/90 backdrop-blur-xs text-slate-700 shadow-xs transition-transform hover:scale-110 active:scale-95 hover:bg-white"
-          >
-            <Heart
-              className={`h-3 w-3 sm:h-3.5 sm:w-3.5 transition-colors ${
-                isWishlisted ? "fill-rose-500 text-rose-500" : "text-slate-600"
-              }`}
-            />
-          </button>
         </div>
 
         {/* Product Information */}

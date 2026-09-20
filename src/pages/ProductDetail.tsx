@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ArrowLeft, Heart, Minus, Package, Plus, Share2, ShoppingCart, Zap } from "lucide-react";
+import { ArrowLeft, Minus, Package, Plus, Share2, ShoppingCart, Zap } from "lucide-react";
 
 export default function ProductDetail() {
   const { slug } = useParams<{ slug: string }>();
@@ -102,7 +102,6 @@ export default function ProductDetail() {
           Back to Products
         </Link>
         <div className="hidden md:flex gap-2">
-          <Button variant="outline" size="sm"><Heart className="mr-2 h-4 w-4" />Wishlist</Button>
           <Button variant="outline" size="sm"><Share2 className="mr-2 h-4 w-4" />Share</Button>
         </div>
       </section>

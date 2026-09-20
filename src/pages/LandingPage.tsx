@@ -10,7 +10,6 @@ import {
   ShoppingCart,
   Star,
   UserRound,
-  Heart,
   CheckCircle2,
   ShieldCheck,
   ChevronLeft,
@@ -843,7 +842,6 @@ function FoodProductCard({
   const isOutOfStock = stock < moq && typeof product.stock === "number";
   const [quantity, setQuantity] = useState(moq);
   const [imageFailed, setImageFailed] = useState(false);
-  const [isWishlisted, setIsWishlisted] = useState(false);
   const unitLabel = unitLabels[unit] ?? unit;
 
   return (
@@ -872,29 +870,6 @@ function FoodProductCard({
               Offer
             </span>
           )}
-
-          {/* Wishlist Heart Toggle */}
-          <button
-            type="button"
-            aria-label="Save to favorites"
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              setIsWishlisted(!isWishlisted);
-              if (!isWishlisted) {
-                toast.success(`Saved "${product.name}" to favorites`);
-              } else {
-                toast.info(`Removed "${product.name}" from favorites`);
-              }
-            }}
-            className="absolute top-1 right-1 xs:top-1.5 xs:right-1.5 sm:top-3 sm:right-3 z-10 flex h-5 w-5 xs:h-6 xs:w-6 sm:h-8 sm:w-8 items-center justify-center rounded-full bg-white/90 backdrop-blur-xs text-slate-700 shadow-xs transition-transform hover:scale-110 active:scale-95 hover:bg-white"
-          >
-            <Heart
-              className={`h-2.5 w-2.5 xs:h-3 xs:w-3 sm:h-4 sm:w-4 transition-colors ${
-                isWishlisted ? "fill-rose-500 text-rose-500" : "text-slate-600"
-              }`}
-            />
-          </button>
         </div>
 
         {/* ============================================================== */}
