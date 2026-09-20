@@ -39,6 +39,7 @@ import {
   Utensils,
   Filter,
 } from "lucide-react";
+import { getCategoryEmoji } from "./LandingPage";
 
 type CatalogProduct = {
   id: number;
@@ -70,43 +71,34 @@ export interface FoodCategoryItem {
   slug: string;
 }
 
-const CATEGORY_VISUALS: Record<string, { emoji: string; image: string; defaultDesc: string }> = {
-  platters: {
-    emoji: "🍽",
-    image: "/products/chicken-platter.jpg",
-    defaultDesc: "Hearty meals, full of flavor",
-  },
-  gyros: {
-    emoji: "🌯",
-    image: "/products/combo-gyro.jpg",
-    defaultDesc: "Authentic & Delicious",
-  },
-  "burgers-sandwiches": {
-    emoji: "🍔",
-    image: "/products/cheeseburger.jpg",
-    defaultDesc: "Juicy & Satisfying",
-  },
-  "party-wings": {
-    emoji: "🍗",
-    image: "/products/hot-wings.jpg",
-    defaultDesc: "Perfect for sharing",
-  },
-  sides: {
-    emoji: "🍟",
-    image: "/products/fries.jpg",
-    defaultDesc: "The perfect add-ons",
-  },
-  drinks: {
-    emoji: "🥤",
-    image: "/products/soda-bottle.jpg",
-    defaultDesc: "Cool & Refreshing",
-  },
-  catering: {
-    emoji: "🍱",
-    image: "/products/catering.jpg",
-    defaultDesc: "Feast packages & party platters",
-  },
-};
+export function getCategoryImage(category: { name?: string | null; slug?: string | null }): string {
+  const text = `${category.slug || ""} ${category.name || ""}`.toLowerCase();
+  if (text.includes("platter")) return "/products/chicken-platter.jpg";
+  if (text.includes("gyro") || text.includes("wrap") || text.includes("pita")) return "/products/combo-gyro.jpg";
+  if (text.includes("burger") || text.includes("sandwich") || text.includes("cheesesteak") || text.includes("sub")) return "/products/cheeseburger.jpg";
+  if (text.includes("wing")) return "/products/hot-wings.jpg";
+  if (text.includes("rice bowl") || text.includes("bowl") || text.includes("rice")) return "/products/combo-platter.jpg";
+  if (text.includes("side") || text.includes("fries") || text.includes("fry")) return "/products/fries.jpg";
+  if (text.includes("drink") || text.includes("beverage") || text.includes("soda") || text.includes("juice")) return "/products/soda-bottle.jpg";
+  if (text.includes("dessert") || text.includes("sweet") || text.includes("baklava")) return "/products/baklava.jpg";
+  if (text.includes("catering") || text.includes("party") || text.includes("feast")) return "/products/catering.jpg";
+  return "/products/chicken-platter.jpg";
+}
+
+export function getCategoryDescription(category: { name?: string | null; slug?: string | null; description?: string | null }): string {
+  if (category.description?.trim()) return category.description.trim();
+  const text = `${category.slug || ""} ${category.name || ""}`.toLowerCase();
+  if (text.includes("platter")) return "Hearty meals, full of flavor";
+  if (text.includes("gyro") || text.includes("wrap") || text.includes("pita")) return "Authentic & Delicious";
+  if (text.includes("burger") || text.includes("sandwich")) return "Juicy & Satisfying";
+  if (text.includes("wing")) return "Perfect for sharing";
+  if (text.includes("rice bowl") || text.includes("bowl")) return "Served over fragrant seasoned rice";
+  if (text.includes("side") || text.includes("fries")) return "The perfect add-ons";
+  if (text.includes("drink") || text.includes("beverage")) return "Cool & Refreshing";
+  if (text.includes("dessert") || text.includes("sweet")) return "Traditional sweet treats";
+  if (text.includes("catering")) return "Feast packages & party platters";
+  return "Fresh & delicious halal food";
+}
 
 export function getCategoryVisual(category: {
   id: number;
@@ -115,34 +107,19 @@ export function getCategoryVisual(category: {
   description?: string | null;
 }): FoodCategoryItem {
   const slug = (category.slug || "").toLowerCase().trim();
-  const visual = CATEGORY_VISUALS[slug] || {
-    emoji: "🍽",
-    image: "/products/chicken-platter.jpg",
-    defaultDesc: "Fresh & delicious halal food",
-  };
+  const emoji = getCategoryEmoji(category);
+  const image = getCategoryImage(category);
+  const description = getCategoryDescription(category);
 
   return {
     id: category.id,
-    key: slug || String(category.id),
+    key: String(category.id),
     name: category.name,
-    emoji: visual.emoji,
-    description: category.description || visual.defaultDesc,
-    image: visual.image,
+    emoji,
+    description,
+    image,
     slug: slug || String(category.id),
   };
-}
-
-function matchesCategory(
-  product: CatalogProduct,
-  categoryKey: string,
-  categories: FoodCategoryItem[],
-): boolean {
-  if (categoryKey === "all") return true;
-  const match = categories.find((c) => c.key === categoryKey || c.slug === categoryKey || String(c.id) === categoryKey);
-  if (match) {
-    return product.categoryId === match.id;
-  }
-  return false;
 }
 
 function matchesSearch(product: CatalogProduct, query: string): boolean {
@@ -176,26 +153,64 @@ function BuyerMarketplace() {
 
   const categoriesQuery = trpc.category.list.useQuery(undefined, { retry: false });
 
+  // Only active categories for customer browsing
   const displayCategories = useMemo(() => {
-    const list = categoriesQuery.data ?? [];
+    const list = ((categoriesQuery.data ?? []) as {
+      id: number;
+      name: string;
+      slug?: string | null;
+      description?: string | null;
+      isActive?: boolean | null;
+    }[]).filter((c) => c.isActive !== false);
+
     return list.map(getCategoryVisual);
   }, [categoriesQuery.data]);
 
+  const isAllSelected = categoryParam === "all";
+
+  // Resolve active category by database ID or slug or key
   const activeCategory = useMemo(() => {
-    if (!categoryParam) return null;
+    if (!categoryParam || isAllSelected) return null;
     return (
       displayCategories.find(
-        (c) => c.key === categoryParam || c.slug === categoryParam || String(c.id) === categoryParam,
+        (c) =>
+          String(c.id) === categoryParam ||
+          c.key === categoryParam ||
+          (c.slug && c.slug.toLowerCase() === categoryParam.toLowerCase()),
       ) ?? null
     );
-  }, [categoryParam, displayCategories]);
+  }, [categoryParam, isAllSelected, displayCategories]);
 
-  const isCategoriesOverview = !activeCategory && !search.trim();
+  // If a category param is present, or if user is searching, stay in product catalog view.
+  // When no category is selected and no search entered, show category overview cards.
+  const isCategoriesOverview = !categoryParam && !search.trim();
+
+  // Determine the categoryId to send to the server
+  const targetCategoryId = useMemo(() => {
+    if (isAllSelected) return undefined;
+    if (activeCategory) return activeCategory.id;
+    // If categoryParam is numeric, we can pass it directly to the server
+    if (categoryParam) {
+      const parsed = Number(categoryParam);
+      if (!Number.isNaN(parsed) && parsed > 0) return parsed;
+    }
+    return undefined;
+  }, [isAllSelected, activeCategory, categoryParam]);
+
+  // Check if an invalid/inactive category was requested once categories have loaded
+  const isInvalidCategory = Boolean(categoryParam) && !isAllSelected && categoriesQuery.isSuccess && !activeCategory;
+
+  const apiSortBy: "price" | "name" | "newest" =
+    sort === "price_asc" || sort === "price_desc" ? "price" : "newest";
+  const apiSortOrder: "asc" | "desc" = sort === "price_asc" ? "asc" : "desc";
 
   const productsQuery = trpc.product.list.useQuery(
     {
+      categoryId: isInvalidCategory ? -1 : targetCategoryId,
+      search: search.trim() || undefined,
       status: "active",
-      sortBy: sort === "price_asc" || sort === "price_desc" ? "price" : "newest",
+      sortBy: apiSortBy,
+      sortOrder: apiSortOrder,
     },
     { retry: false },
   );
@@ -214,32 +229,16 @@ function BuyerMarketplace() {
     onError: (error) => toast.error(error.message || "Could not add product to cart."),
   });
 
-  const rawProducts = useMemo(() => (productsQuery.data ?? []) as CatalogProduct[], [productsQuery.data]);
-
-  const filteredProducts = useMemo(() => {
-    if (activeCategory) {
-      return rawProducts.filter(
-        (p) =>
-          matchesCategory(p, activeCategory.key, displayCategories) &&
-          matchesSearch(p, search),
-      );
-    }
-    return rawProducts.filter((p) => matchesSearch(p, search));
-  }, [rawProducts, activeCategory, displayCategories, search]);
-
-  const sortedProducts = useMemo(() => {
-    const list = [...filteredProducts];
-    if (sort === "price_asc") {
-      return list.sort((a, b) => toNumber(a.unitPrice) - toNumber(b.unitPrice));
-    }
-    if (sort === "price_desc") {
-      return list.sort((a, b) => toNumber(b.unitPrice) - toNumber(a.unitPrice));
+  const products = useMemo(() => {
+    let list = (productsQuery.data ?? []) as CatalogProduct[];
+    if (targetCategoryId !== undefined && !isInvalidCategory) {
+      list = list.filter((p) => p.categoryId === targetCategoryId);
     }
     if (sort === "rating") {
-      return list.sort((a, b) => (Number(b.rating) || 4.8) - (Number(a.rating) || 4.8));
+      return [...list].sort((a, b) => (Number(b.rating) || 4.8) - (Number(a.rating) || 4.8));
     }
     return list;
-  }, [filteredProducts, sort]);
+  }, [productsQuery.data, targetCategoryId, isInvalidCategory, sort]);
 
   function addProductToCart(product: CatalogProduct, quantity: number) {
     if (quantity > (product.stock ?? 0)) {
@@ -353,47 +352,55 @@ function BuyerMarketplace() {
           </div>
 
           {/* 2-Column Responsive Grid of Category Cards */}
-          <div className="w-full grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2.5 sm:gap-3.5 box-border">
-            {displayCategories.map((category) => (
-              <button
-                key={category.key || category.id}
-                id={`food-category-card-${category.key}`}
-                type="button"
-                onClick={() => {
-                  setSearchParams({ category: category.key });
-                  window.scrollTo({ top: 0, behavior: "smooth" });
-                }}
-                className="group relative flex flex-col justify-end overflow-hidden rounded-xl sm:rounded-2xl h-36 xs:h-40 sm:h-44 md:h-48 w-full text-left shadow-xs hover:shadow-md transition-all active:scale-[0.98] border border-slate-200/80 cursor-pointer"
-              >
-                {/* Full Card Food Image */}
-                <img
-                  src={category.image}
-                  alt={category.name}
-                  className="absolute inset-0 h-full w-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out"
-                  loading="lazy"
-                />
+          {categoriesQuery.isLoading ? (
+            <div className="w-full grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2.5 sm:gap-3.5 box-border">
+              {Array.from({ length: 6 }).map((_, i) => (
+                <Skeleton key={i} className="h-36 xs:h-40 sm:h-44 md:h-48 w-full rounded-xl sm:rounded-2xl" />
+              ))}
+            </div>
+          ) : (
+            <div className="w-full grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2.5 sm:gap-3.5 box-border">
+              {displayCategories.map((category) => (
+                <button
+                  key={category.id}
+                  id={`food-category-card-${category.slug || category.id}`}
+                  type="button"
+                  onClick={() => {
+                    setSearchParams({ category: String(category.id) });
+                    window.scrollTo({ top: 0, behavior: "smooth" });
+                  }}
+                  className="group relative flex flex-col justify-end overflow-hidden rounded-xl sm:rounded-2xl h-36 xs:h-40 sm:h-44 md:h-48 w-full text-left shadow-xs hover:shadow-md transition-all active:scale-[0.98] border border-slate-200/80 cursor-pointer"
+                >
+                  {/* Full Card Food Image */}
+                  <img
+                    src={category.image}
+                    alt={category.name}
+                    className="absolute inset-0 h-full w-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out"
+                    loading="lazy"
+                  />
 
-                {/* Dark Gradient Overlay: Transparent to Dark Green/Black */}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/50 via-40% to-transparent" />
+                  {/* Dark Gradient Overlay: Transparent to Dark Green/Black */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/50 via-40% to-transparent" />
 
-                {/* Text OVER the image at bottom */}
-                <div className="relative z-10 p-2.5 sm:p-3 flex flex-col justify-end w-full">
-                  <div className="flex items-center justify-between gap-1.5">
-                    <h3 className="text-xs xs:text-sm sm:text-base font-extrabold text-white tracking-tight flex items-center gap-1 drop-shadow-sm">
-                      <span className="text-sm sm:text-base">{category.emoji}</span>
-                      <span>{category.name}</span>
-                    </h3>
-                    <div className="flex h-5 w-5 xs:h-6 xs:w-6 sm:h-7 sm:w-7 shrink-0 items-center justify-center rounded-full border border-white/70 bg-black/30 text-white backdrop-blur-xs group-hover:bg-emerald-600 group-hover:border-emerald-600 transition-colors">
-                      <ArrowRight className="h-2.5 w-2.5 xs:h-3 xs:w-3 sm:h-3.5 sm:w-3.5" />
+                  {/* Text OVER the image at bottom */}
+                  <div className="relative z-10 p-2.5 sm:p-3 flex flex-col justify-end w-full">
+                    <div className="flex items-center justify-between gap-1.5">
+                      <h3 className="text-xs xs:text-sm sm:text-base font-extrabold text-white tracking-tight flex items-center gap-1 drop-shadow-sm">
+                        <span className="text-sm sm:text-base">{category.emoji}</span>
+                        <span>{category.name}</span>
+                      </h3>
+                      <div className="flex h-5 w-5 xs:h-6 xs:w-6 sm:h-7 sm:w-7 shrink-0 items-center justify-center rounded-full border border-white/70 bg-black/30 text-white backdrop-blur-xs group-hover:bg-emerald-600 group-hover:border-emerald-600 transition-colors">
+                        <ArrowRight className="h-2.5 w-2.5 xs:h-3 xs:w-3 sm:h-3.5 sm:w-3.5" />
+                      </div>
                     </div>
+                    <p className="text-[10px] xs:text-[11px] sm:text-xs font-medium text-emerald-100/90 line-clamp-1 mt-0.5 drop-shadow-xs">
+                      {category.description}
+                    </p>
                   </div>
-                  <p className="text-[10px] xs:text-[11px] sm:text-xs font-medium text-emerald-100/90 line-clamp-1 mt-0.5 drop-shadow-xs">
-                    {category.description}
-                  </p>
-                </div>
-              </button>
-            ))}
-          </div>
+                </button>
+              ))}
+            </div>
+          )}
 
           {/* 100% Certified Halal Trust Banner */}
           <div className="mt-1 rounded-xl border border-emerald-800/40 bg-gradient-to-r from-emerald-950 via-emerald-900 to-emerald-950 px-4 py-3 text-center text-white shadow-xs">
@@ -568,11 +575,27 @@ function BuyerMarketplace() {
         <div className="space-y-1.5 sm:space-y-2">
           <div className="space-y-0.5">
             <h2 className="text-xs sm:text-base font-extrabold uppercase tracking-wider text-emerald-900 flex items-center gap-1.5">
-              <span>{activeCategory ? activeCategory.emoji : "🔍"}</span>
-              <span>{activeCategory ? activeCategory.name : "Search Results"}</span>
+              <span>{isAllSelected ? "🍽️" : activeCategory ? activeCategory.emoji : (search.trim() ? "🔍" : "🍽️")}</span>
+              <span>
+                {isAllSelected
+                  ? "All Products"
+                  : activeCategory
+                    ? activeCategory.name
+                    : (search.trim()
+                      ? "Search Results"
+                      : (categoriesQuery.isLoading ? "Loading Category..." : "Halal Food Menu"))}
+              </span>
             </h2>
             <p className="text-[10px] sm:text-xs text-slate-500 leading-tight">
-              {activeCategory ? activeCategory.description : `Showing results for "${search}"`}
+              {isAllSelected
+                ? "Showing all halal menu items"
+                : activeCategory
+                  ? activeCategory.description
+                  : (search.trim()
+                    ? `Showing results for "${search}"`
+                    : (categoriesQuery.isLoading
+                      ? "Fetching category items..."
+                      : "Browse all certified halal dishes"))}
             </p>
           </div>
 
@@ -580,27 +603,43 @@ function BuyerMarketplace() {
           <div className="flex gap-1.5 sm:gap-2 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
             <button
               type="button"
+              id="category-tab-back"
               onClick={() => {
                 setSearchParams({});
                 setSearch("");
                 window.scrollTo({ top: 0, behavior: "smooth" });
               }}
-              className="shrink-0 px-2.5 py-1.5 sm:px-3 sm:py-2 rounded-lg sm:rounded-xl text-[11px] sm:text-xs font-semibold transition-all whitespace-nowrap bg-slate-100 text-slate-700 hover:bg-slate-200 flex items-center gap-1 border border-slate-200"
+              className="shrink-0 px-2.5 py-1.5 sm:px-3 sm:py-2 rounded-lg sm:rounded-xl text-[11px] sm:text-xs font-semibold transition-all whitespace-nowrap bg-slate-100 text-slate-700 hover:bg-slate-200 flex items-center gap-1 border border-slate-200 cursor-pointer"
             >
               <ArrowLeft className="h-3 w-3" />
               <span>Categories</span>
             </button>
-            {FOOD_CATEGORIES.map((category) => {
-              const isSelected = activeCategory?.key === category.key;
+            <button
+              type="button"
+              id="category-tab-all"
+              onClick={() => {
+                setSearchParams({ category: "all" });
+              }}
+              className={`shrink-0 px-3 py-1.5 sm:px-3.5 sm:py-2 rounded-lg sm:rounded-xl text-[11px] sm:text-xs transition-all whitespace-nowrap flex items-center gap-1.5 cursor-pointer ${
+                isAllSelected
+                  ? "bg-emerald-700 text-white font-bold shadow-xs hover:bg-emerald-800 border border-emerald-700"
+                  : "bg-white text-slate-700 border border-slate-200 hover:bg-slate-50 hover:text-slate-950 font-medium"
+              }`}
+            >
+              <span className="text-xs sm:text-sm leading-none">🍽️</span>
+              <span>All Products</span>
+            </button>
+            {displayCategories.map((category) => {
+              const isSelected = activeCategory?.id === category.id;
               return (
                 <button
-                  key={category.key}
-                  id={`category-tab-${category.key}`}
+                  key={category.id}
+                  id={`category-tab-${category.slug || category.id}`}
                   type="button"
                   onClick={() => {
-                    setSearchParams({ category: category.key });
+                    setSearchParams({ category: String(category.id) });
                   }}
-                  className={`shrink-0 px-3 py-1.5 sm:px-3.5 sm:py-2 rounded-lg sm:rounded-xl text-[11px] sm:text-xs transition-all whitespace-nowrap flex items-center gap-1.5 ${
+                  className={`shrink-0 px-3 py-1.5 sm:px-3.5 sm:py-2 rounded-lg sm:rounded-xl text-[11px] sm:text-xs transition-all whitespace-nowrap flex items-center gap-1.5 cursor-pointer ${
                     isSelected
                       ? "bg-emerald-700 text-white font-bold shadow-xs hover:bg-emerald-800 border border-emerald-700"
                       : "bg-white text-slate-700 border border-slate-200 hover:bg-slate-50 hover:text-slate-950 font-medium"
@@ -617,7 +656,7 @@ function BuyerMarketplace() {
         {/* Product Count Row */}
         <div className="flex items-center justify-between text-xs px-0.5 pt-0.5">
           <span className="font-bold text-slate-900 text-xs sm:text-sm">
-            {sortedProducts.length} Products
+            {products.length} Products
           </span>
           <span className="inline-flex items-center gap-1 font-semibold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200/80 text-[10px] sm:text-xs">
             <CheckCircle2 className="h-3 w-3 text-emerald-600" />
@@ -636,15 +675,16 @@ function BuyerMarketplace() {
               <div className="space-y-2">
                 <Label className="text-xs font-semibold text-slate-700">Category</Label>
                 <Select
-                  value={activeCategory?.key ?? ""}
+                  value={isAllSelected ? "all" : (activeCategory ? String(activeCategory.id) : "")}
                   onValueChange={(val) => {
                     setSearchParams({ category: val });
                   }}
                 >
                   <SelectTrigger><SelectValue placeholder="Select Category" /></SelectTrigger>
                   <SelectContent>
-                    {FOOD_CATEGORIES.map((category) => (
-                      <SelectItem key={category.key} value={category.key}>
+                    <SelectItem value="all">🍽️ All Products</SelectItem>
+                    {displayCategories.map((category) => (
+                      <SelectItem key={category.id} value={String(category.id)}>
                         {category.emoji} {category.name}
                       </SelectItem>
                     ))}
@@ -669,7 +709,7 @@ function BuyerMarketplace() {
               <FilterCheck label="Available to Order" checked />
               <Button
                 variant="outline"
-                className="w-full text-xs font-medium"
+                className="w-full text-xs font-medium cursor-pointer"
                 onClick={() => {
                   setSearchParams({});
                   setSearch("");
@@ -696,7 +736,7 @@ function BuyerMarketplace() {
                   </SelectContent>
                 </Select>
               </div>
-              <p className="text-xs font-medium text-slate-600">{sortedProducts.length} Products displayed</p>
+              <p className="text-xs font-medium text-slate-600">{products.length} Products displayed</p>
             </div>
 
             {/* 2 Products Per Row on Mobile (grid-cols-2) */}
@@ -708,7 +748,7 @@ function BuyerMarketplace() {
               </div>
             ) : (
               <div className="grid grid-cols-2 gap-2 sm:gap-4 md:grid-cols-3 xl:grid-cols-4">
-                {sortedProducts.map((product) => (
+                {products.map((product) => (
                   <ProductCard
                     key={product.id}
                     product={product}
@@ -719,24 +759,37 @@ function BuyerMarketplace() {
               </div>
             )}
 
-            {!productsQuery.isLoading && !sortedProducts.length && (
+            {!productsQuery.isLoading && !products.length && (
               <Card className="border-dashed border-2 border-slate-200 bg-white">
                 <CardContent className="flex min-h-60 flex-col items-center justify-center p-8 text-center">
                   <Package className="mb-3 h-10 w-10 text-slate-300" />
-                  <h2 className="font-semibold text-slate-900">No products found</h2>
+                  <h2 className="font-semibold text-slate-900 text-sm sm:text-base">
+                    No products available in this category.
+                  </h2>
                   <p className="mt-1 max-w-md text-xs sm:text-sm text-slate-500">
                     Try selecting another category or adjusting your search keywords.
                   </p>
-                  <Button
-                    variant="outline"
-                    className="mt-4 text-xs font-semibold"
-                    onClick={() => {
-                      setSearchParams({});
-                      setSearch("");
-                    }}
-                  >
-                    Browse All Categories
-                  </Button>
+                  <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
+                    <Button
+                      variant="outline"
+                      className="text-xs font-semibold cursor-pointer"
+                      onClick={() => {
+                        setSearchParams({});
+                        setSearch("");
+                      }}
+                    >
+                      Browse All Categories
+                    </Button>
+                    <Button
+                      variant="default"
+                      className="bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-semibold cursor-pointer"
+                      onClick={() => {
+                        setSearchParams({ category: "all" });
+                      }}
+                    >
+                      View All Products
+                    </Button>
+                  </div>
                 </CardContent>
               </Card>
             )}
@@ -776,15 +829,16 @@ function BuyerMarketplace() {
               <div className="space-y-2">
                 <Label className="text-xs font-bold text-slate-700">Category</Label>
                 <Select
-                  value={activeCategory?.key ?? ""}
+                  value={isAllSelected ? "all" : (activeCategory ? String(activeCategory.id) : "")}
                   onValueChange={(val) => {
                     setSearchParams({ category: val });
                   }}
                 >
                   <SelectTrigger><SelectValue placeholder="Select Category" /></SelectTrigger>
                   <SelectContent>
-                    {FOOD_CATEGORIES.map((category) => (
-                      <SelectItem key={category.key} value={category.key}>
+                    <SelectItem value="all">🍽️ All Products</SelectItem>
+                    {displayCategories.map((category) => (
+                      <SelectItem key={category.id} value={String(category.id)}>
                         {category.emoji} {category.name}
                       </SelectItem>
                     ))}
@@ -795,7 +849,7 @@ function BuyerMarketplace() {
               <FilterCheck label="In Stock" checked />
               <Button
                 variant="outline"
-                className="w-full text-xs font-semibold"
+                className="w-full text-xs font-semibold cursor-pointer"
                 onClick={() => {
                   setSearchParams({});
                   setSearch("");

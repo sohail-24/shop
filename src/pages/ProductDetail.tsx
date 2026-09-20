@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { CustomerBottomNav } from "@/components/CustomerBottomNav";
 import { ArrowLeft, Minus, Package, Plus, Share2, ShoppingCart, Zap } from "lucide-react";
 
 export default function ProductDetail() {
@@ -46,24 +47,26 @@ export default function ProductDetail() {
 
   if (isLoading) {
     return (
-      <div className="mx-auto max-w-5xl space-y-6">
+      <div className="mx-auto max-w-5xl space-y-6 pb-20 md:pb-0">
         <Skeleton className="h-8 w-48" />
         <Skeleton className="h-[520px] w-full" />
+        <CustomerBottomNav active="categories" />
       </div>
     );
   }
 
   if (!product || isError) {
     return (
-      <div className="mx-auto flex min-h-[420px] max-w-xl flex-col items-center justify-center text-center">
+      <div className="mx-auto flex min-h-[420px] max-w-xl flex-col items-center justify-center text-center pb-20 md:pb-0">
         <Package className="mb-4 h-12 w-12 text-muted-foreground/40" />
         <h1 className="text-xl font-semibold">Product not found</h1>
         <p className="mt-2 text-sm text-muted-foreground">
           {error?.message ?? "This product may have been archived or is not available."}
         </p>
-        <Link to="/products">
-          <Button className="mt-5" variant="outline">Back to Products</Button>
+        <Link to="/">
+          <Button className="mt-5" variant="outline">Back to Home</Button>
         </Link>
+        <CustomerBottomNav active="categories" />
       </div>
     );
   }
@@ -95,11 +98,11 @@ export default function ProductDetail() {
   }
 
   return (
-    <div className="mx-auto max-w-6xl flex flex-col gap-5 px-4 md:px-0">
+    <div className="mx-auto max-w-6xl flex flex-col gap-5 px-4 md:px-0 pb-20 md:pb-6">
       <section className="flex items-center justify-between md:border-b md:pb-3">
-        <Link to="/products" className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground">
+        <Link to="/" className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground">
           <ArrowLeft className="h-4 w-4" />
-          Back to Products
+          Back to Home
         </Link>
         <div className="hidden md:flex gap-2">
           <Button variant="outline" size="sm"><Share2 className="mr-2 h-4 w-4" />Share</Button>
@@ -174,7 +177,7 @@ export default function ProductDetail() {
             </div>
 
             <div className="flex flex-col gap-3 md:hidden mt-2">
-              <Button variant="outline" className="h-12 bg-card" onClick={() => addProduct("/products")} disabled={isOutOfStock}>
+              <Button variant="outline" className="h-12 bg-card" onClick={() => addProduct("/")} disabled={isOutOfStock}>
                 <ShoppingCart className="mr-2 h-4 w-4" />
                 {isOutOfStock ? "Out of Stock" : "Add & Continue Shopping"}
               </Button>
@@ -197,9 +200,6 @@ export default function ProductDetail() {
         </div>
       </section>
 
-      <DetailSection title="Item Details & Ingredients">
-        {product.description ?? "Authentic halal food prepared fresh with quality ingredients."}
-      </DetailSection>
       <div className="hidden md:block">
         <DetailSection title="Dietary & Preparation Info">
           100% Certified Halal meats. Prepared fresh to order with authentic spices, warm pita, and signature white and hot sauces.
@@ -225,6 +225,8 @@ export default function ProductDetail() {
           </DetailSection>
         </div>
       )}
+
+      <CustomerBottomNav active="categories" />
     </div>
   );
 }

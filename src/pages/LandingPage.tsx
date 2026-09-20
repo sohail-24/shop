@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { Fragment, useEffect, useMemo, useState } from "react";
 import { Link } from "react-router";
 import { toast } from "sonner";
 import {
@@ -64,15 +64,34 @@ const ALL_PRODUCTS_CATEGORY: CategoryNavItem = {
   key: "all",
   name: "All Products",
   icon: LayoutGrid,
-  emoji: "▦",
+  emoji: "🍽️",
 };
+
+export function getCategoryEmoji(category: { name: string; slug?: string | null }): string {
+  const text = `${category.slug || ""} ${category.name || ""}`.toLowerCase();
+
+  if (text.includes("platter")) return "🍛";
+  if (text.includes("gyro") || text.includes("wrap") || text.includes("pita")) return "🌯";
+  if (text.includes("burger")) return "🍔";
+  if (text.includes("wing")) return "🍗";
+  if (text.includes("rice bowl") || text.includes("bowl") || text.includes("rice")) return "🍚";
+  if (text.includes("sandwich") || text.includes("sub") || text.includes("philly") || text.includes("cheesesteak")) return "🥪";
+  if (text.includes("salad")) return "🥗";
+  if (text.includes("side") || text.includes("fries") || text.includes("fry")) return "🍟";
+  if (text.includes("beverage") || text.includes("drink") || text.includes("soda") || text.includes("juice")) return "🥤";
+  if (text.includes("dessert") || text.includes("sweet") || text.includes("baklava") || text.includes("cake")) return "🍰";
+  if (text.includes("catering") || text.includes("party") || text.includes("feast")) return "🍱";
+  if (text.includes("falafel")) return "🧆";
+  if (text.includes("sauce")) return "🥣";
+  return "🍽️";
+}
 
 export function toCategoryNavItem(category: MarketplaceCategory): CategoryNavItem {
   return {
     key: `category-${category.id}`,
     name: category.name,
     icon: Utensils,
-    emoji: "🍽",
+    emoji: getCategoryEmoji(category),
     categoryId: category.id,
   };
 }
@@ -181,79 +200,76 @@ export default function LandingPage() {
         style={{
           background: "linear-gradient(to bottom, #0F5132 0%, #062E1F 50%, #0F5132 100%)",
         }}
-        className="md:hidden w-[28%] shrink-0 sticky top-0 h-screen border-r border-[#062E1F] text-white p-1 xs:p-1.5 pt-2.5 xs:pt-3 flex flex-col justify-between overflow-y-auto hide-scrollbar z-30 select-none"
+        className="md:hidden w-[28%] shrink-0 sticky top-0 h-screen border-r border-[#062E1F] text-white flex flex-col justify-between overflow-hidden z-30 select-none"
       >
-        <div className="flex flex-col">
-          {/* AM FRUITS logo */}
-          <div className="flex flex-col items-center text-center">
-            <div className="flex items-center justify-center p-1 rounded-xl bg-white/10 backdrop-blur-xs border border-white/20 mb-1 shadow-xs">
-              <img
-                src="/branding/am-fruits-logo.png"
-                alt="Shah's Halal Food"
-                className="h-8 xs:h-9 w-auto object-contain"
-              />
-            </div>
-
-            {/* Shah's Halal */}
-            <h2 className="text-xs xs:text-sm font-extrabold tracking-tight text-white leading-tight">
+        {/* Top Brand Header */}
+        <div className="shrink-0 p-1.5 xs:p-2 pt-2.5 xs:pt-3 pb-2 flex flex-col items-center text-center border-b border-emerald-800/60">
+          <Link to="/" className="flex flex-col items-center group">
+            <img
+              src="/branding/am-fruits-logo.png"
+              alt="Shah's Halal"
+              className="h-7 xs:h-8 w-auto object-contain transition-transform group-hover:scale-105"
+            />
+            <h2 className="mt-1 text-xs xs:text-sm font-extrabold tracking-tight text-white leading-tight">
               Shah&apos;s Halal
             </h2>
-
-            {/* Fresh Food · Pure Taste */}
             <p className="mt-0.5 text-[8px] xs:text-[9px] font-semibold text-emerald-300 tracking-wide text-center leading-tight">
               Fresh Food · Pure Taste
             </p>
-          </div>
+          </Link>
+        </div>
 
-          {/* Divider */}
-          <div className="w-full my-2 border-b border-emerald-800/60" />
-
-          {/* Categories */}
-          <nav className="flex flex-col gap-1 xs:gap-1.5">
+        {/* Scrollable Categories List */}
+        <div className="flex-1 min-h-0 overflow-y-auto hide-scrollbar p-1 xs:p-1.5 py-2">
+          <nav className="rounded-xl bg-black/20 border border-emerald-500/20 p-1 flex flex-col gap-0.5 shadow-inner">
             {sidebarCategories.map((item) => {
               const isActive = selectedCategoryKey === item.key;
               const isAllProducts = item.key === "all";
               return (
-                <button
-                  key={item.key}
-                  type="button"
-                  onClick={() => {
-                    setSelectedCategoryKey(item.key);
-                    const grid = document.getElementById("products-grid");
-                    if (grid) {
-                      grid.scrollIntoView({ behavior: "smooth" });
-                    }
-                  }}
-                  className={`w-full flex items-center gap-1.5 px-1.5 xs:px-2 py-1.5 rounded-lg text-left transition-all ${
-                    isAllProducts ? "mb-3.5 xs:mb-4" : ""
-                  } ${
-                    isActive
-                      ? "bg-[#0b6e54] text-white font-bold shadow-xs ring-1 ring-emerald-400/50"
-                      : "text-emerald-100/90 hover:bg-[#075c46]/60 hover:text-white"
-                  }`}
-                >
-                  <span className="text-xs xs:text-sm select-none leading-none shrink-0">{item.emoji}</span>
-                  <span className="text-[10px] xs:text-[11px] font-medium leading-tight truncate">
-                    {item.name}
-                  </span>
-                </button>
+                <Fragment key={item.key}>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSelectedCategoryKey(item.key);
+                      const grid = document.getElementById("products-grid");
+                      if (grid) {
+                        grid.scrollIntoView({ behavior: "smooth" });
+                      }
+                    }}
+                    className={`w-full flex items-center gap-1.5 xs:gap-2 px-1.5 xs:px-2 py-1.5 xs:py-2 rounded-lg text-left transition-all ${
+                      isActive
+                        ? "bg-[#107c57] text-white font-bold shadow-xs ring-1 ring-emerald-300/50"
+                        : "text-emerald-100/90 hover:bg-white/10 hover:text-white font-medium"
+                    }`}
+                  >
+                    <span className="text-sm xs:text-base w-5 xs:w-6 text-center select-none leading-none shrink-0">
+                      {item.emoji}
+                    </span>
+                    <span className="text-[11px] xs:text-xs font-semibold leading-tight truncate">
+                      {item.name}
+                    </span>
+                  </button>
+                  {isAllProducts && (
+                    <div className="my-1 border-b border-emerald-500/25" />
+                  )}
+                </Fragment>
               );
             })}
           </nav>
         </div>
 
-        {/* Good Food Brings Good People & ☪ HALAL CERTIFIED HALAL */}
-        <div className="pt-2.5 mt-2.5 border-t border-emerald-800/60 flex flex-col items-center text-center gap-1.5 pb-1 shrink-0">
+        {/* Bottom Footer: Good Food Brings Good People & Halal */}
+        <div className="shrink-0 p-1.5 xs:p-2 pt-2 border-t border-emerald-800/60 flex flex-col items-center text-center gap-1 pb-2">
           <div className="text-[9px] xs:text-[10px] italic text-emerald-200 font-medium leading-tight">
             <p>Good Food</p>
             <p>Brings Good People</p>
           </div>
-          <div className="inline-flex flex-col items-center gap-0.5 rounded-lg bg-[#042d22] border border-amber-400/40 px-2 py-0.5 text-amber-300 shadow-xs">
-            <div className="flex items-center gap-1 text-[9px] xs:text-[10px] font-bold">
-              <span className="text-amber-400 text-xs">☪</span>
+          <div className="inline-flex flex-col items-center gap-0.5 rounded-md bg-[#042d22] border border-amber-400/40 px-1.5 py-0.5 text-amber-300 shadow-xs">
+            <div className="flex items-center gap-1 text-[8.5px] xs:text-[9px] font-bold">
+              <span className="text-amber-400 text-[10px]">☪</span>
               <span>HALAL</span>
             </div>
-            <span className="text-[7.5px] xs:text-[8px] font-semibold text-emerald-300 uppercase tracking-wider">
+            <span className="text-[7px] xs:text-[7.5px] font-semibold text-emerald-300 uppercase tracking-wider">
               CERTIFIED HALAL
             </span>
           </div>
@@ -263,73 +279,71 @@ export default function LandingPage() {
       {/* ====================================================================== */}
       {/* 2. PERMANENT LEFT VERTICAL CATEGORY SIDEBAR (DESKTOP / TABLET)         */}
       {/* ====================================================================== */}
-      <aside className="hidden md:flex md:w-64 lg:w-72 shrink-0 md:sticky md:top-0 md:h-screen bg-[#033b2c] border-r border-[#022c22] text-white p-5 flex-col justify-between overflow-y-auto hide-scrollbar z-30 select-none">
-        <div>
-          {/* Top Brand Header */}
-          <div className="flex flex-col items-center text-center pb-4 border-b border-emerald-800/60">
-            <Link to="/" className="group flex flex-col items-center">
-              <div className="flex items-center justify-center p-2 rounded-2xl bg-white/10 backdrop-blur-xs border border-white/20 mb-2.5 shadow-md transition-transform group-hover:scale-105">
-                <img
-                  src="/branding/am-fruits-logo.png"
-                  alt="Shah's Halal"
-                  className="h-14 w-auto object-contain"
-                />
-              </div>
-              <h2 className="text-xl font-extrabold tracking-tight text-white group-hover:text-emerald-300 transition-colors">
-                Shah's Halal
-              </h2>
-              <p className="mt-0.5 text-xs font-medium text-emerald-300/90 tracking-wide">
-                Fresh Food • Pure Taste
-              </p>
-            </Link>
-          </div>
+      <aside
+        style={{
+          background: "linear-gradient(to bottom, #0F5132 0%, #062E1F 50%, #0F5132 100%)",
+        }}
+        className="hidden md:flex md:w-64 lg:w-72 shrink-0 md:sticky md:top-0 md:h-screen border-r border-[#062E1F] text-white p-4 lg:p-5 flex-col justify-between overflow-hidden z-30 select-none"
+      >
+        {/* Top Brand Header */}
+        <div className="shrink-0 pb-3.5 flex flex-col items-center text-center border-b border-emerald-800/60">
+          <Link to="/" className="group flex flex-col items-center">
+            <img
+              src="/branding/am-fruits-logo.png"
+              alt="Shah's Halal"
+              className="h-10 lg:h-11 w-auto object-contain transition-transform group-hover:scale-105"
+            />
+            <h2 className="mt-2 text-lg lg:text-xl font-extrabold tracking-tight text-white group-hover:text-emerald-300 transition-colors">
+              Shah's Halal
+            </h2>
+            <p className="mt-0.5 text-xs font-semibold text-emerald-300/90 tracking-wide">
+              Fresh Food · Pure Taste
+            </p>
+          </Link>
+        </div>
 
-          {/* Category Navigation Items */}
-          <nav className="mt-4 flex flex-col gap-1.5">
-            <div className="px-3 pb-2 text-[11px] font-bold uppercase tracking-wider text-emerald-300/70">
-              Menu Categories
-            </div>
+        {/* Scrollable Categories List */}
+        <div className="flex-1 min-h-0 overflow-y-auto hide-scrollbar py-3">
+          <nav className="rounded-2xl bg-black/20 border border-emerald-500/20 p-2 flex flex-col gap-1 shadow-inner">
             {sidebarCategories.map((item) => {
               const isActive = selectedCategoryKey === item.key;
               const isAllProducts = item.key === "all";
-              const Icon = item.icon;
               return (
-                <button
-                  key={item.key}
-                  type="button"
-                  onClick={() => {
-                    setSelectedCategoryKey(item.key);
-                    const grid = document.getElementById("products-grid");
-                    if (grid) {
-                      grid.scrollIntoView({ behavior: "smooth" });
-                    }
-                  }}
-                  className={`w-full group flex items-center justify-between px-3.5 py-2 rounded-xl text-sm font-medium transition-all text-left ${
-                    isAllProducts ? "mb-4" : ""
-                  } ${
-                    isActive
-                      ? "bg-emerald-700 text-white font-semibold shadow-xs ring-1 ring-emerald-400/50"
-                      : "text-emerald-100/80 hover:bg-emerald-800/60 hover:text-white"
-                  }`}
-                >
-                  <div className="flex items-center gap-3">
-                    <span className="text-base select-none leading-none">{item.emoji}</span>
-                    <span>{item.name}</span>
-                  </div>
-                  <Icon
-                    className={`h-4 w-4 transition-transform group-hover:scale-110 ${
-                      isActive ? "text-amber-300" : "text-emerald-400/60"
+                <Fragment key={item.key}>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSelectedCategoryKey(item.key);
+                      const grid = document.getElementById("products-grid");
+                      if (grid) {
+                        grid.scrollIntoView({ behavior: "smooth" });
+                      }
+                    }}
+                    className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-left transition-all ${
+                      isActive
+                        ? "bg-[#107c57] text-white font-bold shadow-xs ring-1 ring-emerald-300/50"
+                        : "text-emerald-100/90 hover:bg-white/10 hover:text-white font-medium"
                     }`}
-                  />
-                </button>
+                  >
+                    <span className="text-lg lg:text-xl w-7 text-center shrink-0 select-none leading-none">
+                      {item.emoji}
+                    </span>
+                    <span className="text-sm lg:text-[15px] font-semibold leading-tight truncate">
+                      {item.name}
+                    </span>
+                  </button>
+                  {isAllProducts && (
+                    <div className="my-1.5 border-b border-emerald-500/25" />
+                  )}
+                </Fragment>
               );
             })}
           </nav>
         </div>
 
-        {/* Sidebar Footer: Brand Statement & Halal Certification */}
-        <div className="pt-5 mt-5 border-t border-emerald-800/60 flex flex-col items-center text-center gap-2">
-          <p className="text-xs italic text-emerald-200/90 font-medium">
+        {/* Bottom Footer: Good Food Brings Good People & Halal */}
+        <div className="shrink-0 pt-3.5 border-t border-emerald-800/60 flex flex-col items-center text-center gap-2">
+          <p className="text-xs lg:text-sm italic text-emerald-200/90 font-medium">
             &ldquo;Good Food Brings Good People&rdquo;
           </p>
           <div className="inline-flex items-center gap-1.5 rounded-full bg-emerald-950/90 border border-amber-400/40 px-3 py-1 text-[11px] font-bold text-amber-300 shadow-xs">
