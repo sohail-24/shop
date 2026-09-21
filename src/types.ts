@@ -1,13 +1,10 @@
-export type * from "../db/schema";
-export * from "./errors";
-
 export type ProductOption = {
   id: string;
-  name: string;
-  price: number;
-  compareAtPrice?: number | null;
-  mealPrice?: number | null;
-  onlyPrice?: number | null;
+  name: string; // e.g. "2 PC", "3 PC", "4 PC", "Small", "Regular", "Classic"
+  price: number; // Primary selling price
+  compareAtPrice?: number | null; // Optional original/compare price
+  mealPrice?: number | null; // Optional MEAL price
+  onlyPrice?: number | null; // Optional ONLY price
 };
 
 export const ProductOption = {} as unknown as ProductOption;
@@ -42,4 +39,3 @@ export function parseProductOptions(value?: unknown): ProductOption[] {
     return [];
   }
 }
-

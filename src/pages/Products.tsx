@@ -1003,6 +1003,7 @@ function ProductCard({
               <img
                 src={product.image}
                 alt={product.name}
+                referrerPolicy="no-referrer"
                 className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
                 onError={() => setImageFailed(true)}
               />
@@ -1261,6 +1262,7 @@ function OwnerProductCatalog() {
                     <img
                       src={product.image}
                       alt={product.name}
+                      referrerPolicy="no-referrer"
                       className="h-full w-full object-cover"
                       loading="lazy"
                     />

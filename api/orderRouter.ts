@@ -392,12 +392,13 @@ export const orderRouter = createRouter({
 
         orderItemsData.push({
           productId: item.productId,
-          productName: product.name,
+          productName: item.selectedOption ? `${product.name} (${item.selectedOption})` : product.name,
           productImage: product.image ?? undefined,
           quantity: item.quantity,
           unitPrice: unitPrice.toFixed(2),
           totalPrice: totalPrice.toFixed(2),
           unitType: product.unitType,
+          selectedOption: item.selectedOption ?? undefined,
           notes: item.notes ?? undefined,
           inventoryId: inventoryRecord.id,
           currentReserved: inventoryRecord.quantityReserved,

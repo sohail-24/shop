@@ -74,6 +74,16 @@ app.get("/api/uploads/:filename", async (c) => {
   }
 });
 
+app.get("/uploads/products/:filename", (c) => {
+  const filename = basename(c.req.param("filename"));
+  return c.redirect(`/api/uploads/${filename}`);
+});
+
+app.get("/uploads/:filename", (c) => {
+  const filename = basename(c.req.param("filename"));
+  return c.redirect(`/api/uploads/${filename}`);
+});
+
 app.post("/api/products/upload", async (c) => {
   const responseHeaders = new Headers();
   let user;

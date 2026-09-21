@@ -30,6 +30,7 @@ import {
   authenticateAdminRequest,
   clearAdminSessionCookies,
   issueAdminSessionCookies,
+  resolveAdminUser,
   signAdminToken,
   validateAdminCredentials,
 } from "./auth/admin-session";
@@ -263,7 +264,8 @@ export const authRouter = createRouter({
       const email = input.email.trim().toLowerCase();
       await issueAdminSessionCookies(email, ctx.req.headers, ctx.resHeaders);
       const token = await signAdminToken(email, "access");
-      return { user: publicUser(activeAdminUser(email)), token };
+      const user = await resolveAdminUser(email);
+      return { user: publicUser(user), token };
     }),
 
   refresh: publicQuery.mutation(async ({ ctx }) => ({ user: publicUser(await authenticateAdminRequest(ctx.req.headers, ctx.resHeaders)) })),

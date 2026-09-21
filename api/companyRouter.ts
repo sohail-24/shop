@@ -1,8 +1,9 @@
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
 import { isOwner } from "@contracts/roles";
-import { authedQuery, createRouter, ownerQuery } from "./middleware";
+import { authedQuery, createRouter, ownerQuery, publicQuery } from "./middleware";
 import {
+  ensureDefaultBusiness,
   findAllCompanies,
   findCompaniesByType,
   findCompanyById,
@@ -22,6 +23,10 @@ function canAccessCompany(input: {
 }
 
 export const companyRouter = createRouter({
+  default: publicQuery.query(async () => {
+    return ensureDefaultBusiness();
+  }),
+
   list: ownerQuery
     .input(
       z

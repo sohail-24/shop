@@ -1,8 +1,10 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router";
 import { toast } from "sonner";
-import { trpc } from "@/providers/trpc";
+import { trpc, getStoredAdminToken } from "@/providers/trpc";
 import { formatCurrency, getProductMeta, toNumber } from "@/lib/i18n";
+import { parseProductOptions, type ProductOption } from "@/types";
+import { ProductOptionsEditor } from "@/components/ProductOptionsEditor";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -63,9 +65,17 @@ async function uploadProductImage(file: File): Promise<string> {
   const formData = new FormData();
   formData.append("image", file);
 
+  const token = getStoredAdminToken();
+  const headers: Record<string, string> = {};
+  if (token) {
+    headers["Authorization"] = `Bearer ${token}`;
+  }
+
   const response = await fetch("/api/products/upload", {
     method: "POST",
     body: formData,
+    credentials: "include",
+    headers,
   });
   const payload = (await response.json().catch(() => ({}))) as {
     error?: string;
@@ -106,6 +116,7 @@ export default function EditProduct() {
   const [newImageUrl, setNewImageUrl] = useState("");
   const [attemptedSubmit, setAttemptedSubmit] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
+  const [options, setOptions] = useState<ProductOption[]>([]);
 
   // Restaurant form fields
   const [form, setForm] = useState({
@@ -194,12 +205,17 @@ export default function EditProduct() {
       warehouse: inventoryRecord?.warehouseLocation || "Tex’s Kitchen",
     });
     setImages(parseImages(product.images, product.image));
+    setOptions(parseProductOptions(product.options));
   }, [product, inventoryRecord]);
+
+  const effectiveSellingPrice = options.length > 0
+    ? (toNumber(form.sellingPrice) > 0 ? toNumber(form.sellingPrice) : (options[0].mealPrice || options[0].price || 0))
+    : toNumber(form.sellingPrice);
 
   const errors = {
     name: form.name.trim() ? "" : "Item name is required.",
     categoryId: form.categoryId ? "" : "Category is required.",
-    sellingPrice: toNumber(form.sellingPrice) > 0 ? "" : "Selling price must be greater than $0.00.",
+    sellingPrice: effectiveSellingPrice > 0 ? "" : "Selling price must be greater than $0.00.",
   };
   const isFormValid = Object.values(errors).every((error) => !error);
 
@@ -225,8 +241,11 @@ export default function EditProduct() {
   };
 
   const addImageUrl = () => {
-    const url = newImageUrl.trim();
+    let url = newImageUrl.trim();
     if (!url) return;
+    if (url.startsWith("api/") || url.startsWith("uploads/") || url.startsWith("products/")) {
+      url = `/${url}`;
+    }
     if (images.some((image) => image.url === url)) {
       toast.error("This image URL is already attached.");
       return;
@@ -263,7 +282,7 @@ export default function EditProduct() {
     if (form.isFeatured && !tagList.includes("featured")) tagList.push("featured");
     if (form.spiceLevel && !tagList.includes(form.spiceLevel)) tagList.push(form.spiceLevel);
 
-    const selling = toNumber(form.sellingPrice);
+    const selling = effectiveSellingPrice;
     const purchase = toNumber(form.purchasePrice) > 0
       ? toNumber(form.purchasePrice)
       : Math.max(1, +(selling * 0.35).toFixed(2));
@@ -293,6 +312,14 @@ export default function EditProduct() {
       organic: form.isVegetarian,
       images: images.map((image) => image.url),
       tags: tagList,
+      options: options.map((opt) => ({
+        id: opt.id,
+        name: opt.name,
+        price: Number(opt.price || 0),
+        compareAtPrice: opt.compareAtPrice ? Number(opt.compareAtPrice) : null,
+        mealPrice: opt.mealPrice ? Number(opt.mealPrice) : null,
+        onlyPrice: opt.onlyPrice ? Number(opt.onlyPrice) : null,
+      })),
     });
   };
 
@@ -555,6 +582,14 @@ export default function EditProduct() {
               </Field>
             </CardContent>
           </Card>
+
+          {/* Section 2b: Multiple Price Options / Product Variants */}
+          <ProductOptionsEditor
+            options={options}
+            onChange={setOptions}
+            basePrice={form.sellingPrice}
+            onBasePriceChange={(val) => updateField("sellingPrice", val)}
+          />
 
           {/* Section 3: Dish Photos */}
           <Card>

@@ -5,12 +5,13 @@ import { trpc } from "@/providers/trpc";
 import { useAuth } from "@/hooks/useAuth";
 import { addGuestCartItem } from "@/lib/guestCart";
 import { formatCurrency, toNumber, unitLabels } from "@/lib/i18n";
+import { parseProductOptions } from "@/types";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { CustomerBottomNav } from "@/components/CustomerBottomNav";
-import { ArrowLeft, Minus, Package, Plus, Share2, ShoppingCart, Zap } from "lucide-react";
+import { ArrowLeft, Check, Minus, Package, Plus, Share2, ShoppingCart, Utensils, Zap } from "lucide-react";
 
 export default function ProductDetail() {
   const { slug } = useParams<{ slug: string }>();
@@ -18,6 +19,9 @@ export default function ProductDetail() {
   const { user } = useAuth();
   const [imageFailed, setImageFailed] = useState(false);
   const [quantity, setQuantity] = useState(1);
+  const [selectedOptionId, setSelectedOptionId] = useState<string>("");
+  const [selectedPricingMode, setSelectedPricingMode] = useState<"standard" | "meal" | "only">("standard");
+
   const { data, isLoading, isError, error } = trpc.product.bySlug.useQuery({ slug: slug! }, { enabled: !!slug, retry: false });
   const relatedQuery = trpc.product.featured.useQuery({ limit: 5 }, { retry: false });
   const utils = trpc.useUtils();
@@ -32,10 +36,58 @@ export default function ProductDetail() {
   const minQty = product?.minimumOrderQuantity ?? 1;
   const stock = product?.stock ?? 0;
   const isOutOfStock = stock < minQty;
-  const price = toNumber(product?.unitPrice);
-  const compareAt = toNumber(product?.compareAtPrice);
-  const unit = product?.unitType ?? "kg";
+  const unit = product?.unitType ?? "item";
+
+  const productOptions = useMemo(() => parseProductOptions(product?.options), [product?.options]);
+  const hasOptions = productOptions.length > 0;
+
+  // Auto-select first option on load if available
+  useEffect(() => {
+    if (productOptions.length > 0) {
+      if (!selectedOptionId || !productOptions.some((o) => o.id === selectedOptionId)) {
+        const first = productOptions[0];
+        setSelectedOptionId(first.id);
+        if (first.mealPrice && !first.onlyPrice) setSelectedPricingMode("meal");
+        else if (first.onlyPrice && !first.mealPrice) setSelectedPricingMode("only");
+        else setSelectedPricingMode("standard");
+      }
+    }
+  }, [productOptions, selectedOptionId]);
+
+  const selectedOption = useMemo(() => {
+    if (!hasOptions) return null;
+    return productOptions.find((opt) => opt.id === selectedOptionId) || productOptions[0];
+  }, [hasOptions, productOptions, selectedOptionId]);
+
+  const price = useMemo(() => {
+    if (!selectedOption) return toNumber(product?.unitPrice);
+    if (selectedPricingMode === "meal" && selectedOption.mealPrice) {
+      return selectedOption.mealPrice;
+    }
+    if (selectedPricingMode === "only" && selectedOption.onlyPrice) {
+      return selectedOption.onlyPrice;
+    }
+    return selectedOption.price || toNumber(product?.unitPrice);
+  }, [selectedOption, selectedPricingMode, product?.unitPrice]);
+
+  const compareAt = useMemo(() => {
+    if (selectedOption?.compareAtPrice) return selectedOption.compareAtPrice;
+    return toNumber(product?.compareAtPrice);
+  }, [selectedOption, product?.compareAtPrice]);
+
   const discount = compareAt > price ? Math.round(((compareAt - price) / compareAt) * 100) : 0;
+
+  const resolvedOptionLabel = useMemo(() => {
+    if (!selectedOption) return undefined;
+    if (selectedPricingMode === "meal" && selectedOption.mealPrice) {
+      return `${selectedOption.name} (Meal)`;
+    }
+    if (selectedPricingMode === "only" && selectedOption.onlyPrice) {
+      return `${selectedOption.name} (Only)`;
+    }
+    return selectedOption.name;
+  }, [selectedOption, selectedPricingMode]);
+
   const related = useMemo(
     () => (relatedQuery.data ?? []).filter((item) => item.slug !== product?.slug).slice(0, 4),
     [product?.slug, relatedQuery.data],
@@ -77,8 +129,16 @@ export default function ProductDetail() {
       toast.error("Requested quantity exceeds available stock.");
       return;
     }
+    if (hasOptions && !resolvedOptionLabel) {
+      toast.error("Please select an option before adding to cart.");
+      return;
+    }
+
     if (user && data) {
-      addToCart.mutate({ productId: data.id, quantity }, { onSuccess: () => destination && navigate(destination) });
+      addToCart.mutate(
+        { productId: data.id, quantity, selectedOption: resolvedOptionLabel },
+        { onSuccess: () => destination && navigate(destination) }
+      );
       return;
     }
 
@@ -89,7 +149,8 @@ export default function ProductDetail() {
       productName: currentProduct.name,
       productImage: currentProduct.image ?? null,
       productUnitType: unit,
-      productUnitSize: currentProduct.unitSize ?? unit,
+      productUnitSize: resolvedOptionLabel || currentProduct.unitSize || unit,
+      selectedOption: resolvedOptionLabel,
       quantity,
       unitPrice: String(price),
     });
@@ -113,7 +174,7 @@ export default function ProductDetail() {
         <div className="w-full max-w-[290px] sm:max-w-[330px] mx-auto lg:max-w-none overflow-hidden rounded-xl border bg-muted">
           <div className="flex aspect-square items-center justify-center text-xl font-semibold text-muted-foreground">
             {product.image && !imageFailed ? (
-              <img src={product.image} alt={product.name} className="h-full w-full object-cover" onError={() => setImageFailed(true)} />
+              <img src={product.image} alt={product.name} referrerPolicy="no-referrer" className="h-full w-full object-cover" onError={() => setImageFailed(true)} />
             ) : (
               <Package className="h-16 w-16" />
             )}
@@ -131,7 +192,11 @@ export default function ProductDetail() {
           </div>
           <div className="flex flex-wrap items-baseline gap-3">
             <span className="text-3xl font-semibold text-emerald-700">{formatCurrency(price)}</span>
-            {product.unitSize ? (
+            {resolvedOptionLabel ? (
+              <span className="text-sm font-medium text-emerald-800 bg-emerald-50 dark:bg-emerald-950 dark:text-emerald-300 px-2.5 py-0.5 rounded-full border border-emerald-200">
+                {resolvedOptionLabel}
+              </span>
+            ) : product.unitSize ? (
               <span className="text-sm text-muted-foreground">({product.unitSize})</span>
             ) : unitLabels[unit] && unitLabels[unit] !== "item" && unitLabels[unit] !== "order" ? (
               <span className="text-sm text-muted-foreground">/ {unitLabels[unit]}</span>
@@ -139,8 +204,114 @@ export default function ProductDetail() {
             {compareAt > 0 && <span className="text-lg text-muted-foreground line-through">{formatCurrency(compareAt)}</span>}
             {discount > 0 && <Badge>{discount}% OFF</Badge>}
           </div>
+
+          {/* Product Options / Variants Selector */}
+          {hasOptions && (
+            <div className="space-y-3 rounded-xl border border-border/80 bg-muted/20 p-4 shadow-sm">
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-semibold text-foreground flex items-center gap-1.5">
+                  <Utensils className="h-4 w-4 text-emerald-600" />
+                  Select Option
+                  <span className="text-xs font-normal text-destructive">* Required</span>
+                </span>
+                {resolvedOptionLabel && (
+                  <span className="text-xs text-muted-foreground font-medium">
+                    Current: <strong className="text-foreground">{resolvedOptionLabel}</strong>
+                  </span>
+                )}
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                {productOptions.map((opt) => {
+                  const isSelected = selectedOption?.id === opt.id;
+                  const displayOptPrice = opt.mealPrice || opt.price;
+                  return (
+                    <button
+                      key={opt.id}
+                      type="button"
+                      onClick={() => {
+                        setSelectedOptionId(opt.id);
+                        if (opt.mealPrice && !opt.onlyPrice) setSelectedPricingMode("meal");
+                        else if (opt.onlyPrice && !opt.mealPrice) setSelectedPricingMode("only");
+                        else if (!opt.mealPrice && !opt.onlyPrice) setSelectedPricingMode("standard");
+                      }}
+                      className={`flex items-center justify-between p-3 rounded-lg border text-left transition-all ${
+                        isSelected
+                          ? "border-emerald-600 bg-emerald-50/70 dark:bg-emerald-950/40 text-emerald-950 dark:text-emerald-100 ring-2 ring-emerald-500/20 shadow-sm"
+                          : "border-border bg-card hover:border-muted-foreground/30 hover:bg-muted/30"
+                      }`}
+                    >
+                      <div className="flex items-center gap-2.5">
+                        <div
+                          className={`h-4 w-4 rounded-full border flex items-center justify-center shrink-0 ${
+                            isSelected
+                              ? "border-emerald-600 bg-emerald-600 text-white"
+                              : "border-muted-foreground/40"
+                          }`}
+                        >
+                          {isSelected && <Check className="h-2.5 w-2.5 stroke-[3]" />}
+                        </div>
+                        <div>
+                          <p className="font-semibold text-sm text-foreground leading-tight">{opt.name}</p>
+                          {opt.mealPrice && opt.onlyPrice ? (
+                            <p className="text-[11px] text-muted-foreground mt-0.5">Meal & Only available</p>
+                          ) : null}
+                        </div>
+                      </div>
+                      <div className="text-right pl-2">
+                        <p className="text-sm font-bold text-emerald-700 dark:text-emerald-400">
+                          {formatCurrency(displayOptPrice)}
+                        </p>
+                        {opt.compareAtPrice && opt.compareAtPrice > displayOptPrice && (
+                          <p className="text-[11px] text-muted-foreground line-through">
+                            {formatCurrency(opt.compareAtPrice)}
+                          </p>
+                        )}
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Meal vs Only Toggle if Selected Option Offers Both */}
+              {selectedOption && (selectedOption.mealPrice || selectedOption.onlyPrice) && (
+                <div className="mt-2 pt-3 border-t border-border/60">
+                  <p className="text-xs font-medium text-muted-foreground mb-2">Pricing Structure:</p>
+                  <div className="grid grid-cols-2 gap-2">
+                    {selectedOption.onlyPrice != null && (
+                      <button
+                        type="button"
+                        onClick={() => setSelectedPricingMode("only")}
+                        className={`py-2 px-3 rounded-md border text-center text-xs font-semibold transition-all ${
+                          selectedPricingMode === "only"
+                            ? "border-emerald-600 bg-emerald-600 text-white shadow-sm"
+                            : "border-border bg-card hover:bg-muted text-foreground"
+                        }`}
+                      >
+                        Only: {formatCurrency(selectedOption.onlyPrice)}
+                      </button>
+                    )}
+                    {selectedOption.mealPrice != null && (
+                      <button
+                        type="button"
+                        onClick={() => setSelectedPricingMode("meal")}
+                        className={`py-2 px-3 rounded-md border text-center text-xs font-semibold transition-all ${
+                          selectedPricingMode === "meal"
+                            ? "border-emerald-600 bg-emerald-600 text-white shadow-sm"
+                            : "border-border bg-card hover:bg-muted text-foreground"
+                        }`}
+                      >
+                        Combo Meal: {formatCurrency(selectedOption.mealPrice)}
+                      </button>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
           <div className="grid gap-2 text-sm text-muted-foreground sm:grid-cols-2">
-            <p><span className="font-medium text-foreground">Serving / Portion:</span> {product.unitSize ?? "1 Order"}</p>
+            <p><span className="font-medium text-foreground">Serving / Portion:</span> {resolvedOptionLabel || product.unitSize || "1 Order"}</p>
             <p><span className="font-medium text-foreground">Category:</span> {product.categoryName ?? "Halal Food"}</p>
             {product.origin && (
               <p><span className="font-medium text-foreground">Style / Recipe:</span> {product.origin}</p>

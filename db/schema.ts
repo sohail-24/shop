@@ -398,6 +398,7 @@ export const products = pgTable(
     metaTitle: varchar("metaTitle", { length: 255 }),
     metaDescription: text("metaDescription"),
     tags: text("tags"), // comma-separated
+    options: text("options"), // JSON array of ProductOption { id, name, price, compareAtPrice?, mealPrice?, onlyPrice? }
     createdAt: timestamp("createdAt").defaultNow().notNull(),
     updatedAt: timestamp("updatedAt")
       .defaultNow()
@@ -434,6 +435,7 @@ export const cartItems = pgTable(
     productId: bigint("productId", { mode: "number" }).notNull(),
     quantity: integer("quantity").notNull(),
     unitPrice: numeric("unitPrice", { precision: 12, scale: 2 }).notNull(),
+    selectedOption: varchar("selectedOption", { length: 255 }),
     notes: varchar("notes", { length: 500 }),
     createdAt: timestamp("createdAt").defaultNow().notNull(),
     updatedAt: timestamp("updatedAt")
@@ -565,6 +567,7 @@ export const orderItems = pgTable(
     unitPrice: numeric("unitPrice", { precision: 12, scale: 2 }).notNull(),
     totalPrice: numeric("totalPrice", { precision: 12, scale: 2 }).notNull(),
     unitType: unitTypeEnum("unitType").notNull(),
+    selectedOption: varchar("selectedOption", { length: 255 }),
     notes: varchar("notes", { length: 500 }),
     createdAt: timestamp("createdAt").defaultNow().notNull(),
   },

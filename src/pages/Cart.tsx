@@ -65,19 +65,30 @@ export default function Cart() {
                       <div className="flex items-start justify-between gap-2">
                         <div>
                           <Link to={`/products/${item.productSlug}`} className="font-medium hover:text-primary">{item.productName}</Link>
-                          <p className="text-xs text-muted-foreground">{item.productUnitSize}</p>
+                          {item.selectedOption ? (
+                            <div className="flex flex-wrap items-center gap-1.5 mt-1">
+                              <span className="inline-flex items-center rounded-md bg-emerald-50 px-2 py-0.5 text-xs font-bold text-emerald-800 border border-emerald-200/80">
+                                {item.selectedOption}
+                              </span>
+                              <span className="text-xs text-muted-foreground font-medium">
+                                ({formatCurrency(unitPrice)} each)
+                              </span>
+                            </div>
+                          ) : (
+                            <p className="text-xs text-muted-foreground mt-0.5">{item.productUnitSize}</p>
+                          )}
                         </div>
-                        <Button variant="ghost" size="icon" onClick={() => (isAuthenticated ? removeMutation.mutate({ cartItemId: item.id }) : guestCart.remove(item.productId))}>
+                        <Button variant="ghost" size="icon" onClick={() => (isAuthenticated ? removeMutation.mutate({ cartItemId: item.id }) : guestCart.remove(item.id))}>
                           <Trash2 className="h-4 w-4" />
                         </Button>
                       </div>
                       <div className="mt-4 flex items-center justify-between">
                         <div className="flex items-center gap-2">
-                          <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => (isAuthenticated ? updateMutation.mutate({ cartItemId: item.id, quantity: Math.max(1, item.quantity - 1) }) : guestCart.update(item.productId, Math.max(1, item.quantity - 1)))}>
+                          <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => (isAuthenticated ? updateMutation.mutate({ cartItemId: item.id, quantity: Math.max(1, item.quantity - 1) }) : guestCart.update(item.id, Math.max(1, item.quantity - 1)))}>
                             <Minus className="h-3 w-3" />
                           </Button>
                           <span className="w-10 text-center text-sm font-medium">{item.quantity}</span>
-                          <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => (isAuthenticated ? updateMutation.mutate({ cartItemId: item.id, quantity: item.quantity + 1 }) : guestCart.update(item.productId, item.quantity + 1))}>
+                          <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => (isAuthenticated ? updateMutation.mutate({ cartItemId: item.id, quantity: item.quantity + 1 }) : guestCart.update(item.id, item.quantity + 1))}>
                             <Plus className="h-3 w-3" />
                           </Button>
                         </div>

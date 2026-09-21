@@ -29,7 +29,16 @@ const unitTypeSchema = z.enum(["kg", "lb", "case", "pallet", "each", "bunch", "b
 const gradeSchema = z.enum(["premium", "grade_a", "grade_b", "standard"]);
 const statusSchema = z.enum(["draft", "active", "archived"]);
 export function isSupportedProductImageUrl(value: string) {
-  return value.startsWith("/api/uploads/") || value.startsWith("/products/") || /^https?:\/\//i.test(value);
+  return (
+    value.startsWith("/api/uploads/") ||
+    value.startsWith("api/uploads/") ||
+    value.startsWith("/uploads/") ||
+    value.startsWith("uploads/") ||
+    value.startsWith("/products/") ||
+    value.startsWith("products/") ||
+    /^https?:\/\//i.test(value) ||
+    value.startsWith("data:image/")
+  );
 }
 
 const productImageUrlSchema = z
@@ -41,6 +50,15 @@ const productImageUrlSchema = z
     "Product images must be uploaded files, supported local product assets, or HTTP(S) URLs.",
   );
 
+const productOptionSchema = z.object({
+  id: z.string().optional(),
+  name: z.string().trim().min(1, "Option name is required."),
+  price: z.number().min(0, "Option price must be non-negative."),
+  compareAtPrice: z.number().min(0).optional().nullable(),
+  mealPrice: z.number().min(0).optional().nullable(),
+  onlyPrice: z.number().min(0).optional().nullable(),
+});
+
 const productMutationSchema = z.object({
   name: z.string().trim().min(2, "Product name is required."),
   sku: z.string().trim().min(2, "SKU is required.").max(80),
@@ -50,7 +68,7 @@ const productMutationSchema = z.object({
   description: z.string().trim().max(5000).optional().or(z.literal("").transform(() => undefined)),
   purchasePrice: z.number().positive("Purchase price must be greater than zero."),
   wholesalePrice: z.number().positive("Wholesale price must be greater than zero.").optional(),
-  sellingPrice: z.number().positive("Selling price must be greater than zero."),
+  sellingPrice: z.number().min(0, "Selling price must be greater than or equal to zero."),
   discount: z.number().min(0).max(100).optional(),
   openingStock: z.number().int().min(0).default(0),
   availableStock: z.number().int().min(0).optional(),
@@ -66,6 +84,7 @@ const productMutationSchema = z.object({
   grade: gradeSchema.default("grade_a"),
   organic: z.boolean().default(false),
   images: z.array(productImageUrlSchema).default([]),
+  options: z.array(productOptionSchema).optional().default([]),
   tags: z.array(z.string().trim().min(1)).default([]),
 });
 
@@ -287,6 +306,7 @@ export const productRouter = createRouter({
             grade: input.grade,
             organic: input.organic,
             status: input.status,
+            options: input.options && input.options.length > 0 ? JSON.stringify(input.options) : undefined,
             tags: productTags({
               sku: input.sku,
               barcode: input.barcode,
@@ -421,6 +441,7 @@ export const productRouter = createRouter({
       grade: input.grade,
       organic: input.organic,
       status: input.status,
+      options: input.options !== undefined ? (input.options.length > 0 ? JSON.stringify(input.options) : null) : undefined,
       tags:
         input.sku ||
         input.barcode !== undefined ||

@@ -2,8 +2,10 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router";
 import { nanoid } from "nanoid";
 import { toast } from "sonner";
-import { trpc } from "@/providers/trpc";
+import { trpc, getStoredAdminToken } from "@/providers/trpc";
 import { formatCurrency, toNumber } from "@/lib/i18n";
+import type { ProductOption } from "@/types";
+import { ProductOptionsEditor } from "@/components/ProductOptionsEditor";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -48,9 +50,17 @@ async function uploadProductImage(file: File): Promise<string> {
   const formData = new FormData();
   formData.append("image", file);
 
+  const token = getStoredAdminToken();
+  const headers: Record<string, string> = {};
+  if (token) {
+    headers["Authorization"] = `Bearer ${token}`;
+  }
+
   const response = await fetch("/api/products/upload", {
     method: "POST",
     body: formData,
+    credentials: "include",
+    headers,
   });
   const payload = (await response.json().catch(() => ({}))) as {
     error?: string;
@@ -73,6 +83,7 @@ export default function AddProduct() {
   const [primaryImageId, setPrimaryImageId] = useState<string | null>(null);
   const [attemptedSubmit, setAttemptedSubmit] = useState(false);
   const [publish, setPublish] = useState(true);
+  const [options, setOptions] = useState<ProductOption[]>([]);
 
   // Restaurant menu form fields
   const [form, setForm] = useState({
@@ -130,11 +141,15 @@ export default function AddProduct() {
     }
   }, [form.supplierId, suppliers]);
 
+  const effectiveSellingPrice = options.length > 0
+    ? (toNumber(form.sellingPrice) > 0 ? toNumber(form.sellingPrice) : (options[0].mealPrice || options[0].price || 0))
+    : toNumber(form.sellingPrice);
+
   // Validation rules
   const errors = {
     name: form.name.trim() ? "" : "Menu item name is required.",
     categoryId: form.categoryId ? "" : "Category is required.",
-    sellingPrice: toNumber(form.sellingPrice) > 0 ? "" : "Selling price must be greater than $0.00.",
+    sellingPrice: effectiveSellingPrice > 0 ? "" : "Selling price must be greater than $0.00.",
   };
   const isFormValid = Object.values(errors).every((error) => !error);
 
@@ -174,15 +189,28 @@ export default function AddProduct() {
   const addImageUrl = () => {
     const trimmed = imageUrlInput.trim();
     if (!trimmed) return;
-    if (!trimmed.startsWith("http://") && !trimmed.startsWith("https://")) {
-      toast.error("Please enter a valid HTTP or HTTPS image URL.");
+    const isSupported =
+      trimmed.startsWith("http://") ||
+      trimmed.startsWith("https://") ||
+      trimmed.startsWith("/api/uploads/") ||
+      trimmed.startsWith("api/uploads/") ||
+      trimmed.startsWith("/uploads/") ||
+      trimmed.startsWith("uploads/") ||
+      trimmed.startsWith("/products/") ||
+      trimmed.startsWith("products/");
+    if (!isSupported) {
+      toast.error("Please enter a valid image URL (HTTP/HTTPS) or /api/uploads/ path.");
       return;
     }
+    const finalUrl =
+      trimmed.startsWith("api/") || trimmed.startsWith("uploads/") || trimmed.startsWith("products/")
+        ? `/${trimmed}`
+        : trimmed;
     const newImage: ImagePreview = {
       id: nanoid(),
       name: "Web Image",
       size: 1024,
-      url: trimmed,
+      url: finalUrl,
     };
     setImages((curr) => {
       const updated = [...curr, newImage];
@@ -231,7 +259,7 @@ export default function AddProduct() {
     const safeSku = form.sku.trim() || `TEX-${cleanNameSlug.slice(0, 20).toUpperCase()}-${nanoid(4).toUpperCase()}`;
 
     // Estimated prep cost (purchase price)
-    const selling = toNumber(form.sellingPrice);
+    const selling = effectiveSellingPrice;
     const purchase = toNumber(form.purchasePrice) > 0
       ? toNumber(form.purchasePrice)
       : Math.max(1, +(selling * 0.35).toFixed(2));
@@ -263,6 +291,14 @@ export default function AddProduct() {
       organic: form.isVegetarian,
       images: orderedImages.map((image) => image.url),
       tags: tagList,
+      options: options.map((opt) => ({
+        id: opt.id,
+        name: opt.name,
+        price: Number(opt.price || 0),
+        compareAtPrice: opt.compareAtPrice ? Number(opt.compareAtPrice) : null,
+        mealPrice: opt.mealPrice ? Number(opt.mealPrice) : null,
+        onlyPrice: opt.onlyPrice ? Number(opt.onlyPrice) : null,
+      })),
     });
   };
 
@@ -492,6 +528,14 @@ export default function AddProduct() {
               </Field>
             </CardContent>
           </Card>
+
+          {/* Section 2b: Multiple Price Options / Product Variants */}
+          <ProductOptionsEditor
+            options={options}
+            onChange={setOptions}
+            basePrice={form.sellingPrice}
+            onBasePriceChange={(val) => updateField("sellingPrice", val)}
+          />
 
           {/* Section 3: Food Photos */}
           <Card>

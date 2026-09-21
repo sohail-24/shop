@@ -1,5 +1,5 @@
 import { Fragment, useEffect, useMemo, useState } from "react";
-import { Link } from "react-router";
+import { Link, useNavigate } from "react-router";
 import { toast } from "sonner";
 import {
   Home,
@@ -22,6 +22,7 @@ import { trpc } from "@/providers/trpc";
 import { useAuth } from "@/hooks/useAuth";
 import { addGuestCartItem, useGuestCart } from "@/lib/guestCart";
 import { formatCurrency, formatNumber, toNumber, unitLabels } from "@/lib/i18n";
+import { parseProductOptions } from "@/types";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -44,6 +45,7 @@ type MarketplaceProduct = {
   grade?: string | null;
   organic?: boolean | null;
   status?: string | null;
+  options?: string | null;
 };
 
 type MarketplaceCategory = {
@@ -98,6 +100,7 @@ export function toCategoryNavItem(category: MarketplaceCategory): CategoryNavIte
 }
 
 export default function LandingPage() {
+  const navigate = useNavigate();
   const { user, isAuthenticated } = useAuth();
   const guestCart = useGuestCart();
   const [search, setSearch] = useState("");
@@ -173,6 +176,13 @@ export default function LandingPage() {
   }
 
   function addProductToCart(product: MarketplaceProduct, quantity: number) {
+    const options = parseProductOptions(product.options);
+    if (options.length > 0) {
+      navigate(`/products/${product.slug}`);
+      toast.info("Please select an option before adding to cart.");
+      return;
+    }
+
     if (isAuthenticated) {
       addToCart.mutate({ productId: product.id, quantity });
       return;
@@ -879,6 +889,14 @@ function FoodProductCard({
   const [imageFailed, setImageFailed] = useState(false);
   const unitLabel = unitLabels[unit] ?? unit;
 
+  const options = useMemo(() => parseProductOptions(product.options), [product.options]);
+  const hasOptions = options.length > 0;
+  const minOptionPrice = useMemo(() => {
+    if (!hasOptions) return price;
+    const prices = options.map((o) => o.onlyPrice || o.price || o.mealPrice || price).filter(Boolean);
+    return prices.length > 0 ? Math.min(...prices) : price;
+  }, [hasOptions, options, price]);
+
   return (
     <Card id={`product-card-${product.id}`} className="group overflow-hidden rounded-lg sm:rounded-2xl border border-slate-200/90 bg-white shadow-xs hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300 flex flex-col justify-between p-0 py-0 gap-0">
       <div className="flex flex-col flex-1">
@@ -889,6 +907,7 @@ function FoodProductCard({
               <img
                 src={product.image}
                 alt={product.name}
+                referrerPolicy="no-referrer"
                 className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
                 onError={() => setImageFailed(true)}
               />
@@ -903,6 +922,12 @@ function FoodProductCard({
           {compareAt > price && (
             <span className="absolute top-1 left-1 xs:top-1.5 xs:left-1.5 sm:top-3 sm:left-3 z-10 rounded-full bg-amber-500 px-1 xs:px-1.5 py-0.5 sm:px-2.5 sm:py-0.5 text-[7.5px] xs:text-[8.5px] sm:text-[11px] font-bold uppercase tracking-wider text-slate-950 shadow-xs">
               Offer
+            </span>
+          )}
+
+          {hasOptions && (
+            <span className="absolute bottom-1 left-1 xs:bottom-1.5 xs:left-1.5 sm:bottom-2.5 sm:left-2.5 z-10 rounded bg-slate-950/80 backdrop-blur-xs px-1 xs:px-1.5 py-0.5 text-[7px] xs:text-[8.5px] sm:text-[10px] font-semibold text-white shadow-xs">
+              {options.length} Options
             </span>
           )}
         </div>
@@ -929,7 +954,7 @@ function FoodProductCard({
           {/* LINE 4: PRICE + ORIGINAL PRICE */}
           <div className="flex items-baseline justify-between gap-1 pt-0.5 min-w-0">
             <span className="text-xs xs:text-sm font-extrabold text-emerald-700 leading-none shrink-0">
-              {formatCurrency(price)}
+              {hasOptions ? `From ${formatCurrency(minOptionPrice)}` : formatCurrency(price)}
             </span>
             {compareAt > price ? (
               <span className="text-[9.5px] xs:text-[10.5px] text-black font-medium line-through leading-none truncate">
@@ -950,49 +975,61 @@ function FoodProductCard({
             </div>
           </div>
 
-          {/* LINE 6: QUANTITY + ADD */}
+          {/* LINE 6: QUANTITY + ADD / OPTIONS */}
           <div className="flex items-center justify-between gap-1 pt-1 min-w-0">
-            <div className="flex items-center rounded border border-slate-200 bg-slate-50 p-0.5 shrink-0">
-              <button
-                id={`product-qty-minus-mobile-${product.id}`}
-                type="button"
-                className="h-4 w-4 p-0 flex items-center justify-center rounded text-slate-600 hover:bg-white hover:text-slate-900 transition-colors disabled:opacity-30 disabled:pointer-events-none"
-                onClick={() => setQuantity(Math.max(moq, quantity - 1))}
-                disabled={quantity <= moq || isOutOfStock}
-                aria-label="Decrease quantity"
+            {hasOptions ? (
+              <Link
+                id={`product-options-btn-mobile-${product.id}`}
+                to={`/products/${product.slug}`}
+                className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold h-[22px] px-2 text-[10px] rounded shadow-xs active:scale-[0.98] flex items-center justify-center leading-none transition-colors"
               >
-                <Minus className="h-2.5 w-2.5" />
-              </button>
-              <span className="w-3 text-center text-[10px] font-bold text-slate-800 leading-none select-none">
-                {quantity}
-              </span>
-              <button
-                id={`product-qty-plus-mobile-${product.id}`}
-                type="button"
-                className="h-4 w-4 p-0 flex items-center justify-center rounded text-slate-600 hover:bg-white hover:text-slate-900 transition-colors disabled:opacity-30 disabled:pointer-events-none"
-                onClick={() => {
-                  if (quantity >= stock) {
-                    toast.error(`Only ${stock} available.`);
-                  } else {
-                    setQuantity(quantity + 1);
-                  }
-                }}
-                disabled={isOutOfStock}
-                aria-label="Increase quantity"
-              >
-                <Plus className="h-2.5 w-2.5" />
-              </button>
-            </div>
+                Select Options
+              </Link>
+            ) : (
+              <>
+                <div className="flex items-center rounded border border-slate-200 bg-slate-50 p-0.5 shrink-0">
+                  <button
+                    id={`product-qty-minus-mobile-${product.id}`}
+                    type="button"
+                    className="h-4 w-4 p-0 flex items-center justify-center rounded text-slate-600 hover:bg-white hover:text-slate-900 transition-colors disabled:opacity-30 disabled:pointer-events-none"
+                    onClick={() => setQuantity(Math.max(moq, quantity - 1))}
+                    disabled={quantity <= moq || isOutOfStock}
+                    aria-label="Decrease quantity"
+                  >
+                    <Minus className="h-2.5 w-2.5" />
+                  </button>
+                  <span className="w-3 text-center text-[10px] font-bold text-slate-800 leading-none select-none">
+                    {quantity}
+                  </span>
+                  <button
+                    id={`product-qty-plus-mobile-${product.id}`}
+                    type="button"
+                    className="h-4 w-4 p-0 flex items-center justify-center rounded text-slate-600 hover:bg-white hover:text-slate-900 transition-colors disabled:opacity-30 disabled:pointer-events-none"
+                    onClick={() => {
+                      if (quantity >= stock) {
+                        toast.error(`Only ${stock} available.`);
+                      } else {
+                        setQuantity(quantity + 1);
+                      }
+                    }}
+                    disabled={isOutOfStock}
+                    aria-label="Increase quantity"
+                  >
+                    <Plus className="h-2.5 w-2.5" />
+                  </button>
+                </div>
 
-            <button
-              id={`product-add-btn-mobile-${product.id}`}
-              type="button"
-              className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold h-[22px] px-2 text-[10px] rounded shadow-xs active:scale-[0.98] shrink-0 flex items-center justify-center leading-none transition-colors disabled:opacity-50 disabled:pointer-events-none"
-              onClick={() => onAdd(product, quantity)}
-              disabled={pending || isOutOfStock}
-            >
-              Add
-            </button>
+                <button
+                  id={`product-add-btn-mobile-${product.id}`}
+                  type="button"
+                  className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold h-[22px] px-2 text-[10px] rounded shadow-xs active:scale-[0.98] shrink-0 flex items-center justify-center leading-none transition-colors disabled:opacity-50 disabled:pointer-events-none"
+                  onClick={() => onAdd(product, quantity)}
+                  disabled={pending || isOutOfStock}
+                >
+                  Add
+                </button>
+              </>
+            )}
           </div>
         </div>
 
@@ -1015,7 +1052,7 @@ function FoodProductCard({
           {/* Price and Comparison */}
           <div className="flex items-baseline flex-wrap gap-1.5">
             <span className="text-xl md:text-2xl font-extrabold text-emerald-700 leading-tight">
-              {formatCurrency(price)}
+              {hasOptions ? `From ${formatCurrency(minOptionPrice)}` : formatCurrency(price)}
             </span>
             {compareAt > price && (
               <span className="text-sm text-slate-400 line-through">
@@ -1051,47 +1088,63 @@ function FoodProductCard({
       {/* ============================================================== */}
       <div className="hidden sm:block p-4 md:p-5 pt-0">
         <div className="flex items-center gap-2 pt-3 border-t border-slate-100">
-          <div className="flex items-center justify-center rounded-lg border border-slate-200 bg-slate-50 p-0.5">
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon"
-              className="h-8 w-8 rounded hover:bg-white text-slate-700 transition-colors"
-              onClick={() => setQuantity(Math.max(moq, quantity - 1))}
-              disabled={quantity <= moq || isOutOfStock}
-            >
-              <Minus className="h-3.5 w-3.5" />
-            </Button>
-            <span className="w-8 text-center text-xs font-bold text-slate-800">
-              {quantity}
-            </span>
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon"
-              className="h-8 w-8 rounded hover:bg-white text-slate-700 transition-colors"
-              onClick={() => {
-                if (quantity >= stock) {
-                  toast.error(`Only ${stock} available.`);
-                } else {
-                  setQuantity(quantity + 1);
-                }
-              }}
-              disabled={isOutOfStock}
-            >
-              <Plus className="h-3.5 w-3.5" />
-            </Button>
-          </div>
+          {hasOptions ? (
+            <Link to={`/products/${product.slug}`} className="flex-1">
+              <Button
+                id={`product-options-btn-desktop-${product.id}`}
+                type="button"
+                className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-semibold h-9 text-xs md:text-sm rounded-lg shadow-xs gap-1 transition-all active:scale-[0.98] px-3"
+              >
+                <Utensils className="h-4 w-4 shrink-0" />
+                <span className="truncate">Select Options</span>
+              </Button>
+            </Link>
+          ) : (
+            <>
+              <div className="flex items-center justify-center rounded-lg border border-slate-200 bg-slate-50 p-0.5">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 rounded hover:bg-white text-slate-700 transition-colors"
+                  onClick={() => setQuantity(Math.max(moq, quantity - 1))}
+                  disabled={quantity <= moq || isOutOfStock}
+                >
+                  <Minus className="h-3.5 w-3.5" />
+                </Button>
+                <span className="w-8 text-center text-xs font-bold text-slate-800">
+                  {quantity}
+                </span>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 rounded hover:bg-white text-slate-700 transition-colors"
+                  onClick={() => {
+                    if (quantity >= stock) {
+                      toast.error(`Only ${stock} available.`);
+                    } else {
+                      setQuantity(quantity + 1);
+                    }
+                  }}
+                  disabled={isOutOfStock}
+                >
+                  <Plus className="h-3.5 w-3.5" />
+                </Button>
+              </div>
 
-          <Button
-            type="button"
-            className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold h-9 text-xs md:text-sm rounded-lg shadow-xs gap-1 transition-all active:scale-[0.98] px-3"
-            onClick={() => onAdd(product, quantity)}
-            disabled={pending || isOutOfStock}
-          >
-            <ShoppingCart className="h-4 w-4 shrink-0" />
-            <span className="truncate">Add to Cart</span>
-          </Button>
+              <Button
+                id={`product-add-btn-desktop-${product.id}`}
+                type="button"
+                className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold h-9 text-xs md:text-sm rounded-lg shadow-xs gap-1 transition-all active:scale-[0.98] px-3"
+                onClick={() => onAdd(product, quantity)}
+                disabled={pending || isOutOfStock}
+              >
+                <ShoppingCart className="h-4 w-4 shrink-0" />
+                <span className="truncate">Add to Cart</span>
+              </Button>
+            </>
+          )}
         </div>
       </div>
     </Card>

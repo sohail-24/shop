@@ -1,9 +1,12 @@
 import * as cookie from "cookie";
 import { timingSafeEqual } from "node:crypto";
 import { SignJWT, jwtVerify } from "jose";
-import type { User } from "@db/schema";
+import { users, type User } from "@db/schema";
+import { eq, or, and } from "drizzle-orm";
 import { env } from "../lib/env";
 import { getSessionCookieOptions } from "../lib/cookies";
+import { getDb } from "../queries/connection";
+import { ensureDefaultBusiness } from "../queries/companies";
 
 const encoder = new TextEncoder();
 const accessCookieName = "shop_admin_access";
@@ -12,6 +15,8 @@ const accessMaxAgeMs = 15 * 60 * 1000;
 const refreshMaxAgeMs = 30 * 24 * 60 * 60 * 1000;
 
 type TokenType = "access" | "refresh";
+
+let cachedAdminCompanyId: number | null = null;
 
 function configuredAdmin() {
   if (!env.adminEmail || !env.adminPassword || !env.jwtAccessSecret || !env.jwtRefreshSecret) {
@@ -24,17 +29,17 @@ function keyFor(type: TokenType) {
   return encoder.encode(type === "access" ? env.jwtAccessSecret : env.jwtRefreshSecret);
 }
 
-export function activeAdminUser(email: string): User {
-  // This is an in-memory session identity only. It is deliberately not a users-table record.
+export function activeAdminUser(email: string, companyId?: number | null): User {
+  const finalCompanyId = companyId ?? cachedAdminCompanyId ?? 1;
   return {
-    id: 0,
-    unionId: `admin:${email}`,
+    id: 1,
+    unionId: `admin:${email.trim().toLowerCase()}`,
     authProvider: "local",
     role: "admin",
-    email,
+    email: email.trim().toLowerCase(),
     name: "Administrator",
     phone: null,
-    companyId: null,
+    companyId: finalCompanyId,
     passwordHash: null,
     refreshTokenHash: null,
     isActive: true,
@@ -44,6 +49,61 @@ export function activeAdminUser(email: string): User {
     createdAt: new Date(),
     updatedAt: new Date(),
   } as User;
+}
+
+export async function resolveAdminUser(email: string): Promise<User> {
+  const defaultBusiness = await ensureDefaultBusiness();
+  cachedAdminCompanyId = defaultBusiness.id;
+  const db = getDb();
+  const normalizedEmail = email.trim().toLowerCase();
+  const unionId = `admin:${normalizedEmail}`;
+
+  try {
+    let user = await db.query.users.findFirst({
+      where: or(
+        eq(users.unionId, unionId),
+        and(eq(users.email, normalizedEmail), eq(users.role, "admin"))
+      ),
+    });
+
+    if (!user) {
+      const [inserted] = await db
+        .insert(users)
+        .values({
+          unionId,
+          authProvider: "local",
+          name: "Administrator",
+          email: normalizedEmail,
+          role: "admin",
+          companyId: defaultBusiness.id,
+          isActive: true,
+          lastSignInAt: new Date(),
+        })
+        .returning();
+      user = inserted;
+    } else if (user.companyId !== defaultBusiness.id || user.role !== "admin" || !user.isActive) {
+      const [updated] = await db
+        .update(users)
+        .set({
+          companyId: defaultBusiness.id,
+          role: "admin",
+          isActive: true,
+          updatedAt: new Date(),
+          lastSignInAt: new Date(),
+        })
+        .where(eq(users.id, user.id))
+        .returning();
+      user = updated;
+    }
+
+    if (user) {
+      return user;
+    }
+  } catch (error) {
+    console.warn("[AdminSession] Database lookup/sync failed, using fallback linked user:", error);
+  }
+
+  return activeAdminUser(normalizedEmail, defaultBusiness.id);
 }
 
 export function validateAdminCredentials(email: string, password: string) {
@@ -75,7 +135,7 @@ async function verifyToken(token: string, type: TokenType) {
   if (result.payload.typ !== type || result.payload.role !== "admin" || result.payload.sub !== configured.email) {
     throw new Error("Invalid admin token");
   }
-  return activeAdminUser(configured.email);
+  return await resolveAdminUser(configured.email);
 }
 
 function appendCookie(headers: Headers, requestHeaders: Headers, name: string, value: string, maxAgeMs: number) {

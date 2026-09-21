@@ -11,6 +11,7 @@ import {
 } from "./queries/cart";
 import { findBuyerProductById } from "./queries/products";
 import { validateInventory } from "./queries/inventory";
+import { parseProductOptions } from "../contracts/types";
 
 export const cartRouter = createRouter({
   list: authedQuery.query(async ({ ctx }) => {
@@ -22,6 +23,7 @@ export const cartRouter = createRouter({
       z.object({
         productId: z.number(),
         quantity: z.number().min(1),
+        selectedOption: z.string().optional(),
         notes: z.string().optional(),
       })
     )
@@ -40,8 +42,46 @@ export const cartRouter = createRouter({
         });
       }
 
+      // Check product options and verify price from server database
+      const options = parseProductOptions(product.options);
+      let unitPrice = Number(product.unitPrice);
+      let resolvedOptionName: string | undefined = input.selectedOption?.trim() || undefined;
+
+      if (options.length > 0) {
+        if (!resolvedOptionName) {
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: "Please select an option before adding to cart.",
+          });
+        }
+        // Match option by id, name, or meal/only label
+        const matched = options.find((opt) =>
+          opt.id === resolvedOptionName ||
+          opt.name.toLowerCase() === resolvedOptionName?.toLowerCase() ||
+          (opt.mealPrice && `${opt.name} (Meal)`.toLowerCase() === resolvedOptionName?.toLowerCase()) ||
+          (opt.onlyPrice && `${opt.name} (Only)`.toLowerCase() === resolvedOptionName?.toLowerCase())
+        );
+
+        if (matched) {
+          if (matched.mealPrice && resolvedOptionName.toLowerCase().includes("meal")) {
+            unitPrice = matched.mealPrice;
+            resolvedOptionName = `${matched.name} (Meal)`;
+          } else if (matched.onlyPrice && resolvedOptionName.toLowerCase().includes("only")) {
+            unitPrice = matched.onlyPrice;
+            resolvedOptionName = `${matched.name} (Only)`;
+          } else {
+            unitPrice = matched.price;
+            resolvedOptionName = matched.name;
+          }
+        }
+      }
+
       const cartItems = await findCartByUserId(ctx.user.id);
-      const existingCartItem = cartItems.find((item) => item.productId === input.productId);
+      const existingCartItem = cartItems.find(
+        (item) =>
+          item.productId === input.productId &&
+          (item.selectedOption || null) === (resolvedOptionName || null)
+      );
       const totalQuantity = (existingCartItem?.quantity ?? 0) + input.quantity;
 
       await validateInventory(
@@ -55,7 +95,8 @@ export const cartRouter = createRouter({
         userId: ctx.user.id,
         productId: input.productId,
         quantity: input.quantity,
-        unitPrice: product.unitPrice.toString(),
+        unitPrice: unitPrice.toFixed(2),
+        selectedOption: resolvedOptionName,
         notes: input.notes,
       });
     }),

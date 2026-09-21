@@ -11,6 +11,7 @@ export type GuestCartItem = {
   productImage?: string | null;
   productUnitType?: string | null;
   productUnitSize?: string | null;
+  selectedOption?: string | null;
   quantity: number;
   unitPrice: string;
   notes?: string;
@@ -38,25 +39,32 @@ export function saveGuestCart(items: GuestCartItem[]) {
 
 export function addGuestCartItem(item: GuestCartItem) {
   const items = getGuestCart();
-  const existing = items.find((cartItem) => cartItem.productId === item.productId);
+  const existing = items.find(
+    (cartItem) =>
+      cartItem.productId === item.productId &&
+      (cartItem.selectedOption || null) === (item.selectedOption || null)
+  );
   if (existing) {
     existing.quantity += item.quantity;
     saveGuestCart(items);
     return;
   }
-  saveGuestCart([...items, item]);
+  const uniqueId = items.some((i) => i.id === item.id)
+    ? Date.now() + Math.floor(Math.random() * 1000)
+    : item.id;
+  saveGuestCart([...items, { ...item, id: uniqueId }]);
 }
 
-export function updateGuestCartItem(productId: number, quantity: number) {
+export function updateGuestCartItem(idOrProductId: number, quantity: number) {
   saveGuestCart(
     getGuestCart().map((item) =>
-      item.productId === productId ? { ...item, quantity } : item,
-    ),
+      item.id === idOrProductId ? { ...item, quantity } : item
+    )
   );
 }
 
-export function removeGuestCartItem(productId: number) {
-  saveGuestCart(getGuestCart().filter((item) => item.productId !== productId));
+export function removeGuestCartItem(idOrProductId: number) {
+  saveGuestCart(getGuestCart().filter((item) => item.id !== idOrProductId));
 }
 
 export function clearGuestCart() {

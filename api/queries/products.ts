@@ -127,12 +127,14 @@ async function listProducts(
       unitSize: products.unitSize,
       minimumOrderQuantity: products.minimumOrderQuantity,
       image: products.image,
+      images: products.images,
       origin: products.origin,
       season: products.season,
       grade: products.grade,
       organic: products.organic,
       status: products.status,
       tags: products.tags,
+      options: products.options,
       createdAt: products.createdAt,
       updatedAt: products.updatedAt,
       categoryName: categories.name,
@@ -152,6 +154,24 @@ async function listProducts(
     )
     .where(conditions.length ? and(...conditions) : undefined)
     .orderBy(...(marketplaceOrdering ? [asc(products.displayPriority), orderByCol] : [orderByCol]));
+
+  return rows.map((row) => {
+    let resolvedImage = row.image;
+    if (!resolvedImage && row.images) {
+      try {
+        const parsed = JSON.parse(row.images);
+        if (Array.isArray(parsed) && parsed.length > 0 && typeof parsed[0] === "string" && parsed[0].trim()) {
+          resolvedImage = parsed[0].trim();
+        }
+      } catch {
+        // ignore JSON parse failure
+      }
+    }
+    return {
+      ...row,
+      image: resolvedImage,
+    };
+  });
 }
 
 export async function findAllProducts(filters?: ProductFilters) {
@@ -196,6 +216,7 @@ async function findProductDetailBySlug(slug: string, visibilityConditions: SQL[]
       certifications: products.certifications,
       status: products.status,
       tags: products.tags,
+      options: products.options,
       metaTitle: products.metaTitle,
       metaDescription: products.metaDescription,
       createdAt: products.createdAt,
@@ -227,8 +248,21 @@ async function findProductDetailBySlug(slug: string, visibilityConditions: SQL[]
     .where(and(eq(products.slug, slug), ...visibilityConditions))
     .limit(1);
 
-  const row = rows[0] ?? null;
-  if (!row) return null;
+  const rawRow = rows[0] ?? null;
+  if (!rawRow) return null;
+
+  let resolvedImage = rawRow.image;
+  if (!resolvedImage && rawRow.images) {
+    try {
+      const parsed = JSON.parse(rawRow.images);
+      if (Array.isArray(parsed) && parsed.length > 0 && typeof parsed[0] === "string" && parsed[0].trim()) {
+        resolvedImage = parsed[0].trim();
+      }
+    } catch {
+      // ignore
+    }
+  }
+  const row = { ...rawRow, image: resolvedImage };
 
   // If supplier is AM Fruits / store owner (seed placeholder "amfruits-warehouse", supplierId 19, 2, or owner product)
   const isOwnerSupplier =
@@ -495,6 +529,7 @@ export async function findFeaturedProducts(limit = 8) {
       origin: products.origin,
       grade: products.grade,
       organic: products.organic,
+      options: products.options,
       categoryName: categories.name,
       supplierName: companies.name,
       stock: inventory.quantityAvailable,
