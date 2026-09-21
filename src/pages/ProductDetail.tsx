@@ -127,7 +127,7 @@ export default function ProductDetail() {
           </div>
           <div>
             <h1 className="text-3xl font-semibold tracking-tight">{product.name}</h1>
-            <p className="mt-1 text-sm text-muted-foreground">by {product.supplierName ?? "Shah's Halal Food"}</p>
+            <p className="mt-1 text-sm text-muted-foreground">by {product.supplierName ?? "Tex’s Chicken & Burgers"}</p>
           </div>
           <div className="flex flex-wrap items-baseline gap-3">
             <span className="text-3xl font-semibold text-emerald-700">{formatCurrency(price)}</span>
@@ -207,7 +207,7 @@ export default function ProductDetail() {
       </div>
       <DetailSection title="Restaurant & Kitchen Information">
         <div className="grid gap-2 text-sm sm:grid-cols-2">
-          <p><span className="font-medium text-foreground">Restaurant:</span> {product.supplierName ?? "Shah's Halal Food"}</p>
+          <p><span className="font-medium text-foreground">Restaurant:</span> {product.supplierName ?? "Tex’s Chicken & Burgers"}</p>
           <p><span className="font-medium text-foreground">Phone / Contact:</span> {product.supplierPhone ?? "+1 (718) 555-0199"}</p>
           <p className="sm:col-span-2"><span className="font-medium text-foreground">Address:</span> {formatSupplierAddress(product)}</p>
         </div>

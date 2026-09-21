@@ -210,8 +210,8 @@ export async function findOrderById(orderId: number) {
 
   const businessAccount = isOwnerOrPlaceholder ? platformAdmin : (supplierAdmin ?? platformAdmin);
   const businessName = isOwnerOrPlaceholder
-    ? (businessAccount?.name || "Shah's Halal Food")
-    : (supplierAdmin?.name || supplier?.name || businessAccount?.name || "Shah's Halal Food");
+    ? (businessAccount?.name || "Tex’s Chicken & Burgers")
+    : (supplierAdmin?.name || supplier?.name || businessAccount?.name || "Tex’s Chicken & Burgers");
 
   const businessPhone = isOwnerOrPlaceholder
     ? (adminDefaultAddress?.mobileNumber || businessAccount?.phone || null)

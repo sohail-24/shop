@@ -248,7 +248,7 @@ async function findProductDetailBySlug(slug: string, visibilityConditions: SQL[]
       }).catch(() => null),
     ]);
 
-    const realName = adminUser?.name || activeWarehouse?.name || "Shah's Halal Food";
+    const realName = adminUser?.name || activeWarehouse?.name || "Tex’s Chicken & Burgers";
     const realPhone = adminUser?.phone || activeWarehouse?.contactNumber || null;
     const realAddressLine1 = activeWarehouse?.address || adminUser?.addressLine1 || null;
     const realCity = activeWarehouse?.city || adminUser?.city || null;
@@ -259,7 +259,7 @@ async function findProductDetailBySlug(slug: string, visibilityConditions: SQL[]
     return {
       ...row,
       supplierName: realName,
-      supplierSlug: "shahs-halal-food",
+      supplierSlug: "texs-chicken-and-burgers",
       supplierPhone: realPhone,
       supplierAddressLine1: realAddressLine1,
       supplierAddressLine2: null,

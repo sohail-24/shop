@@ -88,7 +88,7 @@
     @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background;
   }
 
-  /* Tasteful, subtle food animations for Shah's Halal storefront */
+  /* Tasteful, subtle food animations for Tex’s Chicken & Burgers storefront */
   .animate-float-slow {
     animation: floatSlow 4.5s ease-in-out infinite;
   }

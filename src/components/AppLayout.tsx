@@ -195,7 +195,7 @@ function AppLayoutContent() {
 
   const company = companyQuery.data ?? null;
   const role = getAppRole(user);
-  const businessName = company?.name ?? "Shah's Halal Food";
+  const businessName = company?.name ?? "Tex’s Chicken & Burgers";
   const initials = (user?.name ?? businessName)
     .split(" ")
     .map((part) => part[0])
@@ -219,8 +219,12 @@ function AppLayoutContent() {
       <Sidebar collapsible="icon" className="z-40 border-sidebar-border">
         <SidebarHeader className="h-16 border-b border-sidebar-border px-3">
           <Link to={role === "buyer" ? "/" : "/dashboard"} className="flex min-w-0 items-center gap-3 rounded-md px-1 py-1.5">
-            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground shadow-sm">
-              <Boxes className="h-5 w-5" />
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-white border border-sidebar-border overflow-hidden shadow-sm p-0.5">
+              <img
+                src="/branding/logo.png"
+                alt="Tex’s Chicken & Burgers"
+                className="h-full w-full object-contain"
+              />
             </div>
             {!isCollapsed && (
               <div className="min-w-0">
@@ -274,8 +278,8 @@ function AppLayoutContent() {
         <SidebarFooter className="border-t border-sidebar-border p-3">
           {user ? (
             <UserMenu
-              initials={initials || "SH"}
-              userName={user.name ?? "Shah's Halal Admin"}
+              initials={initials || "TC"}
+              userName={user.name ?? "Tex’s Admin"}
               userDetail={user.email ?? user.phone ?? getRoleLabel(role)}
               role={role}
               onLogout={logout}
@@ -306,7 +310,7 @@ function AppLayoutContent() {
           <div className="relative hidden min-w-[260px] max-w-xl flex-1 md:block">
             <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
-              aria-label="Search Shah's Halal Food"
+              aria-label="Search Tex’s Chicken & Burgers"
               placeholder={role === "buyer" ? "Search dishes, platters, gyros, drinks..." : "Search menu items, orders, inventory..."}
               className="h-9 border-input bg-card pl-9 pr-10"
             />

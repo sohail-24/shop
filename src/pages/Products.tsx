@@ -272,7 +272,7 @@ function BuyerMarketplace() {
   if (isCategoriesOverview) {
     return (
       <div className="w-full min-h-screen bg-slate-50/50 flex flex-col justify-between overflow-x-hidden">
-        {/* Header: Home Link + Shah's Halal Logo & Name + Profile + Cart */}
+        {/* Header: Home Link + Tex’s Chicken & Burgers Logo & Name + Profile + Cart */}
         <header className="sticky top-0 z-30 bg-white/95 backdrop-blur-md border-b border-slate-200/80 px-2.5 py-2 sm:px-4 sm:py-2.5 shadow-xs">
           <div className="flex items-center justify-between gap-2 max-w-[1500px] mx-auto">
             <Link to="/" className="flex items-center gap-2 group">
@@ -280,16 +280,16 @@ function BuyerMarketplace() {
                 <ArrowLeft className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
               </div>
               <img
-                src="/branding/am-fruits-logo.png"
-                alt="Shah's Halal"
+                src="/branding/logo.png"
+                alt="Tex’s Chicken & Burgers"
                 className="h-7 w-7 sm:h-8 sm:w-8 object-contain rounded-md border border-slate-100 bg-white p-0.5 shadow-xs"
               />
               <div>
                 <h1 className="text-xs sm:text-base font-extrabold text-slate-900 leading-tight">
-                  Shah's Halal
+                  Tex’s Chicken & Burgers
                 </h1>
                 <p className="text-[9px] sm:text-xs text-slate-500 font-medium leading-none mt-0.5">
-                  Fresh Food • Pure Taste
+                  Worth Every Bite
                 </p>
               </div>
             </Link>
@@ -483,7 +483,7 @@ function BuyerMarketplace() {
   // ─────────────────────────────────────────────────────────────
   return (
     <div className="w-full min-h-screen bg-slate-50/50 flex flex-col justify-between overflow-x-hidden">
-      {/* Header: Back to Categories + Shah's Halal + Profile + Cart */}
+      {/* Header: Back to Categories + Tex’s Chicken & Burgers + Profile + Cart */}
       <header className="sticky top-0 z-30 bg-white/95 backdrop-blur-md border-b border-slate-200/80 px-2.5 py-2 sm:px-4 sm:py-2.5 shadow-xs">
         <div className="flex items-center justify-between gap-2 max-w-[1500px] mx-auto">
           <button
@@ -499,16 +499,16 @@ function BuyerMarketplace() {
               <ArrowLeft className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
             </div>
             <img
-              src="/branding/am-fruits-logo.png"
-              alt="Shah's Halal"
+              src="/branding/logo.png"
+              alt="Tex’s Chicken & Burgers"
               className="h-7 w-7 sm:h-8 sm:w-8 object-contain rounded-md border border-slate-100 bg-white p-0.5 shadow-xs"
             />
             <div>
               <h1 className="text-xs sm:text-base font-extrabold text-slate-900 leading-tight">
-                Shah's Halal
+                Tex’s Chicken & Burgers
               </h1>
               <p className="text-[9px] sm:text-xs text-slate-500 font-medium leading-none mt-0.5">
-                Fresh Food • Pure Taste
+                Worth Every Bite
               </p>
             </div>
           </button>
@@ -704,7 +704,7 @@ function BuyerMarketplace() {
                 <Label className="text-xs font-semibold text-slate-700">Restaurant</Label>
                 <Select defaultValue="all">
                   <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent><SelectItem value="all">Shah's Halal Food</SelectItem></SelectContent>
+                  <SelectContent><SelectItem value="all">Tex’s Chicken & Burgers</SelectItem></SelectContent>
                 </Select>
               </div>
               <FilterCheck label="Available to Order" checked />
@@ -1032,9 +1032,9 @@ function ProductCard({
             {product.name}
           </Link>
 
-          {/* 4. "Shah's Halal Food" */}
+          {/* 4. "Tex’s Chicken & Burgers" */}
           <p className="text-[9px] xs:text-[10px] sm:text-xs font-normal text-slate-500 leading-none truncate">
-            {product.supplierName ?? "Shah's Halal Food"}
+            {product.supplierName ?? "Tex’s Chicken & Burgers"}
           </p>
 
           {/* 5. Selling price + original price */}
@@ -1175,7 +1175,7 @@ function OwnerProductCatalog() {
         <div>
           <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">Product Catalog</h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            Manage Shah's Halal food menu items, categories, pricing, and availability.
+            Manage Tex’s Chicken & Burgers food menu items, categories, pricing, and availability.
           </p>
         </div>
         <Link to="/products/new">

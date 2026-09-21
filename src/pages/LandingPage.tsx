@@ -204,19 +204,24 @@ export default function LandingPage() {
         className="md:hidden w-[28%] shrink-0 sticky top-0 h-screen border-r border-[#062E1F] text-white flex flex-col justify-between overflow-hidden z-30 select-none"
       >
         {/* Top Brand Header */}
-        <div className="shrink-0 px-1.5 xs:px-2 pt-7 xs:pt-8 pb-2 flex flex-col items-center text-center border-b border-emerald-800/60">
-          <Link to="/" className="flex flex-col items-center group">
+        <div className="shrink-0 px-1.5 xs:px-2 pt-5 xs:pt-6 pb-2.5 flex flex-col items-center text-center border-b border-emerald-800/60">
+          <Link to="/" className="flex flex-col items-center group w-full">
             <img
-              src="/branding/am-fruits-logo.png"
-              alt="Shah's Halal"
-              className="h-[33px] xs:h-[38px] w-auto object-contain transition-transform group-hover:scale-105"
+              src="/branding/logo.png"
+              alt="Tex’s Chicken & Burgers"
+              className="h-10 xs:h-12 w-auto object-contain transition-transform group-hover:scale-105 drop-shadow-sm"
             />
-            <h2 className="mt-1 text-xs xs:text-sm font-extrabold tracking-tight text-white leading-tight">
-              Shah&apos;s Halal
-            </h2>
-            <p className="mt-0.5 text-[8px] xs:text-[9px] font-semibold text-emerald-300 tracking-wide text-center leading-tight">
-              Fresh Food · Pure Taste
-            </p>
+            <div className="mt-1.5 flex flex-col items-center text-center w-full">
+              <span className="text-xs xs:text-sm font-extrabold tracking-tight text-white leading-tight">
+                Tex’s
+              </span>
+              <span className="whitespace-nowrap text-[9.5px] xs:text-[11px] font-bold tracking-tight text-white/95 leading-tight mt-0.5">
+                Chicken &amp; Burgers
+              </span>
+              <span className="whitespace-nowrap text-[7.5px] xs:text-[8.5px] font-semibold text-emerald-300 tracking-tight leading-tight mt-1">
+                Worth Every Bite
+              </span>
+            </div>
           </Link>
         </div>
 
@@ -288,18 +293,23 @@ export default function LandingPage() {
       >
         {/* Top Brand Header */}
         <div className="shrink-0 pt-6 lg:pt-8 pb-3.5 flex flex-col items-center text-center border-b border-emerald-800/60">
-          <Link to="/" className="group flex flex-col items-center">
+          <Link to="/" className="group flex flex-col items-center w-full">
             <img
-              src="/branding/am-fruits-logo.png"
-              alt="Shah's Halal"
-              className="h-12 lg:h-[52px] w-auto object-contain transition-transform group-hover:scale-105"
+              src="/branding/logo.png"
+              alt="Tex’s Chicken & Burgers"
+              className="h-16 lg:h-20 w-auto object-contain transition-transform group-hover:scale-105 drop-shadow-md"
             />
-            <h2 className="mt-2 text-lg lg:text-xl font-extrabold tracking-tight text-white group-hover:text-emerald-300 transition-colors">
-              Shah's Halal
-            </h2>
-            <p className="mt-0.5 text-xs font-semibold text-emerald-300/90 tracking-wide">
-              Fresh Food · Pure Taste
-            </p>
+            <div className="mt-2.5 flex flex-col items-center text-center w-full">
+              <span className="text-lg lg:text-xl font-extrabold tracking-tight text-white leading-tight group-hover:text-emerald-300 transition-colors">
+                Tex’s
+              </span>
+              <span className="whitespace-nowrap text-sm lg:text-base font-bold tracking-tight text-white/95 leading-tight mt-0.5 group-hover:text-emerald-200 transition-colors">
+                Chicken &amp; Burgers
+              </span>
+              <span className="whitespace-nowrap text-xs font-semibold text-emerald-300/90 tracking-wide mt-1 text-center">
+                Worth Every Bite
+              </span>
+            </div>
           </Link>
         </div>
 
@@ -363,13 +373,13 @@ export default function LandingPage() {
         {/* ==================================================================== */}
         <header className="hidden md:block sticky top-0 z-40 border-b border-slate-200 bg-white/95 backdrop-blur-sm shadow-xs px-6 py-4">
           <div className="flex items-center justify-between gap-4">
-            {/* Left side: Shah's Halal branding */}
+            {/* Left side: Tex’s Chicken & Burgers branding */}
             <div>
               <h1 className="text-xl lg:text-2xl font-extrabold tracking-tight text-slate-900 leading-none">
-                Shah's Halal
+                Tex’s Chicken & Burgers
               </h1>
               <p className="text-xs lg:text-sm font-medium text-emerald-700 mt-1">
-                Fresh Food • Pure Taste • Always Halal
+                Worth Every Bite • Fresh Food • Always Halal
               </p>
             </div>
 
@@ -449,10 +459,10 @@ export default function LandingPage() {
               <Link to="/" className="flex items-center gap-1.5 min-w-0">
                 <div className="min-w-0">
                   <span className="block text-xs xs:text-sm font-extrabold tracking-tight text-slate-900 leading-tight truncate">
-                    Shah&apos;s Halal
+                    Tex’s Chicken & Burgers
                   </span>
                   <span className="block text-[8px] xs:text-[9.5px] font-semibold text-emerald-700 leading-none truncate">
-                    Fresh Food • Pure Taste
+                    Worth Every Bite
                   </span>
                 </div>
               </Link>
@@ -612,7 +622,7 @@ function HeroBanner({ onOrderNow }: { onOrderNow: () => void }) {
       title: "DELICIOUS HALAL FOOD",
       tagline: "Fresh Ingredients • Great Taste • Always Halal",
       description:
-        "Authentic NYC-style chicken & lamb platters over spiced basmati rice, warm pita, crisp salad, and Shah's world-famous white and hot sauces.",
+        "Authentic NYC-style chicken & lamb platters over spiced basmati rice, warm pita, crisp salad, and Tex's world-famous sauces.",
       image: "/products/chicken-platter.jpg",
       badge: "100% HALAL",
       cta: "ORDER NOW →",
@@ -913,7 +923,7 @@ function FoodProductCard({
 
           {/* LINE 3: SHOP NAME */}
           <p className="text-[9px] xs:text-[10px] font-normal text-slate-500 leading-none truncate">
-            Shah's Halal Food
+            Tex’s Chicken & Burgers
           </p>
 
           {/* LINE 4: PRICE + ORIGINAL PRICE */}
@@ -998,7 +1008,7 @@ function FoodProductCard({
               {product.name}
             </Link>
             <p className="text-xs text-slate-400 truncate">
-              {product.supplierName ?? "Shah's Halal Food"}
+              {product.supplierName ?? "Tex’s Chicken & Burgers"}
             </p>
           </div>
 

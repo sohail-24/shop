@@ -126,7 +126,7 @@ export default function EditProduct() {
     // Compatibility fields
     sku: "",
     supplierId: "",
-    warehouse: "Shah's Halal Kitchen",
+    warehouse: "Tex’s Kitchen",
   });
 
   const productQuery = trpc.product.bySlug.useQuery({ slug: slug! }, { enabled: !!slug, retry: false });
@@ -191,7 +191,7 @@ export default function EditProduct() {
       tags: existingTags.join(", "),
       sku: meta.sku ?? product.sku ?? "",
       supplierId: String(product.supplierId ?? ""),
-      warehouse: inventoryRecord?.warehouseLocation || "Shah's Halal Kitchen",
+      warehouse: inventoryRecord?.warehouseLocation || "Tex’s Kitchen",
     });
     setImages(parseImages(product.images, product.image));
   }, [product, inventoryRecord]);
@@ -285,7 +285,7 @@ export default function EditProduct() {
         : 0,
       openingStock: portions,
       availableStock: portions,
-      warehouse: form.warehouse.trim() || "Shah's Halal Kitchen",
+      warehouse: form.warehouse.trim() || "Tex’s Kitchen",
       status: form.status,
       unitType: "each",
       unitSize: form.unitSize.trim() || "1 Portion",
@@ -656,7 +656,7 @@ export default function EditProduct() {
                 <Input
                   value={form.warehouse}
                   onChange={(event) => updateField("warehouse", event.target.value)}
-                  placeholder="Shah's Halal Kitchen"
+                  placeholder="Tex’s Kitchen"
                 />
               </Field>
 
@@ -664,7 +664,7 @@ export default function EditProduct() {
                 <Input
                   value={form.sku}
                   onChange={(event) => updateField("sku", event.target.value)}
-                  placeholder="e.g. SHAH-CHK-PLTR-01"
+                  placeholder="e.g. TEX-CHK-SNDW-01"
                 />
               </Field>
             </CardContent>

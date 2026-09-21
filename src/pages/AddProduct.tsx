@@ -92,7 +92,7 @@ export default function AddProduct() {
     // Backend technical compatibility fields
     sku: "",
     supplierId: "",
-    warehouse: "Shah's Halal Kitchen",
+    warehouse: "Tex’s Kitchen",
   });
 
   const utils = trpc.useUtils();
@@ -119,11 +119,11 @@ export default function AddProduct() {
     },
   });
 
-  // Auto-select Shah's Halal supplier if available
+  // Auto-select Tex’s supplier if available
   useEffect(() => {
     if (!form.supplierId && suppliers.length > 0) {
-      const shahsSupplier = suppliers.find((s) => s.name.toLowerCase().includes("shah"));
-      const defaultSupplier = shahsSupplier || suppliers[0];
+      const texsSupplier = suppliers.find((s) => s.name.toLowerCase().includes("tex"));
+      const defaultSupplier = texsSupplier || suppliers[0];
       if (defaultSupplier) {
         setForm((curr) => ({ ...curr, supplierId: String(defaultSupplier.id) }));
       }
@@ -228,7 +228,7 @@ export default function AddProduct() {
 
     // Auto-generate safe SKU if not given
     const cleanNameSlug = form.name.toLowerCase().replace(/[^a-z0-9]+/g, "-");
-    const safeSku = form.sku.trim() || `SHAH-${cleanNameSlug.slice(0, 20).toUpperCase()}-${nanoid(4).toUpperCase()}`;
+    const safeSku = form.sku.trim() || `TEX-${cleanNameSlug.slice(0, 20).toUpperCase()}-${nanoid(4).toUpperCase()}`;
 
     // Estimated prep cost (purchase price)
     const selling = toNumber(form.sellingPrice);
@@ -254,7 +254,7 @@ export default function AddProduct() {
       reservedStock: 0,
       minimumStock: 5,
       reorderQuantity: 20,
-      warehouse: form.warehouse.trim() || "Shah's Halal Kitchen",
+      warehouse: form.warehouse.trim() || "Tex’s Kitchen",
       status,
       unitType: "each",
       unitSize: form.unitSize.trim() || "1 Portion",
@@ -279,7 +279,7 @@ export default function AddProduct() {
           </Link>
           <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">Add Menu Item</h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            Add a new dish to Shah's Halal restaurant menu with photos, pricing, ingredients, and dietary options.
+            Add a new dish to Tex’s Chicken & Burgers restaurant menu with photos, pricing, ingredients, and dietary options.
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
@@ -593,7 +593,7 @@ export default function AddProduct() {
                 <Input
                   value={form.warehouse}
                   onChange={(event) => updateField("warehouse", event.target.value)}
-                  placeholder="Shah's Halal Kitchen"
+                  placeholder="Tex’s Kitchen"
                 />
               </Field>
 
@@ -601,7 +601,7 @@ export default function AddProduct() {
                 <Input
                   value={form.sku}
                   onChange={(event) => updateField("sku", event.target.value)}
-                  placeholder="e.g. SHAH-CHK-PLTR-01"
+                  placeholder="e.g. TEX-CHK-SNDW-01"
                 />
               </Field>
             </CardContent>

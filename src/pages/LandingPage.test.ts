@@ -16,7 +16,7 @@ describe("customer category navigation", () => {
     });
   });
 
-  it("maps categories to their designated Shah's Halal food emojis", () => {
+  it("maps categories to their designated food emojis", () => {
     expect(getCategoryEmoji({ name: "Platters", slug: "platters" })).toBe("🍛");
     expect(getCategoryEmoji({ name: "Gyros", slug: "gyros" })).toBe("🌯");
     expect(getCategoryEmoji({ name: "Burgers", slug: "burgers" })).toBe("🍔");

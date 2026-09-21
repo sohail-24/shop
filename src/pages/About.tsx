@@ -101,8 +101,8 @@ export default function About() {
               <div className="absolute inset-0 rounded-full bg-amber-400/20 blur-xl scale-125" />
               <div className="relative inline-flex p-3 sm:p-3.5 rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 shadow-2xl">
                 <img
-                  src="/branding/am-fruits-logo.png"
-                  alt="Shah's Halal Food"
+                  src="/branding/logo.png"
+                  alt="Tex’s Chicken & Burgers"
                   className="h-12 sm:h-16 md:h-18 w-auto object-contain drop-shadow-md"
                 />
               </div>
@@ -110,12 +110,12 @@ export default function About() {
 
             {/* Main Headline */}
             <h1 className="text-3xl sm:text-5xl lg:text-6xl font-black tracking-tight leading-[1.1] max-w-3xl">
-              ABOUT <span className="text-amber-300">SHAH&apos;S HALAL</span>
+              ABOUT <span className="text-amber-300">TEX’S CHICKEN &amp; BURGERS</span>
             </h1>
 
             {/* Tagline */}
             <p className="mt-3 sm:mt-4 text-lg sm:text-xl md:text-2xl font-semibold text-emerald-200 tracking-wide">
-              Fresh Food · Pure Taste
+              Worth Every Bite
             </p>
 
             {/* Motto */}
@@ -130,7 +130,7 @@ export default function About() {
                 <div className="relative rounded-2xl overflow-hidden aspect-[4/3] bg-emerald-900/50">
                   <img
                     src="/products/chicken-platter.jpg"
-                    alt="Shah's Halal Signature Chicken Platter"
+                    alt="Tex’s Chicken & Burgers Signature Chicken Platter"
                     className="w-full h-full object-cover transition-transform duration-700 hover:scale-105"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
@@ -195,7 +195,7 @@ export default function About() {
               </div>
 
               <p className="text-base sm:text-lg text-slate-700 leading-relaxed">
-                Shah&apos;s Halal is built around a simple idea —{" "}
+                Tex’s Chicken & Burgers is built around a simple idea —{" "}
                 <strong className="text-slate-900 font-semibold">
                   fresh food, great taste, and a welcoming experience for everyone.
                 </strong>
@@ -242,7 +242,7 @@ export default function About() {
                 <div className="aspect-[4/3] sm:aspect-[16/11] overflow-hidden bg-slate-100">
                   <img
                     src="/products/combo-platter.jpg"
-                    alt="Shah's Halal Combo Platter with Lamb, Chicken and Basmati Rice"
+                    alt="Tex’s Chicken & Burgers Combo Platter with Lamb, Chicken and Basmati Rice"
                     className="w-full h-full object-cover transition-transform duration-500 hover:scale-105"
                   />
                 </div>
@@ -432,16 +432,16 @@ export default function About() {
         </section>
 
         {/* ==================================================================== */}
-        {/* 6. WHY SHAH'S HALAL?                                                 */}
+        {/* 6. WHY TEX’S CHICKEN & BURGERS?                                       */}
         {/* ==================================================================== */}
         <section id="why-us" className="py-16 sm:py-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center max-w-2xl mx-auto mb-12">
             <div className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-emerald-800 bg-emerald-100/70 border border-emerald-200/80 px-3 py-1 rounded-full mb-3">
               <ShieldCheck className="h-3.5 w-3.5 text-emerald-700" />
-              <span>The Shah&apos;s Difference</span>
+              <span>The Tex’s Difference</span>
             </div>
             <h2 className="text-2xl sm:text-4xl font-black tracking-tight text-slate-900">
-              WHY SHAH&apos;S HALAL?
+              WHY TEX’S CHICKEN &amp; BURGERS?
             </h2>
             <p className="mt-2 text-sm sm:text-base text-slate-600">
               We take pride in our food quality, authentic recipe traditions, and welcoming service.
@@ -512,7 +512,7 @@ export default function About() {
                 </h2>
 
                 <p className="text-emerald-200 text-sm sm:text-base leading-relaxed">
-                  Make every gathering special with authentic Shah&apos;s Halal catering trays, party platters, and custom
+                  Make every gathering special with authentic Tex’s Chicken &amp; Burgers catering trays, party platters, and custom
                   boxed meals. Perfect for groups of any size:
                 </p>
 
@@ -547,7 +547,7 @@ export default function About() {
               <div className="lg:col-span-5 h-full min-h-[260px] sm:min-h-[340px] relative overflow-hidden bg-emerald-950">
                 <img
                   src="/products/catering.jpg"
-                  alt="Shah's Halal Catering Platter"
+                  alt="Tex’s Chicken & Burgers Catering Platter"
                   className="w-full h-full object-cover"
                   loading="lazy"
                 />
