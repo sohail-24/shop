@@ -17,6 +17,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Drawer, DrawerContent, DrawerTrigger, DrawerTitle, DrawerHeader } from "@/components/ui/drawer";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Switch } from "@/components/ui/switch";
+import { resolveProductImageUrl } from "@/lib/image";
 import {
   ArrowLeft,
   ArrowRight,
@@ -41,6 +42,7 @@ import {
   Filter,
 } from "lucide-react";
 import { getCategoryEmoji } from "./LandingPage";
+import { parseProductOptions } from "@/types";
 
 type CatalogProduct = {
   id: number;
@@ -60,6 +62,7 @@ type CatalogProduct = {
   rating?: string | number | null;
   tags?: string | null;
   description?: string | null;
+  options?: unknown;
 };
 
 export interface FoodCategoryItem {
@@ -540,7 +543,7 @@ function BuyerMarketplace() {
       </header>
 
       {/* Main Page Container */}
-      <div className="mx-auto flex w-full max-w-[1500px] flex-col gap-2.5 sm:gap-3.5 px-2.5 sm:px-4 pt-2 sm:pt-3 pb-32 md:pb-8 flex-1">
+      <div className="mx-auto flex w-full max-w-[1500px] flex-col gap-2.5 sm:gap-3.5 px-2.5 sm:px-4 pt-2 sm:pt-3 pb-20 md:pb-8 flex-1">
         {/* Search Field */}
         <div className="relative">
           <Search className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 sm:h-4 sm:w-4 text-slate-400" />
@@ -809,102 +812,6 @@ function BuyerMarketplace() {
         </div>
       </div>
 
-      {/* Mobile Bottom Filter + Sort Bar (directly above bottom nav) */}
-      <div className="md:hidden fixed bottom-[calc(48px+max(0.25rem,env(safe-area-inset-bottom,0px)))] left-0 right-0 z-40 flex h-9.5 items-center justify-around border-t border-slate-200 bg-white/95 backdrop-blur-md shadow-xs">
-        <Drawer>
-          <DrawerTrigger asChild>
-            <button
-              type="button"
-              id="mobile-filter-button"
-              className="flex-1 flex items-center justify-center gap-1.5 h-full text-xs font-semibold text-slate-700 hover:text-slate-950 active:bg-slate-50 transition-colors"
-            >
-              <SlidersHorizontal className="h-3.5 w-3.5 text-slate-600" />
-              Filters
-            </button>
-          </DrawerTrigger>
-          <DrawerContent>
-            <DrawerHeader>
-              <DrawerTitle>Filters</DrawerTitle>
-            </DrawerHeader>
-            <div className="p-4 space-y-5">
-              <div className="space-y-2">
-                <Label className="text-xs font-bold text-slate-700">Category</Label>
-                <Select
-                  value={isAllSelected ? "all" : (activeCategory ? String(activeCategory.id) : "")}
-                  onValueChange={(val) => {
-                    setSearchParams({ category: val });
-                  }}
-                >
-                  <SelectTrigger><SelectValue placeholder="Select Category" /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">🍽️ All Products</SelectItem>
-                    {displayCategories.map((category) => (
-                      <SelectItem key={category.id} value={String(category.id)}>
-                        {category.emoji} {category.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <FilterCheck label="100% Certified Halal" checked />
-              <FilterCheck label="In Stock" checked />
-              <Button
-                variant="outline"
-                className="w-full text-xs font-semibold cursor-pointer"
-                onClick={() => {
-                  setSearchParams({});
-                  setSearch("");
-                }}
-              >
-                Back to All Categories
-              </Button>
-            </div>
-          </DrawerContent>
-        </Drawer>
-
-        <div className="h-5 w-px bg-slate-200 shrink-0" />
-
-        <Drawer>
-          <DrawerTrigger asChild>
-            <button
-              type="button"
-              id="mobile-sort-button"
-              className="flex-1 flex items-center justify-center gap-1.5 h-full text-xs font-semibold text-slate-700 hover:text-slate-950 active:bg-slate-50 transition-colors"
-            >
-              <ArrowUpDown className="h-3.5 w-3.5 text-slate-600" />
-              Sort
-            </button>
-          </DrawerTrigger>
-          <DrawerContent>
-            <DrawerHeader>
-              <DrawerTitle>Sort Products</DrawerTitle>
-            </DrawerHeader>
-            <div className="p-4 space-y-2">
-              {[
-                { key: "newest", label: "Featured & Newest" },
-                { key: "price_asc", label: "Price: Low to High" },
-                { key: "price_desc", label: "Price: High to Low" },
-                { key: "rating", label: "Highest Rated (★)" },
-              ].map((opt) => (
-                <button
-                  key={opt.key}
-                  type="button"
-                  onClick={() => setSort(opt.key)}
-                  className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-xs sm:text-sm font-medium transition-colors ${
-                    sort === opt.key
-                      ? "bg-emerald-50 text-emerald-800 font-bold border border-emerald-200"
-                      : "text-slate-700 hover:bg-slate-100"
-                  }`}
-                >
-                  <span>{opt.label}</span>
-                  {sort === opt.key && <CheckCircle2 className="h-4 w-4 text-emerald-600" />}
-                </button>
-              ))}
-            </div>
-          </DrawerContent>
-        </Drawer>
-      </div>
-
       {/* Mobile Bottom Navigation - Categories is ACTIVE GREEN */}
       <nav
         aria-label="Mobile Navigation"
@@ -989,6 +896,8 @@ function ProductCard({
   const [quantity, setQuantity] = useState(moq);
   const [imageFailed, setImageFailed] = useState(false);
   const unitLabel = unitLabels[unit] ?? unit;
+  const options = useMemo(() => parseProductOptions(product.options), [product.options]);
+  const hasOptions = options.length > 0;
 
   return (
     <Card
@@ -1001,7 +910,7 @@ function ProductCard({
           <Link to={`/products/${product.slug}`} className="block h-full w-full">
             {product.image && !imageFailed ? (
               <img
-                src={product.image}
+                src={resolveProductImageUrl(product.image)}
                 alt={product.name}
                 referrerPolicy="no-referrer"
                 className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
@@ -1101,15 +1010,26 @@ function ProductCard({
             </button>
           </div>
 
-          <button
-            id={`product-add-btn-${product.id}`}
-            type="button"
-            className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold h-6 sm:h-7 px-2 xs:px-2.5 text-[10px] sm:text-xs rounded shadow-xs active:scale-[0.98] shrink-0 flex items-center justify-center leading-none transition-colors disabled:opacity-50 disabled:pointer-events-none"
-            onClick={() => onAdd(quantity)}
-            disabled={pending || isOutOfStock}
-          >
-            {isOutOfStock ? "Out" : "Add"}
-          </button>
+          {hasOptions ? (
+            <Link
+              id={`product-options-btn-${product.id}`}
+              to={`/products/${product.slug}`}
+              className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold h-6 sm:h-7 px-2.5 xs:px-3 text-[10px] sm:text-xs rounded shadow-xs active:scale-[0.98] shrink-0 flex items-center justify-center leading-none transition-colors whitespace-nowrap"
+            >
+              Select Options
+            </Link>
+          ) : (
+            <button
+              id={`product-add-btn-${product.id}`}
+              type="button"
+              className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold h-6 sm:h-7 px-3 xs:px-3.5 text-[10px] sm:text-xs rounded shadow-xs active:scale-[0.98] shrink-0 flex items-center justify-center gap-1 leading-none transition-colors disabled:opacity-50 disabled:pointer-events-none whitespace-nowrap"
+              onClick={() => onAdd(quantity)}
+              disabled={pending || isOutOfStock}
+            >
+              <ShoppingCart className="h-3 w-3 sm:h-3.5 sm:w-3.5 shrink-0" />
+              <span>Add</span>
+            </button>
+          )}
         </div>
       </div>
     </Card>
@@ -1260,7 +1180,7 @@ function OwnerProductCatalog() {
                 <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-lg border bg-muted">
                   {product.image ? (
                     <img
-                      src={product.image}
+                      src={resolveProductImageUrl(product.image)}
                       alt={product.name}
                       referrerPolicy="no-referrer"
                       className="h-full w-full object-cover"
@@ -1289,12 +1209,16 @@ function OwnerProductCatalog() {
                   </div>
                   <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
                     <span className="font-medium text-foreground/80">
-                      {product.categoryName ?? "Halal Food"}
+                      {product.categoryName ?? "Sides"}
                     </span>
-                    <span>•</span>
-                    <Badge variant="outline" className="text-[11px] py-0 h-4 border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 font-normal">
-                      100% Halal
-                    </Badge>
+                    {product.stock !== undefined && (
+                      <>
+                        <span>•</span>
+                        <span className="font-medium text-emerald-600 dark:text-emerald-400">
+                          {product.stock} in stock
+                        </span>
+                      </>
+                    )}
                     {product.unitSize && (
                       <>
                         <span>•</span>

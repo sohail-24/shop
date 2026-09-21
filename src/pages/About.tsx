@@ -19,7 +19,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { CustomerBottomNav } from "@/components/CustomerBottomNav";
-import { BurgerExplodeAnimation } from "@/components/BurgerExplodeAnimation";
+import { RealBurgerScrollHero } from "@/components/RealBurgerScrollHero";
 
 export default function About() {
   const prefersReducedMotion = useReducedMotion();
@@ -34,148 +34,15 @@ export default function About() {
   };
 
   return (
-    <div className="min-h-screen bg-[#FDFCF7] text-slate-900 flex flex-col antialiased selection:bg-emerald-800 selection:text-amber-200 overflow-x-hidden">
+    <div className="min-h-screen bg-white text-slate-900 flex flex-col antialiased selection:bg-emerald-800 selection:text-amber-200 overflow-x-hidden">
       <main className="flex-1 pb-24 md:pb-16">
         {/* ==================================================================== */}
-        {/* SECTION 1: CINEMATIC HERO                                            */}
+        {/* HERO: REAL BURGER PHOTOGRAPH WITH SCROLL-LINKED EXPLODE ANIMATION   */}
         {/* ==================================================================== */}
-        <section
-          id="about-hero"
-          className="relative text-white pt-10 sm:pt-16 pb-16 sm:pb-24 overflow-hidden"
-          style={{
-            background: "linear-gradient(145deg, #041F15 0%, #062E1F 35%, #0B462C 70%, #062E1F 100%)",
-          }}
-        >
-          {/* Subtle Ambient Halal Pattern & Golden Glows */}
-          <div className="absolute inset-0 opacity-10 pointer-events-none bg-[radial-gradient(#F59E0B_1px,transparent_1px)] [background-size:24px_24px]" />
-          <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[340px] sm:w-[600px] h-[340px] sm:h-[600px] bg-emerald-500/15 rounded-full blur-3xl pointer-events-none" />
-          <div className="absolute bottom-10 right-10 w-72 h-72 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
-
-          <div className="relative max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 text-center flex flex-col items-center">
-            {/* Real Official Tex's Logo */}
-            <motion.div
-              initial={prefersReducedMotion ? { opacity: 1 } : { opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.6 }}
-              className="relative mb-6"
-            >
-              <div className="absolute inset-0 rounded-full bg-amber-400/20 blur-xl scale-125 pointer-events-none" />
-              <div className="relative inline-flex p-3 sm:p-4 rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 shadow-2xl">
-                <img
-                  src="/branding/logo.png"
-                  alt="Tex’s Chicken & Burgers"
-                  className="h-14 sm:h-20 md:h-24 w-auto object-contain drop-shadow-md"
-                />
-              </div>
-            </motion.div>
-
-            {/* 100% Certified Halal Tag */}
-            <motion.div
-              initial={prefersReducedMotion ? { opacity: 1 } : { opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2, duration: 0.5 }}
-              className="inline-flex items-center gap-2 bg-amber-400/15 border border-amber-400/40 text-amber-300 px-4 py-1.5 rounded-full text-xs sm:text-sm font-bold tracking-wider uppercase mb-4 shadow-xs"
-            >
-              <span className="text-amber-400">☪</span>
-              <span>100% Certified Halal</span>
-              <span className="text-amber-400 text-xs">✨</span>
-            </motion.div>
-
-            {/* Main Brand Title */}
-            <motion.h1
-              initial={prefersReducedMotion ? { opacity: 1 } : { opacity: 0, y: 15 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.3, duration: 0.6 }}
-              className="text-3xl sm:text-5xl md:text-6xl lg:text-7xl font-black tracking-tight leading-[1.08] max-w-4xl"
-            >
-              TEX’S CHICKEN <br className="hidden sm:inline" />
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-300 via-yellow-200 to-amber-400">
-                &amp; BURGERS
-              </span>
-            </motion.h1>
-
-            {/* Official Tagline */}
-            <motion.p
-              initial={prefersReducedMotion ? { opacity: 1 } : { opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.4, duration: 0.6 }}
-              className="mt-4 text-xl sm:text-2xl md:text-3xl font-extrabold text-amber-300 tracking-wide"
-            >
-              Worth Every Bite
-            </motion.p>
-
-            {/* Pillar Subtitle */}
-            <motion.div
-              initial={prefersReducedMotion ? { opacity: 1 } : { opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.5, duration: 0.6 }}
-              className="mt-3 flex items-center justify-center gap-3 text-sm sm:text-base font-semibold text-emerald-200 tracking-wider uppercase"
-            >
-              <span>Fresh</span>
-              <span className="text-amber-400">•</span>
-              <span>Crispy</span>
-              <span className="text-amber-400">•</span>
-              <span>100% Halal</span>
-            </motion.div>
-
-            {/* Motto */}
-            <motion.p
-              initial={prefersReducedMotion ? { opacity: 1 } : { opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.6, duration: 0.6 }}
-              className="mt-4 text-sm sm:text-base italic text-emerald-100/90 font-medium"
-            >
-              &ldquo;Good Food Brings Good People&rdquo;
-            </motion.p>
-
-            {/* Hero CTAs */}
-            <motion.div
-              initial={prefersReducedMotion ? { opacity: 1 } : { opacity: 0, y: 15 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.7, duration: 0.6 }}
-              className="mt-8 sm:mt-10 flex flex-wrap items-center justify-center gap-3 sm:gap-4"
-            >
-              <a href="#born-in-nyc">
-                <Button
-                  size="lg"
-                  className="h-12 px-6 sm:px-8 bg-amber-400 hover:bg-amber-300 text-slate-950 font-bold text-sm sm:text-base rounded-xl shadow-lg shadow-amber-400/20 gap-2 transition-all hover:scale-[1.02]"
-                >
-                  <ChevronDown className="h-4 w-4 animate-bounce" />
-                  Explore Our Story
-                </Button>
-              </a>
-              <Link to="/products">
-                <Button
-                  size="lg"
-                  variant="outline"
-                  className="h-12 px-6 sm:px-8 border-emerald-400/40 bg-emerald-900/40 hover:bg-emerald-800/60 text-emerald-100 font-semibold text-sm sm:text-base rounded-xl backdrop-blur-sm gap-2"
-                >
-                  <Utensils className="h-4 w-4" />
-                  Explore Menu
-                </Button>
-              </Link>
-            </motion.div>
-
-            {/* Footprint Quick Stats Banner */}
-            <div className="mt-12 sm:mt-16 grid grid-cols-2 sm:grid-cols-3 gap-3 w-full max-w-2xl text-center">
-              <div className="p-3.5 rounded-2xl bg-white/5 border border-emerald-500/20 backdrop-blur-sm">
-                <div className="text-2xl sm:text-3xl font-black text-amber-300">Late 1980s</div>
-                <div className="text-[11px] sm:text-xs text-emerald-200 mt-0.5">NYC Roots</div>
-              </div>
-              <div className="p-3.5 rounded-2xl bg-white/5 border border-emerald-500/20 backdrop-blur-sm">
-                <div className="text-2xl sm:text-3xl font-black text-amber-300">55+</div>
-                <div className="text-[11px] sm:text-xs text-emerald-200 mt-0.5">East Coast Locations</div>
-              </div>
-              <div className="col-span-2 sm:col-span-1 p-3.5 rounded-2xl bg-white/5 border border-emerald-500/20 backdrop-blur-sm">
-                <div className="text-2xl sm:text-3xl font-black text-amber-300">100%</div>
-                <div className="text-[11px] sm:text-xs text-emerald-200 mt-0.5">Certified Halal</div>
-              </div>
-            </div>
-          </div>
-        </section>
+        <RealBurgerScrollHero />
 
         {/* ==================================================================== */}
-        {/* SECTION 2: BORN IN NEW YORK (NYC STORY)                               */}
+        {/* SECTION 1: BORN IN NEW YORK (NYC STORY)                              */}
         {/* ==================================================================== */}
         <section id="born-in-nyc" className="py-16 sm:py-24 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           <motion.div {...fadeIn} className="text-center max-w-3xl mx-auto mb-12">
@@ -189,62 +56,90 @@ export default function About() {
             <p className="mt-3 text-base sm:text-lg text-slate-600 leading-relaxed">
               The Tex’s journey began in the late 1980s on the vibrant streets of New York City, rooted in neighborhood storefronts across the boroughs.
             </p>
+
+            {/* Footprint Quick Stats Banner */}
+            <div className="mt-8 grid grid-cols-2 sm:grid-cols-3 gap-3 w-full max-w-2xl mx-auto text-center">
+              <div className="p-3.5 rounded-2xl bg-white border border-stone-200 shadow-xs">
+                <div className="text-2xl sm:text-3xl font-black text-emerald-800">Late 1980s</div>
+                <div className="text-[11px] sm:text-xs text-slate-500 mt-0.5">NYC Roots</div>
+              </div>
+              <div className="p-3.5 rounded-2xl bg-white border border-stone-200 shadow-xs">
+                <div className="text-2xl sm:text-3xl font-black text-emerald-800">55+</div>
+                <div className="text-[11px] sm:text-xs text-slate-500 mt-0.5">East Coast Locations</div>
+              </div>
+              <div className="col-span-2 sm:col-span-1 p-3.5 rounded-2xl bg-white border border-stone-200 shadow-xs">
+                <div className="text-2xl sm:text-3xl font-black text-emerald-800">100%</div>
+                <div className="text-[11px] sm:text-xs text-slate-500 mt-0.5">Certified Halal</div>
+              </div>
+            </div>
           </motion.div>
 
           {/* Borough Timeline Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-3.5 sm:gap-6">
             {/* The Bronx */}
             <motion.div
               {...fadeIn}
               transition={{ delay: 0.1, duration: 0.5 }}
-              className="p-6 sm:p-8 rounded-3xl bg-white border border-stone-200 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden"
+              className="p-4 sm:p-6 md:p-8 rounded-2xl sm:rounded-3xl bg-white border border-stone-200 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden flex flex-col justify-between"
             >
-              <div className="text-4xl sm:text-5xl font-black text-stone-200 absolute top-4 right-4 select-none">
-                01
+              <div>
+                <div className="flex items-center justify-between mb-3 sm:mb-4">
+                  <div className="text-2xl sm:text-3xl md:text-4xl font-black text-stone-300 select-none font-mono">
+                    01
+                  </div>
+                  <div className="inline-flex items-center justify-center h-8 w-8 sm:h-11 sm:w-11 rounded-xl sm:rounded-2xl bg-emerald-100 text-emerald-800 font-black text-xs sm:text-base">
+                    BX
+                  </div>
+                </div>
+                <h3 className="text-base sm:text-lg md:text-xl font-black text-slate-900 mb-1.5 sm:mb-2">The Bronx</h3>
+                <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
+                  Small corner kitchens serving hungry local workers, bus drivers, and neighborhood families looking for fresh, hot, and honest comfort food.
+                </p>
               </div>
-              <div className="inline-flex items-center justify-center h-12 w-12 rounded-2xl bg-emerald-100 text-emerald-800 font-black text-lg mb-4">
-                BX
-              </div>
-              <h3 className="text-xl font-black text-slate-900 mb-2">The Bronx</h3>
-              <p className="text-sm text-slate-600 leading-relaxed">
-                Small corner kitchens serving hungry local workers, bus drivers, and neighborhood families looking for fresh, hot, and honest comfort food.
-              </p>
             </motion.div>
 
             {/* Harlem */}
             <motion.div
               {...fadeIn}
               transition={{ delay: 0.2, duration: 0.5 }}
-              className="p-6 sm:p-8 rounded-3xl bg-white border border-stone-200 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden"
+              className="p-4 sm:p-6 md:p-8 rounded-2xl sm:rounded-3xl bg-white border border-stone-200 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden flex flex-col justify-between"
             >
-              <div className="text-4xl sm:text-5xl font-black text-stone-200 absolute top-4 right-4 select-none">
-                02
+              <div>
+                <div className="flex items-center justify-between mb-3 sm:mb-4">
+                  <div className="text-2xl sm:text-3xl md:text-4xl font-black text-stone-300 select-none font-mono">
+                    02
+                  </div>
+                  <div className="inline-flex items-center justify-center h-8 w-8 sm:h-11 sm:w-11 rounded-xl sm:rounded-2xl bg-amber-100 text-amber-800 font-black text-xs sm:text-base">
+                    HL
+                  </div>
+                </div>
+                <h3 className="text-base sm:text-lg md:text-xl font-black text-slate-900 mb-1.5 sm:mb-2">Harlem</h3>
+                <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
+                  Developing distinctive seasoning blends that resonated with deep culinary traditions, perfecting the crunch of fried chicken with rich flavor.
+                </p>
               </div>
-              <div className="inline-flex items-center justify-center h-12 w-12 rounded-2xl bg-amber-100 text-amber-800 font-black text-lg mb-4">
-                HL
-              </div>
-              <h3 className="text-xl font-black text-slate-900 mb-2">Harlem</h3>
-              <p className="text-sm text-slate-600 leading-relaxed">
-                Developing distinctive seasoning blends that resonated with deep culinary traditions, perfecting the crunch of fried chicken with rich flavor.
-              </p>
             </motion.div>
 
             {/* Brooklyn */}
             <motion.div
               {...fadeIn}
               transition={{ delay: 0.3, duration: 0.5 }}
-              className="p-6 sm:p-8 rounded-3xl bg-white border border-stone-200 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden"
+              className="p-4 sm:p-6 md:p-8 rounded-2xl sm:rounded-3xl bg-white border border-stone-200 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden flex flex-col justify-between"
             >
-              <div className="text-4xl sm:text-5xl font-black text-stone-200 absolute top-4 right-4 select-none">
-                03
+              <div>
+                <div className="flex items-center justify-between mb-3 sm:mb-4">
+                  <div className="text-2xl sm:text-3xl md:text-4xl font-black text-stone-300 select-none font-mono">
+                    03
+                  </div>
+                  <div className="inline-flex items-center justify-center h-8 w-8 sm:h-11 sm:w-11 rounded-xl sm:rounded-2xl bg-emerald-100 text-emerald-800 font-black text-xs sm:text-base">
+                    BK
+                  </div>
+                </div>
+                <h3 className="text-base sm:text-lg md:text-xl font-black text-slate-900 mb-1.5 sm:mb-2">Brooklyn</h3>
+                <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
+                  Expanding into diverse immigrant communities, demonstrating that American comfort food can be 100% halal without ever sacrificing taste or value.
+                </p>
               </div>
-              <div className="inline-flex items-center justify-center h-12 w-12 rounded-2xl bg-emerald-100 text-emerald-800 font-black text-lg mb-4">
-                BK
-              </div>
-              <h3 className="text-xl font-black text-slate-900 mb-2">Brooklyn</h3>
-              <p className="text-sm text-slate-600 leading-relaxed">
-                Expanding into diverse immigrant communities, demonstrating that American comfort food can be 100% halal without ever sacrificing taste or value.
-              </p>
             </motion.div>
           </div>
         </section>
@@ -252,7 +147,7 @@ export default function About() {
         {/* ==================================================================== */}
         {/* SECTION 3: THE BEGINNING                                             */}
         {/* ==================================================================== */}
-        <section className="py-16 sm:py-20 bg-[#F4F1EA]/70 border-y border-stone-200">
+        <section className="py-16 sm:py-20 bg-white border-y border-stone-100">
           <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
             <motion.div {...fadeIn} className="max-w-3xl mx-auto text-center space-y-4">
               <div className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-emerald-800 bg-emerald-100 border border-emerald-200 px-3 py-1 rounded-full">
@@ -316,13 +211,8 @@ export default function About() {
             </p>
           </motion.div>
 
-          {/* Interactive Exploding Burger Component */}
-          <motion.div {...fadeIn}>
-            <BurgerExplodeAnimation />
-          </motion.div>
-
           {/* The 4 Craft Pillars */}
-          <div className="mt-12 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <div className="p-5 rounded-2xl bg-white border border-stone-200 shadow-xs">
               <span className="text-2xl mb-2 block">🌾</span>
               <h4 className="font-black text-slate-900 text-base">Signature Breading</h4>
@@ -357,26 +247,21 @@ export default function About() {
         {/* ==================================================================== */}
         {/* SECTION 5: 2016 MILESTONE                                            */}
         {/* ==================================================================== */}
-        <section
-          className="py-16 sm:py-20 text-white relative overflow-hidden"
-          style={{
-            background: "linear-gradient(135deg, #062E1F 0%, #0F5132 60%, #062E1F 100%)",
-          }}
-        >
+        <section className="py-16 sm:py-20 bg-white border-y border-stone-100 relative">
           <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10">
             <motion.div {...fadeIn}>
-              <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-amber-400/20 border border-amber-400/40 text-amber-300 text-xs font-bold uppercase tracking-wider mb-6">
-                <Trophy className="w-3.5 h-3.5" />
+              <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-amber-50 border border-amber-300 text-amber-800 text-xs font-bold uppercase tracking-wider mb-6">
+                <Trophy className="w-3.5 h-3.5 text-amber-600" />
                 <span>Historic Milestone</span>
               </div>
-              <div className="text-6xl sm:text-8xl md:text-9xl font-black tracking-tight text-transparent bg-clip-text bg-gradient-to-b from-amber-300 via-yellow-200 to-amber-500 mb-4 select-none">
+              <div className="text-6xl sm:text-8xl md:text-9xl font-black tracking-tight text-amber-500 mb-4 select-none">
                 2016
               </div>
-              <h2 className="text-2xl sm:text-4xl font-black text-white tracking-tight mb-4">
+              <h2 className="text-2xl sm:text-4xl font-black text-slate-900 tracking-tight mb-4">
                 TEXAS CHICKEN &amp; BURGERS
               </h2>
-              <p className="text-base sm:text-lg text-emerald-100 max-w-2xl mx-auto leading-relaxed">
-                After decades of operating individual neighborhood spots, the founders formally unified their recipes, culinary standards, and hospitality under the <strong className="text-white">Texas Chicken &amp; Burgers</strong> banner. A single, unmistakable standard for fresh halal comfort food was born.
+              <p className="text-base sm:text-lg text-slate-600 max-w-2xl mx-auto leading-relaxed">
+                After decades of operating individual neighborhood spots, the founders formally unified their recipes, culinary standards, and hospitality under the <strong className="text-slate-900">Texas Chicken &amp; Burgers</strong> banner. A single, unmistakable standard for fresh halal comfort food was born.
               </p>
             </motion.div>
           </div>
@@ -433,34 +318,34 @@ export default function About() {
                 transition={{ delay: i * 0.1, duration: 0.5 }}
                 className={`p-6 rounded-3xl border transition-all ${
                   i === 3
-                    ? "bg-gradient-to-br from-[#062E1F] to-[#0F5132] text-white border-emerald-600 shadow-xl"
+                    ? "bg-white border-2 border-emerald-600/30 text-slate-900 shadow-md ring-2 ring-emerald-500/10"
                     : "bg-white border-stone-200 text-slate-900 shadow-xs"
                 }`}
               >
                 <div
                   className={`text-xs font-bold uppercase tracking-wider ${
-                    i === 3 ? "text-amber-300" : "text-emerald-700"
+                    i === 3 ? "text-emerald-800" : "text-emerald-700"
                   }`}
                 >
                   {node.step}
                 </div>
                 <div
                   className={`text-2xl sm:text-3xl font-black my-2 ${
-                    i === 3 ? "text-amber-300" : "text-slate-900"
+                    i === 3 ? "text-emerald-800" : "text-slate-900"
                   }`}
                 >
                   {node.highlight}
                 </div>
                 <h4
                   className={`text-base font-bold mb-1 ${
-                    i === 3 ? "text-white" : "text-slate-800"
+                    i === 3 ? "text-slate-900" : "text-slate-800"
                   }`}
                 >
                   {node.title}
                 </h4>
                 <p
                   className={`text-xs leading-relaxed ${
-                    i === 3 ? "text-emerald-100/90" : "text-slate-500"
+                    i === 3 ? "text-slate-600" : "text-slate-500"
                   }`}
                 >
                   {node.desc}
@@ -473,7 +358,7 @@ export default function About() {
         {/* ==================================================================== */}
         {/* SECTION 7: WHY TEX’S? (THE STORY BEHIND THE NAME)                    */}
         {/* ==================================================================== */}
-        <section className="py-16 sm:py-20 bg-[#F4F1EA]/70 border-y border-stone-200">
+        <section className="py-16 sm:py-20 bg-white border-y border-stone-100">
           <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 sm:gap-12 items-center">
               <motion.div {...fadeIn} className="lg:col-span-7 space-y-4">
@@ -498,19 +383,19 @@ export default function About() {
               <motion.div
                 {...fadeIn}
                 transition={{ delay: 0.2, duration: 0.6 }}
-                className="lg:col-span-5 p-6 sm:p-8 rounded-3xl bg-gradient-to-br from-[#062E1F] to-[#0A3D28] text-white shadow-xl border border-emerald-600/50 text-center"
+                className="lg:col-span-5 p-6 sm:p-8 rounded-3xl bg-white text-slate-900 shadow-sm border border-stone-200 text-center"
               >
-                <div className="inline-flex p-3 rounded-2xl bg-white/10 border border-white/20 mb-4">
+                <div className="inline-flex p-3 rounded-2xl bg-stone-50 border border-stone-200 mb-4">
                   <img
                     src="/branding/logo.png"
                     alt="Tex’s Logo"
                     className="h-16 w-auto object-contain"
                   />
                 </div>
-                <h3 className="text-2xl font-black text-amber-300">
+                <h3 className="text-2xl font-black text-slate-900">
                   Southern Craft. <br />NYC Heart.
                 </h3>
-                <p className="text-xs sm:text-sm text-emerald-100 mt-2 leading-relaxed">
+                <p className="text-xs sm:text-sm text-slate-600 mt-2 leading-relaxed">
                   Crispy golden breading meets 100% verified halal preparation in every single kitchen.
                 </p>
               </motion.div>
@@ -637,7 +522,7 @@ export default function About() {
         {/* ==================================================================== */}
         {/* SECTION 9: MADE FOR THE MENU (REAL PRODUCTS SHOWCASE)                */}
         {/* ==================================================================== */}
-        <section className="py-16 sm:py-24 bg-[#F4F1EA]/70 border-y border-stone-200">
+        <section className="py-16 sm:py-24 bg-white border-y border-stone-100">
           <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
             <motion.div {...fadeIn} className="text-center max-w-3xl mx-auto mb-14">
               <div className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-emerald-800 bg-emerald-100 border border-emerald-200 px-3 py-1 rounded-full mb-3">
@@ -936,33 +821,27 @@ export default function About() {
         {/* ==================================================================== */}
         <section
           id="final-statement"
-          className="relative py-20 sm:py-28 text-white overflow-hidden"
-          style={{
-            background: "linear-gradient(145deg, #041F15 0%, #062E1F 40%, #0A3D28 75%, #041F15 100%)",
-          }}
+          className="relative py-20 sm:py-28 bg-white text-slate-900 border-t border-stone-200 overflow-hidden"
         >
-          {/* Ambient Lighting */}
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-amber-400/10 rounded-full blur-3xl pointer-events-none" />
-
           <div className="relative max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
             <motion.div {...fadeIn}>
-              <div className="inline-flex p-3 sm:p-4 rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 mb-6 shadow-xl">
+              <div className="inline-flex p-3 sm:p-4 rounded-2xl bg-stone-50 border border-stone-200 mb-6 shadow-xs">
                 <img
                   src="/branding/logo.png"
                   alt="Tex’s Chicken & Burgers"
-                  className="h-16 sm:h-20 w-auto object-contain"
+                  className="h-16 sm:h-20 w-auto object-contain drop-shadow-xs"
                 />
               </div>
 
-              <h2 className="text-3xl sm:text-5xl md:text-6xl font-black tracking-tight text-white mb-3">
+              <h2 className="text-3xl sm:text-5xl md:text-6xl font-black tracking-tight text-slate-900 mb-3">
                 TEX’S CHICKEN &amp; BURGERS
               </h2>
 
-              <p className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-amber-300 tracking-wide mb-4">
+              <p className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-amber-600 tracking-wide mb-4">
                 Worth Every Bite
               </p>
 
-              <blockquote className="text-lg sm:text-xl md:text-2xl italic text-emerald-100/90 font-medium max-w-xl mx-auto mb-10">
+              <blockquote className="text-lg sm:text-xl md:text-2xl italic text-slate-600 font-medium max-w-xl mx-auto mb-10">
                 &ldquo;Good Food Brings Good People&rdquo;
               </blockquote>
 
@@ -970,7 +849,7 @@ export default function About() {
                 <Link to="/products">
                   <Button
                     size="lg"
-                    className="h-14 px-8 sm:px-10 bg-amber-400 hover:bg-amber-300 text-slate-950 font-black text-base sm:text-lg rounded-2xl shadow-xl shadow-amber-400/25 gap-2 transition-transform hover:scale-[1.02]"
+                    className="h-14 px-8 sm:px-10 bg-amber-400 hover:bg-amber-300 text-slate-950 font-black text-base sm:text-lg rounded-2xl shadow-lg shadow-amber-400/25 gap-2 transition-transform hover:scale-[1.02]"
                   >
                     <Utensils className="h-5 w-5" />
                     Explore Menu
@@ -980,7 +859,7 @@ export default function About() {
                   <Button
                     size="lg"
                     variant="outline"
-                    className="h-14 px-8 sm:px-10 border-emerald-400/40 bg-emerald-950/60 hover:bg-emerald-900/80 text-white font-bold text-base sm:text-lg rounded-2xl backdrop-blur-sm gap-2"
+                    className="h-14 px-8 sm:px-10 border border-stone-300 bg-white hover:bg-stone-50 text-slate-800 font-bold text-base sm:text-lg rounded-2xl shadow-xs gap-2"
                   >
                     Order Online
                     <ArrowRight className="h-5 w-5" />
@@ -988,7 +867,7 @@ export default function About() {
                 </Link>
               </div>
 
-              <div className="mt-12 flex items-center justify-center gap-6 text-xs text-emerald-300/80 uppercase tracking-widest font-semibold">
+              <div className="mt-12 flex items-center justify-center gap-6 text-xs text-slate-400 uppercase tracking-widest font-semibold">
                 <span>NYC Born</span>
                 <span>•</span>
                 <span>100% Halal</span>

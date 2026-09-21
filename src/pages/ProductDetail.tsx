@@ -12,6 +12,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { CustomerBottomNav } from "@/components/CustomerBottomNav";
 import { ArrowLeft, Check, Minus, Package, Plus, Share2, ShoppingCart, Utensils, Zap } from "lucide-react";
+import { resolveProductImageUrl } from "@/lib/image";
 
 export default function ProductDetail() {
   const { slug } = useParams<{ slug: string }>();
@@ -174,7 +175,7 @@ export default function ProductDetail() {
         <div className="w-full max-w-[290px] sm:max-w-[330px] mx-auto lg:max-w-none overflow-hidden rounded-xl border bg-muted">
           <div className="flex aspect-square items-center justify-center text-xl font-semibold text-muted-foreground">
             {product.image && !imageFailed ? (
-              <img src={product.image} alt={product.name} referrerPolicy="no-referrer" className="h-full w-full object-cover" onError={() => setImageFailed(true)} />
+              <img src={resolveProductImageUrl(product.image)} alt={product.name} referrerPolicy="no-referrer" className="h-full w-full object-cover" onError={() => setImageFailed(true)} />
             ) : (
               <Package className="h-16 w-16" />
             )}

@@ -27,6 +27,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
+import { resolveProductImageUrl } from "@/lib/image";
 
 type MarketplaceProduct = {
   id: number;
@@ -216,11 +217,13 @@ export default function LandingPage() {
         {/* Top Brand Header */}
         <div className="shrink-0 px-1.5 xs:px-2 pt-5 xs:pt-6 pb-2.5 flex flex-col items-center text-center border-b border-emerald-800/60">
           <Link to="/" className="flex flex-col items-center group w-full">
-            <img
-              src="/branding/logo.png"
-              alt="Tex’s Chicken & Burgers"
-              className="h-10 xs:h-12 w-auto object-contain transition-transform group-hover:scale-105 drop-shadow-sm"
-            />
+            <div className="h-10 xs:h-12 flex items-end justify-center w-full">
+              <img
+                src="/branding/logo.png"
+                alt="Tex’s Chicken & Burgers"
+                className="h-[62px] xs:h-[64px] w-auto shrink-0 object-contain transition-transform group-hover:scale-105 drop-shadow-sm"
+              />
+            </div>
             <div className="mt-1.5 flex flex-col items-center text-center w-full">
               <span className="text-xs xs:text-sm font-extrabold tracking-tight text-white leading-tight">
                 Tex’s
@@ -905,7 +908,7 @@ function FoodProductCard({
           <Link to={`/products/${product.slug}`} className="block h-full w-full">
             {product.image && !imageFailed ? (
               <img
-                src={product.image}
+                src={resolveProductImageUrl(product.image)}
                 alt={product.name}
                 referrerPolicy="no-referrer"
                 className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
@@ -1022,11 +1025,12 @@ function FoodProductCard({
                 <button
                   id={`product-add-btn-mobile-${product.id}`}
                   type="button"
-                  className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold h-[22px] px-2 text-[10px] rounded shadow-xs active:scale-[0.98] shrink-0 flex items-center justify-center leading-none transition-colors disabled:opacity-50 disabled:pointer-events-none"
+                  className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold h-[22px] px-3 text-[10px] rounded shadow-xs active:scale-[0.98] shrink-0 flex items-center justify-center gap-1 leading-none transition-colors disabled:opacity-50 disabled:pointer-events-none"
                   onClick={() => onAdd(product, quantity)}
                   disabled={pending || isOutOfStock}
                 >
-                  Add
+                  <ShoppingCart className="h-3 w-3 shrink-0" />
+                  <span>Add</span>
                 </button>
               </>
             )}
@@ -1136,12 +1140,12 @@ function FoodProductCard({
               <Button
                 id={`product-add-btn-desktop-${product.id}`}
                 type="button"
-                className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold h-9 text-xs md:text-sm rounded-lg shadow-xs gap-1 transition-all active:scale-[0.98] px-3"
+                className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold h-9 text-xs md:text-sm rounded-lg shadow-xs gap-1.5 transition-all active:scale-[0.98] px-3"
                 onClick={() => onAdd(product, quantity)}
                 disabled={pending || isOutOfStock}
               >
                 <ShoppingCart className="h-4 w-4 shrink-0" />
-                <span className="truncate">Add to Cart</span>
+                <span className="truncate">Add</span>
               </Button>
             </>
           )}

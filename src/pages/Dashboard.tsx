@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
+import { resolveProductImageUrl } from "@/lib/image";
 import {
   AlertTriangle,
   ChartNoAxesCombined,
@@ -150,7 +151,7 @@ function BuyerDashboard({
                   <Link key={product.id} to={`/products/${product.slug}`} className="rounded-lg border bg-card p-3 shadow-sm hover:bg-muted/40">
                     <div className="flex aspect-[4/3] items-center justify-center overflow-hidden rounded-md bg-muted text-lg font-semibold text-muted-foreground">
                       {product.image ? (
-                        <img src={product.image} alt={product.name} className="h-full w-full object-cover" />
+                        <img src={resolveProductImageUrl(product.image)} alt={product.name} className="h-full w-full object-cover" />
                       ) : (
                         <Package className="h-8 w-8" />
                       )}

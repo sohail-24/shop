@@ -11,6 +11,7 @@ import {
   asc,
   sql,
   ne,
+  isNotNull,
   type SQL,
 } from "drizzle-orm";
 
@@ -167,6 +168,9 @@ async function listProducts(
         // ignore JSON parse failure
       }
     }
+    if (resolvedImage && !resolvedImage.startsWith("/") && !/^https?:\/\//i.test(resolvedImage) && !resolvedImage.startsWith("data:")) {
+      resolvedImage = `/${resolvedImage}`;
+    }
     return {
       ...row,
       image: resolvedImage,
@@ -175,7 +179,13 @@ async function listProducts(
 }
 
 export async function findAllProducts(filters?: ProductFilters) {
-  return listProducts(filters);
+  const adminConditions: SQL[] = [
+    isNotNull(inventory.id),
+  ];
+  if (!filters?.status) {
+    adminConditions.push(ne(products.status, "archived"));
+  }
+  return listProducts(filters, adminConditions);
 }
 
 export async function findBuyerProducts(filters?: ProductFilters) {
@@ -261,6 +271,9 @@ async function findProductDetailBySlug(slug: string, visibilityConditions: SQL[]
     } catch {
       // ignore
     }
+  }
+  if (resolvedImage && !resolvedImage.startsWith("/") && !/^https?:\/\//i.test(resolvedImage) && !resolvedImage.startsWith("data:")) {
+    resolvedImage = `/${resolvedImage}`;
   }
   const row = { ...rawRow, image: resolvedImage };
 

@@ -9,13 +9,14 @@ import { createContext } from "./context";
 import { authenticateAdminRequest } from "./auth/admin-session";
 import { isOwner } from "@contracts/roles";
 
-import { readFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync } from "node:fs";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { randomUUID } from "node:crypto";
 import { basename, extname, join, resolve } from "node:path";
 
 const app = new Hono<{ Bindings: HttpBindings }>();
 const productUploadsDirectory = resolve(process.cwd(), "uploads/products");
+mkdirSync(productUploadsDirectory, { recursive: true });
 const maxProductImageBytes = 5 * 1024 * 1024;
 const imageExtensions: Record<string, string> = {
   "image/jpeg": ".jpg",
@@ -72,17 +73,37 @@ app.get("/api/uploads/:filename", async (c) => {
     return c.json({ error: "Not Found" }, 404);
   }
 
-  try {
-    const image = await readFile(join(productUploadsDirectory, filename));
-    return new Response(image, {
-      headers: {
-        "Content-Type": contentTypeFor(filename),
-        "Cache-Control": "public, max-age=31536000, immutable",
-      },
-    });
-  } catch {
-    return c.json({ error: "Not Found" }, 404);
+  const candidatePaths = [
+    join(productUploadsDirectory, filename),
+    resolve(process.cwd(), "public/products", filename),
+    resolve(process.cwd(), "public/branding", filename),
+    resolve(process.cwd(), "public/uploads/products", filename),
+    resolve(process.cwd(), "public/uploads", filename),
+    resolve(process.cwd(), "dist/public/products", filename),
+  ];
+
+  for (const candidatePath of candidatePaths) {
+    try {
+      if (existsSync(candidatePath)) {
+        const image = await readFile(candidatePath);
+        return new Response(image, {
+          headers: {
+            "Content-Type": contentTypeFor(filename),
+            "Cache-Control": "public, max-age=31536000, immutable",
+          },
+        });
+      }
+    } catch {
+      // Continue searching candidate paths
+    }
   }
+
+  return c.json({ error: "Not Found" }, 404);
+});
+
+app.get("/api/uploads/products/:filename", (c) => {
+  const filename = basename(c.req.param("filename"));
+  return c.redirect(`/api/uploads/${filename}`);
 });
 
 app.get("/uploads/products/:filename", (c) => {
@@ -124,7 +145,17 @@ app.post("/api/products/upload", async (c) => {
 
   await mkdir(productUploadsDirectory, { recursive: true });
   const filename = `product-${randomUUID()}${extension}`;
-  await writeFile(join(productUploadsDirectory, filename), Buffer.from(await image.arrayBuffer()));
+  const fileBytes = Buffer.from(await image.arrayBuffer());
+  await writeFile(join(productUploadsDirectory, filename), fileBytes);
+
+  try {
+    const publicProductsDir = resolve(process.cwd(), "public/products");
+    await mkdir(publicProductsDir, { recursive: true });
+    await writeFile(join(publicProductsDir, filename), fileBytes);
+  } catch {
+    // Ignore backup failure
+  }
+
   for (const [name, value] of responseHeaders) c.header(name, value, { append: true });
   return c.json({ url: `/api/uploads/${filename}` }, 201);
 });

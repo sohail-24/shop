@@ -67,7 +67,7 @@ function preventAssetFallback(): Plugin {
 export default defineConfig({
   plugins: [
     universalCors(),
-    devServer({ entry: "api/boot.ts", exclude: [/^\/(?!api\/).*$/] }),
+    devServer({ entry: "api/boot.ts", exclude: [/^\/(?!api\/|uploads\/|health(?:\/|$)).*$/] }),
     react(),
     preventAssetFallback(),
   ],
