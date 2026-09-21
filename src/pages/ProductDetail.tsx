@@ -353,7 +353,7 @@ export default function ProductDetail() {
                 <ShoppingCart className="mr-2 h-4 w-4" />
                 {isOutOfStock ? "Out of Stock" : "Add & Continue Shopping"}
               </Button>
-              <Button className="h-12 bg-primary hover:bg-primary/90" onClick={() => addProduct("/checkout")} disabled={isOutOfStock}>
+              <Button className="h-12 bg-primary hover:bg-primary/90" onClick={() => addProduct("/info")} disabled={isOutOfStock}>
                 <Zap className="mr-2 h-4 w-4" />
                 {isOutOfStock ? "Out of Stock" : "Buy Now"}
               </Button>
@@ -363,7 +363,7 @@ export default function ProductDetail() {
                 <ShoppingCart className="mr-2 h-4 w-4" />
                 {isOutOfStock ? "Out of Stock" : "Add to Cart"}
               </Button>
-              <Button className="h-12 bg-primary hover:bg-primary/90" onClick={() => addProduct("/checkout")} disabled={isOutOfStock}>
+              <Button className="h-12 bg-primary hover:bg-primary/90" onClick={() => addProduct("/info")} disabled={isOutOfStock}>
                 <Zap className="mr-2 h-4 w-4" />
                 {isOutOfStock ? "Out of Stock" : "Buy Now"}
               </Button>

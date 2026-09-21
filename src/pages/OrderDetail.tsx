@@ -181,7 +181,9 @@ export default function OrderDetail() {
           <AlertTitle>Unable to load order</AlertTitle>
           <AlertDescription>{orderQuery.error?.message ?? "Order not found."}</AlertDescription>
         </Alert>
-        <Button className="mt-4" variant="outline" onClick={() => navigate("/orders")}>Back to Orders</Button>
+        <Button className="mt-4" variant="outline" onClick={() => navigate(user ? "/orders" : "/")}>
+          {user ? "Back to Orders" : "Back to Home"}
+        </Button>
       </div>
     );
   }
@@ -191,8 +193,8 @@ export default function OrderDetail() {
   return (
     <div className="mx-auto flex w-full max-w-[1200px] flex-col gap-5">
       <PageHeader
-        backTo="/orders"
-        backLabel="Back to Orders"
+        backTo={user ? "/orders" : "/"}
+        backLabel={user ? "Back to Orders" : "Back to Home"}
         title={`Order #${order.orderNumber}`}
         actions={<OrderStatusBadge status={order.status} />}
       />

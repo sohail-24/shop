@@ -107,7 +107,7 @@ export default function Cart() {
               <SummaryRow label="Subtotal" value={formatCurrency(subtotal)} />
               <Separator />
               <SummaryRow label="Total" value={formatCurrency(subtotal)} strong />
-              <Link to="/checkout"><Button className="h-11 w-full bg-emerald-600 hover:bg-emerald-700">Checkout<ArrowRight className="ml-2 h-4 w-4" /></Button></Link>
+              <Link to="/info"><Button className="h-11 w-full bg-emerald-600 hover:bg-emerald-700">Checkout<ArrowRight className="ml-2 h-4 w-4" /></Button></Link>
               <Link to="/"><Button variant="outline" className="w-full">Continue Shopping</Button></Link>
             </CardContent>
           </Card>

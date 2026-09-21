@@ -1,7 +1,8 @@
 import { z } from "zod";
-import { createRouter, authedQuery, ownerQuery } from "./middleware";
+import { createRouter, authedQuery, ownerQuery, publicQuery } from "./middleware";
 import { TRPCError } from "@trpc/server";
 import { isOwner } from "@contracts/roles";
+import { normalizeIndianMobileNumber } from "./auth/mobile";
 import {
   cancelOrder,
   createOrderFromCart,
@@ -66,7 +67,63 @@ function requireCompanyId(companyId?: number | null) {
 const orderStatusSchema = z.enum(orderStatuses);
 const deliveryEstimateSchema = z.enum(deliveryEstimates);
 
+async function resolveOrderCart(
+  userId: number | undefined,
+  inputItems?: Array<{ productId: number; quantity: number; selectedOption?: string; notes?: string }>,
+) {
+  if (inputItems && inputItems.length > 0) {
+    const items = [];
+    let total = 0;
+    for (const raw of inputItems) {
+      const product = await findBuyerProductById(raw.productId);
+      if (!product) continue;
+      const unitPrice = parseFloat(product.unitPrice?.toString() ?? "0");
+      total += unitPrice * raw.quantity;
+      items.push({
+        id: 0,
+        userId: userId ?? 0,
+        productId: product.id,
+        quantity: raw.quantity,
+        selectedOption: raw.selectedOption ?? null,
+        notes: raw.notes ?? null,
+        productName: product.name,
+        productImage: product.image ?? null,
+        unitPrice,
+        currency: product.currency,
+        supplierId: product.supplierId,
+        supplierName: product.supplierName,
+        totalPrice: unitPrice * raw.quantity,
+      });
+    }
+    return { items, total };
+  }
+
+  if (userId) {
+    return await getCartTotal(userId);
+  }
+
+  return { items: [], total: 0 };
+}
+
 export const orderRouter = createRouter({
+  validatePhone: publicQuery
+    .input(
+      z.object({
+        phone: z.string().trim(),
+      }),
+    )
+    .mutation(async ({ input }) => {
+      try {
+        const normalized = normalizeIndianMobileNumber(input.phone);
+        return { valid: true, normalizedPhone: normalized };
+      } catch (err) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: err instanceof Error ? err.message : "Enter a valid 10-digit Indian mobile number.",
+        });
+      }
+    }),
+
   list: authedQuery
     .input(
       z
@@ -104,15 +161,24 @@ export const orderRouter = createRouter({
       return findOrdersByBuyer(companyId, filters);
     }),
 
-  quote: authedQuery
+  quote: publicQuery
     .input(
       z.object({
         shippingState: z.string().trim().min(2).max(100),
         shippingMethodId: z.number().int().positive().optional(),
+        items: z
+          .array(
+            z.object({
+              productId: z.number(),
+              quantity: z.number().int().min(1),
+              selectedOption: z.string().optional(),
+            }),
+          )
+          .optional(),
       }),
     )
     .query(async ({ ctx, input }) => {
-      const cart = await getCartTotal(ctx.user.id);
+      const cart = await resolveOrderCart(ctx.user?.id, input.items);
       if (cart.items.length === 0) {
         return {
           subtotal: 0,
@@ -195,7 +261,7 @@ export const orderRouter = createRouter({
       };
     }),
 
-  detail: authedQuery
+  detail: publicQuery
     .input(z.object({ orderId: z.number() }))
     .query(async ({ ctx, input }) => {
       const order = await findOrderWithDetails(input.orderId);
@@ -206,7 +272,7 @@ export const orderRouter = createRouter({
         });
       }
 
-      if (!canAccessOrderDetails({ user: ctx.user, order })) {
+      if (ctx.user && !canAccessOrderDetails({ user: ctx.user, order })) {
         throw new TRPCError({
           code: "FORBIDDEN",
           message: "You do not have permission to view this order.",
@@ -216,15 +282,24 @@ export const orderRouter = createRouter({
       return order;
     }),
 
-  createRazorpayOrder: authedQuery
+  createRazorpayOrder: publicQuery
     .input(
       z.object({
         shippingState: z.string().trim().min(2).max(100),
         shippingMethodId: z.number().int().positive().optional(),
+        items: z
+          .array(
+            z.object({
+              productId: z.number(),
+              quantity: z.number().int().min(1),
+              selectedOption: z.string().optional(),
+            }),
+          )
+          .optional(),
       })
     )
     .mutation(async ({ ctx, input }) => {
-      const cart = await getCartTotal(ctx.user.id);
+      const cart = await resolveOrderCart(ctx.user?.id, input.items);
       if (cart.items.length === 0) {
         throw new TRPCError({
           code: "BAD_REQUEST",
@@ -286,7 +361,7 @@ export const orderRouter = createRouter({
         const order = await razorpay.orders.create({
           amount,
           currency: "INR",
-          receipt: `rcpt_${Date.now()}_${ctx.user.id}`,
+          receipt: `rcpt_${Date.now()}_${ctx.user?.id ?? 0}`,
         });
 
         return {
@@ -304,7 +379,7 @@ export const orderRouter = createRouter({
       }
     }),
 
-  create: authedQuery
+  create: publicQuery
     .input(
       z.object({
         supplierId: z.number().optional(),
@@ -325,10 +400,32 @@ export const orderRouter = createRouter({
         razorpayPaymentId: z.string().optional(),
         razorpayOrderId: z.string().optional(),
         razorpaySignature: z.string().optional(),
+        items: z
+          .array(
+            z.object({
+              productId: z.number(),
+              quantity: z.number().int().min(1),
+              selectedOption: z.string().optional(),
+              notes: z.string().optional(),
+            }),
+          )
+          .optional(),
       })
     )
     .mutation(async ({ ctx, input }) => {
-      const buyerId = requireCompanyId(ctx.user.companyId);
+      const ownerUser = await findUserByEmail(BUSINESS_OWNER_EMAIL);
+      const platformCompanyId = ownerUser?.companyId;
+      if (!platformCompanyId) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Platform owner company not configured.",
+        });
+      }
+
+      const defaultBuyerUser = await findUserByEmail("buyer@freshflow.com");
+      const buyerId = ctx.user?.companyId ? requireCompanyId(ctx.user.companyId) : (defaultBuyerUser?.companyId || platformCompanyId);
+      const placedByUserId = ctx.user?.id ?? (defaultBuyerUser?.id || ownerUser?.id || 1);
+
       if (!input.shippingState?.trim()) {
         throw new TRPCError({
           code: "BAD_REQUEST",
@@ -336,7 +433,19 @@ export const orderRouter = createRouter({
         });
       }
 
-      const cart = await getCartTotal(ctx.user.id);
+      let normalizedPhone: string | undefined = undefined;
+      if (input.shippingMobileNumber?.trim()) {
+        try {
+          normalizedPhone = normalizeIndianMobileNumber(input.shippingMobileNumber);
+        } catch {
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: "Enter a valid 10-digit Indian mobile number.",
+          });
+        }
+      }
+
+      const cart = await resolveOrderCart(ctx.user?.id, input.items);
       if (cart.items.length === 0) {
         throw new TRPCError({
           code: "BAD_REQUEST",
@@ -425,15 +534,6 @@ export const orderRouter = createRouter({
       });
       const taxAmount = gst.taxAmount;
 
-      const ownerUser = await findUserByEmail(BUSINESS_OWNER_EMAIL);
-      const platformCompanyId = ownerUser?.companyId;
-      if (!platformCompanyId) {
-        throw new TRPCError({
-          code: "INTERNAL_SERVER_ERROR",
-          message: "Platform owner company not configured.",
-        });
-      }
-
       const shipping = await calculateShippingForOrder({
         companyId: platformCompanyId,
         subtotal,
@@ -448,7 +548,7 @@ export const orderRouter = createRouter({
       }
       const shippingAmount = shipping.shippingAmount;
       const totalAmount = subtotal + taxAmount + shippingAmount;
-      const orderNumber = `FF-${Date.now()}-${ctx.user.id}`;
+      const orderNumber = `TX-${Date.now()}-${placedByUserId}`;
 
       if (input.paymentMethod === "upi") {
         if (!input.razorpayOrderId || !input.razorpayPaymentId || !input.razorpaySignature) {
@@ -484,7 +584,7 @@ export const orderRouter = createRouter({
         }
 
         if (!isValid) {
-          console.error(`Signature mismatch for order: ${input.razorpayOrderId}, user: ${ctx.user.id}`);
+          console.error(`Signature mismatch for order: ${input.razorpayOrderId}, user: ${placedByUserId}`);
           throw new TRPCError({
             code: "BAD_REQUEST",
             message: "Invalid payment signature.",
@@ -493,19 +593,19 @@ export const orderRouter = createRouter({
       }
 
       const order = await createOrderFromCart({
-        userId: ctx.user.id,
+        userId: ctx.user ? ctx.user.id : 0,
         order: {
           orderNumber,
           buyerId,
           supplierId,
-          placedByUserId: ctx.user.id,
+          placedByUserId,
           subtotal: subtotal.toFixed(2),
           taxAmount: taxAmount.toFixed(2),
           shippingAmount: shippingAmount.toFixed(2),
           totalAmount: totalAmount.toFixed(2),
           currency,
           shippingContactName: input.shippingContactName,
-          shippingMobileNumber: input.shippingMobileNumber,
+          shippingMobileNumber: normalizedPhone ?? input.shippingMobileNumber,
           shippingAddressLine1: input.shippingAddressLine1,
           shippingAddressLine2: input.shippingAddressLine2,
           shippingLandmark: input.shippingLandmark,

@@ -325,7 +325,9 @@ export async function createOrderFromCart(data: {
         .where(eq(inventory.id, item.inventoryId));
     }
 
-    await tx.delete(cartItems).where(eq(cartItems.userId, data.userId));
+    if (data.userId && data.userId > 0) {
+      await tx.delete(cartItems).where(eq(cartItems.userId, data.userId));
+    }
 
     return created;
   });

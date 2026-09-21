@@ -2,6 +2,9 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router";
 import { toast } from "sonner";
 import { trpc } from "@/providers/trpc";
+import { useAuth } from "@/hooks/useAuth";
+import { useGuestCart } from "@/lib/guestCart";
+import { getCheckoutPhone, setCheckoutPhone } from "@/lib/checkoutState";
 import { citiesByState, indianStates } from "@/lib/freshflowData";
 import { formatCurrency } from "@/lib/i18n";
 import { isValidIndianMobileNumber } from "@/lib/utils";
@@ -22,8 +25,12 @@ import { Loader2, Package, ShoppingCart, Truck, MapPin, Home, Briefcase } from "
 export default function Checkout() {
   const navigate = useNavigate();
   const utils = trpc.useUtils();
-  const cartQuery = trpc.cart.list.useQuery(undefined, { retry: false });
-  const addressQuery = trpc.address.list.useQuery(undefined, { retry: false });
+  const { user } = useAuth();
+  const guestCart = useGuestCart();
+  const isAuthenticated = !!user;
+
+  const cartQuery = trpc.cart.list.useQuery(undefined, { enabled: isAuthenticated, retry: false });
+  const addressQuery = trpc.address.list.useQuery(undefined, { enabled: isAuthenticated, retry: false });
   const [isPaymentInProgress, setIsPaymentInProgress] = useState(false);
 
   const createRazorpayOrder = trpc.order.createRazorpayOrder.useMutation({
@@ -32,6 +39,10 @@ export default function Checkout() {
 
   const createOrder = trpc.order.create.useMutation({
     onSuccess: async (data) => {
+      if (!isAuthenticated) {
+        guestCart.clear();
+        clearCheckoutPhone();
+      }
       await Promise.all([
         utils.cart.list.invalidate(),
         utils.order.list.invalidate(),
@@ -47,7 +58,7 @@ export default function Checkout() {
   });
   const [form, setForm] = useState({
     contactName: "",
-    mobileNumber: "",
+    mobileNumber: getCheckoutPhone(),
     state: "Telangana",
     city: "Hyderabad",
     address: "",
@@ -60,6 +71,14 @@ export default function Checkout() {
     agreeTerms: false,
     paymentMethod: "cod" as "upi" | "cod",
   });
+
+  useEffect(() => {
+    const savedPhone = getCheckoutPhone();
+    if (savedPhone) {
+      setForm((prev) => (prev.mobileNumber ? prev : { ...prev, mobileNumber: savedPhone }));
+    }
+  }, []);
+
   const [isAddressModalOpen, setIsAddressModalOpen] = useState(false);
   const authQuery = trpc.auth.me.useQuery(undefined, { retry: false });
   const hasAutoFilled = useRef(false);
@@ -69,7 +88,7 @@ export default function Checkout() {
       setForm((prev) => ({
         ...prev,
         contactName: defaultAddr.fullName || "",
-        mobileNumber: defaultAddr.mobileNumber || "",
+        mobileNumber: prev.mobileNumber || defaultAddr.mobileNumber || "",
         address: defaultAddr.addressLine1 || "",
         addressLine2: defaultAddr.addressLine2 || "",
         landmark: defaultAddr.landmark || "",
@@ -82,10 +101,17 @@ export default function Checkout() {
   }, [addressQuery.data]);
 
   const cities = useMemo(() => citiesByState[form.state] ?? [], [form.state]);
-  const items = cartQuery.data?.items ?? [];
-  const subtotal = cartQuery.data?.total ?? 0;
+  const items = isAuthenticated ? (cartQuery.data?.items ?? []) : guestCart.items;
+  const subtotal = isAuthenticated ? (cartQuery.data?.total ?? 0) : guestCart.total;
   const quoteQuery = trpc.order.quote.useQuery(
-    { shippingState: form.state },
+    {
+      shippingState: form.state,
+      items: items.map((it) => ({
+        productId: it.productId,
+        quantity: it.quantity,
+        selectedOption: it.selectedOption || undefined,
+      })),
+    },
     { enabled: items.length > 0 && !!form.state, retry: false },
   );
   const shippingAmount = quoteQuery.data?.shippingAmount ?? 0;
@@ -93,7 +119,7 @@ export default function Checkout() {
   const total = quoteQuery.data?.totalAmount ?? subtotal + shippingAmount + taxAmount;
   const deliveryUnavailable = quoteQuery.data ? !quoteQuery.data.deliveryAvailable : false;
 
-  if (cartQuery.isLoading) {
+  if (isAuthenticated && cartQuery.isLoading) {
     return <div className="py-16 text-center"><Loader2 className="mx-auto h-8 w-8 animate-spin text-emerald-600" /></div>;
   }
 
@@ -123,7 +149,7 @@ export default function Checkout() {
     );
   }
 
-  if (!addressQuery.isLoading && addressQuery.data?.length === 0) {
+  if (isAuthenticated && !addressQuery.isLoading && addressQuery.data?.length === 0) {
     return (
       <div className="mx-auto max-w-md py-16 text-center">
         <MapPin className="mx-auto mb-4 h-12 w-12 text-muted-foreground/40" />
@@ -146,11 +172,23 @@ export default function Checkout() {
       return;
     }
 
+    const orderItemPayload = items.map((it) => ({
+      productId: it.productId,
+      quantity: it.quantity,
+      selectedOption: it.selectedOption || undefined,
+      notes: it.notes || undefined,
+    }));
+
     if (form.paymentMethod === "upi") {
       setIsPaymentInProgress(true);
       try {
         const razorpayOrder = await createRazorpayOrder.mutateAsync({
           shippingState: form.state,
+          items: items.map((it) => ({
+            productId: it.productId,
+            quantity: it.quantity,
+            selectedOption: it.selectedOption || undefined,
+          })),
         });
 
         const scriptLoaded = await new Promise((resolve) => {
@@ -175,7 +213,7 @@ export default function Checkout() {
           key: razorpayOrder.keyId || "rzp_test_invalid",
           amount: razorpayOrder.amount,
           currency: razorpayOrder.currency,
-          name: "FreshFlow",
+          name: "Tex’s Chicken & Burgers",
           description: "Order Payment",
           order_id: razorpayOrder.id,
           prefill: {
@@ -203,6 +241,7 @@ export default function Checkout() {
               razorpayOrderId: response.razorpay_order_id,
               razorpayPaymentId: response.razorpay_payment_id,
               razorpaySignature: response.razorpay_signature,
+              items: orderItemPayload,
             }, {
               onSettled: () => setIsPaymentInProgress(false)
             });
@@ -238,13 +277,14 @@ export default function Checkout() {
         shippingMethod: form.slot || undefined,
         buyerNotes: form.notes || undefined,
         paymentMethod: "cod",
+        items: orderItemPayload,
       });
     }
   }
 
   return (
     <div className="mx-auto max-w-5xl space-y-6">
-      <PageHeader backTo="/cart" backLabel="Back to Cart" title="Checkout" />
+      <PageHeader backTo="/info" backLabel="Back to Customer Info" title="Checkout" />
       <form onSubmit={handleSubmit} className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between">
@@ -290,7 +330,16 @@ export default function Checkout() {
               </div>
               <div className="space-y-2">
                 <Label htmlFor="mobileNumber">Mobile Number</Label>
-                <Input id="mobileNumber" value={form.mobileNumber} onChange={(event) => setForm({ ...form, mobileNumber: event.target.value })} required />
+                <Input
+                  id="mobileNumber"
+                  value={form.mobileNumber}
+                  onChange={(event) => {
+                    const val = event.target.value;
+                    setForm({ ...form, mobileNumber: val });
+                    setCheckoutPhone(val);
+                  }}
+                  required
+                />
               </div>
             </div>
             <Separator />

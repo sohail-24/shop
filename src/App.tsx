@@ -15,6 +15,7 @@ const EditProduct = lazy(() => import("./pages/EditProduct"));
 const Categories = lazy(() => import("./pages/Categories"));
 const ProductDetail = lazy(() => import("./pages/ProductDetail"));
 const Cart = lazy(() => import("./pages/Cart"));
+const Info = lazy(() => import("./pages/Info"));
 const Checkout = lazy(() => import("./pages/Checkout"));
 const Orders = lazy(() => import("./pages/Orders"));
 const OrderDetail = lazy(() => import("./pages/OrderDetail"));
@@ -143,14 +144,8 @@ function AppRoutes() {
           />
           <Route path="/products/:slug" element={<ProductDetail />} />
           <Route path="/cart" element={<Cart />} />
-          <Route
-            path="/checkout"
-            element={
-              <ProtectedRoute>
-                <Checkout />
-              </ProtectedRoute>
-            }
-          />
+          <Route path="/info" element={<Info />} />
+          <Route path="/checkout" element={<Checkout />} />
           <Route
             path="/orders"
             element={
@@ -161,11 +156,7 @@ function AppRoutes() {
           />
           <Route
             path="/orders/:id"
-            element={
-              <ProtectedRoute>
-                <OrderDetail />
-              </ProtectedRoute>
-            }
+            element={<OrderDetail />}
           />
           <Route
             path="/invoices"
