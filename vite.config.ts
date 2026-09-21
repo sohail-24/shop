@@ -4,6 +4,41 @@ const __dirname = import.meta.dirname
 import react from "@vitejs/plugin-react"
 import { defineConfig, type Plugin } from "vite"
 
+function universalCors(): Plugin {
+  return {
+    name: "universal-cors",
+    configureServer(server) {
+      server.middlewares.use((req, res, next) => {
+        const origin = req.headers.origin;
+        if (origin) {
+          res.setHeader("Access-Control-Allow-Origin", origin);
+          res.setHeader("Access-Control-Allow-Credentials", "true");
+          res.setHeader("Vary", "Origin");
+        } else {
+          res.setHeader("Access-Control-Allow-Origin", "*");
+        }
+        res.setHeader(
+          "Access-Control-Allow-Methods",
+          "GET, HEAD, POST, PUT, DELETE, PATCH, OPTIONS"
+        );
+        res.setHeader(
+          "Access-Control-Allow-Headers",
+          "Content-Type, Authorization, x-trpc-source, trpc-accept, *"
+        );
+        res.setHeader("Access-Control-Expose-Headers", "*");
+
+        if (req.method === "OPTIONS") {
+          res.statusCode = 204;
+          res.setHeader("Content-Length", "0");
+          res.end();
+          return;
+        }
+        next();
+      });
+    },
+  };
+}
+
 function preventAssetFallback(): Plugin {
   return {
     name: "prevent-asset-html-fallback",
@@ -31,6 +66,7 @@ function preventAssetFallback(): Plugin {
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [
+    universalCors(),
     devServer({ entry: "api/boot.ts", exclude: [/^\/(?!api\/).*$/] }),
     react(),
     preventAssetFallback(),
@@ -39,10 +75,7 @@ export default defineConfig({
     port: 3000,
     host: "0.0.0.0",
     allowedHosts: true,
-    cors: {
-      origin: true,
-      credentials: true,
-    },
+    cors: false,
   },
   resolve: {
     alias: {

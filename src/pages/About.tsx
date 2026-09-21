@@ -1,346 +1,745 @@
-import { useMemo } from "react";
+import { useState } from "react";
 import { Link } from "react-router";
+import { motion, useReducedMotion } from "motion/react";
 import {
   ArrowRight,
+  Award,
   CheckCircle2,
-  ChevronRight,
+  ChevronDown,
   Flame,
+  Gift,
   Heart,
+  MapPin,
   ShieldCheck,
-  ShoppingBag,
   Sparkles,
   Star,
-  Users,
+  Trophy,
   Utensils,
+  Zap,
 } from "lucide-react";
-import { trpc } from "@/providers/trpc";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { CustomerBottomNav } from "@/components/CustomerBottomNav";
-import { getCategoryEmoji } from "./LandingPage";
-import { getCategoryDescription, getCategoryImage } from "./Products";
-
-interface CategoryItem {
-  id: number;
-  name: string;
-  slug?: string | null;
-  description?: string | null;
-}
-
-const FALLBACK_CATEGORIES: CategoryItem[] = [
-  { id: 1, name: "Platters", slug: "platters", description: "Chicken, Lamb, Combo & Falafel over rice" },
-  { id: 2, name: "Gyros & Wraps", slug: "gyros", description: "Warm pita wrapped with fresh veggies" },
-  { id: 3, name: "Burgers & Sandwiches", slug: "burgers", description: "Juicy patties & specialty cheesesteaks" },
-  { id: 4, name: "Party Wings", slug: "party-wings", description: "Crispy wings in Buffalo, BBQ & Sweet Chili" },
-  { id: 5, name: "Rice Bowls", slug: "rice-bowls", description: "Fragrant basmati rice topped to perfection" },
-  { id: 6, name: "Fresh Salads", slug: "salads", description: "Crisp lettuce, tomato, cucumber & feta" },
-  { id: 7, name: "Crispy Sides", slug: "sides", description: "Golden fries, falafel, hummus & pita" },
-  { id: 8, name: "Beverages", slug: "beverages", description: "Chilled sodas, juices & cold drinks" },
-  { id: 9, name: "Desserts", slug: "desserts", description: "Crispy sweet honey baklava" },
-  { id: 10, name: "Catering", slug: "catering", description: "Feast platters for parties & gatherings" },
-];
+import { BurgerExplodeAnimation } from "@/components/BurgerExplodeAnimation";
 
 export default function About() {
-  const categoriesQuery = trpc.category.list.useQuery(undefined, {
-    retry: false,
-  });
+  const prefersReducedMotion = useReducedMotion();
+  const [activeTier, setActiveTier] = useState<"bronze" | "silver" | "gold">("bronze");
 
-  const categories: CategoryItem[] = useMemo(() => {
-    const data = (categoriesQuery.data ?? []) as CategoryItem[];
-    if (data.length > 0) return data;
-    return FALLBACK_CATEGORIES;
-  }, [categoriesQuery.data]);
+  // Motion helper props
+  const fadeIn = {
+    initial: prefersReducedMotion ? { opacity: 1 } : { opacity: 0, y: 20 },
+    whileInView: { opacity: 1, y: 0 },
+    viewport: { once: true, margin: "-60px" },
+    transition: { duration: 0.6, ease: "easeOut" },
+  };
 
   return (
-    <div className="min-h-screen bg-[#FDFCF7] text-slate-900 flex flex-col antialiased selection:bg-emerald-800 selection:text-amber-200">
-      {/* Main Content Container - Starts directly at the top */}
+    <div className="min-h-screen bg-[#FDFCF7] text-slate-900 flex flex-col antialiased selection:bg-emerald-800 selection:text-amber-200 overflow-x-hidden">
       <main className="flex-1 pb-24 md:pb-16">
         {/* ==================================================================== */}
-        {/* HERO SECTION                                                         */}
+        {/* SECTION 1: CINEMATIC HERO                                            */}
         {/* ==================================================================== */}
         <section
           id="about-hero"
-          className="relative overflow-hidden text-white pt-8 sm:pt-12 pb-14 sm:pb-20 lg:pb-24"
+          className="relative text-white pt-10 sm:pt-16 pb-16 sm:pb-24 overflow-hidden"
           style={{
-            background: "linear-gradient(135deg, #062E1F 0%, #0B462C 45%, #0F5132 75%, #062E1F 100%)",
+            background: "linear-gradient(145deg, #041F15 0%, #062E1F 35%, #0B462C 70%, #062E1F 100%)",
           }}
         >
-          {/* Subtle Halal Pattern & Ambient Glows */}
+          {/* Subtle Ambient Halal Pattern & Golden Glows */}
           <div className="absolute inset-0 opacity-10 pointer-events-none bg-[radial-gradient(#F59E0B_1px,transparent_1px)] [background-size:24px_24px]" />
-          <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[340px] sm:w-[520px] h-[340px] sm:h-[520px] bg-emerald-500/15 rounded-full blur-3xl pointer-events-none animate-soft-glow" />
-          <div className="absolute bottom-10 right-10 w-64 h-64 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
-
-          {/* Floating decorative food emoji badges */}
-          <div className="hidden sm:flex absolute top-12 left-[10%] lg:left-[14%] items-center gap-2 bg-[#062E1F]/80 backdrop-blur-sm border border-emerald-700/50 text-emerald-200 px-3 py-1.5 rounded-full text-xs font-semibold shadow-lg animate-float-slow pointer-events-none">
-            <span className="text-base">🍔</span> Fresh Burgers
-          </div>
-
-          <div className="hidden sm:flex absolute top-20 right-[10%] lg:right-[15%] items-center gap-2 bg-[#062E1F]/80 backdrop-blur-sm border border-emerald-700/50 text-emerald-200 px-3 py-1.5 rounded-full text-xs font-semibold shadow-lg animate-float-reverse pointer-events-none">
-            <span className="text-base">🌯</span> Warm Gyros
-          </div>
-
-          <div className="hidden md:flex absolute bottom-14 left-[8%] items-center gap-2 bg-[#062E1F]/80 backdrop-blur-sm border border-amber-400/40 text-amber-300 px-3 py-1.5 rounded-full text-xs font-semibold shadow-lg animate-gentle-tilt pointer-events-none">
-            <span className="text-base">🍗</span> Crispy Wings
-          </div>
-
-          <div className="hidden md:flex absolute bottom-16 right-[10%] items-center gap-2 bg-[#062E1F]/80 backdrop-blur-sm border border-emerald-700/50 text-emerald-200 px-3 py-1.5 rounded-full text-xs font-semibold shadow-lg animate-float-slow pointer-events-none">
-            <span className="text-base">🍟</span> Golden Sides
-          </div>
+          <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[340px] sm:w-[600px] h-[340px] sm:h-[600px] bg-emerald-500/15 rounded-full blur-3xl pointer-events-none" />
+          <div className="absolute bottom-10 right-10 w-72 h-72 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
 
           <div className="relative max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 text-center flex flex-col items-center">
-            {/* 100% Certified Halal Badge */}
-            <div className="inline-flex items-center gap-2 bg-amber-400/15 border border-amber-400/40 text-amber-300 px-4 py-1.5 rounded-full text-xs sm:text-sm font-bold tracking-wider uppercase mb-5 shadow-xs">
-              <span className="text-amber-400 text-sm">☪</span>
-              <span>100% Certified Halal</span>
-              <span className="text-amber-400 text-xs">✨</span>
-            </div>
-
-            {/* Center Logo */}
-            <div className="relative mb-5">
-              <div className="absolute inset-0 rounded-full bg-amber-400/20 blur-xl scale-125" />
-              <div className="relative inline-flex p-3 sm:p-3.5 rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 shadow-2xl">
+            {/* Real Official Tex's Logo */}
+            <motion.div
+              initial={prefersReducedMotion ? { opacity: 1 } : { opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.6 }}
+              className="relative mb-6"
+            >
+              <div className="absolute inset-0 rounded-full bg-amber-400/20 blur-xl scale-125 pointer-events-none" />
+              <div className="relative inline-flex p-3 sm:p-4 rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 shadow-2xl">
                 <img
                   src="/branding/logo.png"
                   alt="Tex’s Chicken & Burgers"
-                  className="h-12 sm:h-16 md:h-18 w-auto object-contain drop-shadow-md"
+                  className="h-14 sm:h-20 md:h-24 w-auto object-contain drop-shadow-md"
                 />
               </div>
-            </div>
+            </motion.div>
 
-            {/* Main Headline */}
-            <h1 className="text-3xl sm:text-5xl lg:text-6xl font-black tracking-tight leading-[1.1] max-w-3xl">
-              ABOUT <span className="text-amber-300">TEX’S CHICKEN &amp; BURGERS</span>
-            </h1>
+            {/* 100% Certified Halal Tag */}
+            <motion.div
+              initial={prefersReducedMotion ? { opacity: 1 } : { opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2, duration: 0.5 }}
+              className="inline-flex items-center gap-2 bg-amber-400/15 border border-amber-400/40 text-amber-300 px-4 py-1.5 rounded-full text-xs sm:text-sm font-bold tracking-wider uppercase mb-4 shadow-xs"
+            >
+              <span className="text-amber-400">☪</span>
+              <span>100% Certified Halal</span>
+              <span className="text-amber-400 text-xs">✨</span>
+            </motion.div>
 
-            {/* Tagline */}
-            <p className="mt-3 sm:mt-4 text-lg sm:text-xl md:text-2xl font-semibold text-emerald-200 tracking-wide">
+            {/* Main Brand Title */}
+            <motion.h1
+              initial={prefersReducedMotion ? { opacity: 1 } : { opacity: 0, y: 15 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3, duration: 0.6 }}
+              className="text-3xl sm:text-5xl md:text-6xl lg:text-7xl font-black tracking-tight leading-[1.08] max-w-4xl"
+            >
+              TEX’S CHICKEN <br className="hidden sm:inline" />
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-300 via-yellow-200 to-amber-400">
+                &amp; BURGERS
+              </span>
+            </motion.h1>
+
+            {/* Official Tagline */}
+            <motion.p
+              initial={prefersReducedMotion ? { opacity: 1 } : { opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.4, duration: 0.6 }}
+              className="mt-4 text-xl sm:text-2xl md:text-3xl font-extrabold text-amber-300 tracking-wide"
+            >
               Worth Every Bite
-            </p>
+            </motion.p>
+
+            {/* Pillar Subtitle */}
+            <motion.div
+              initial={prefersReducedMotion ? { opacity: 1 } : { opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.5, duration: 0.6 }}
+              className="mt-3 flex items-center justify-center gap-3 text-sm sm:text-base font-semibold text-emerald-200 tracking-wider uppercase"
+            >
+              <span>Fresh</span>
+              <span className="text-amber-400">•</span>
+              <span>Crispy</span>
+              <span className="text-amber-400">•</span>
+              <span>100% Halal</span>
+            </motion.div>
 
             {/* Motto */}
-            <div className="mt-2 text-sm sm:text-base italic text-emerald-100/90 font-medium">
+            <motion.p
+              initial={prefersReducedMotion ? { opacity: 1 } : { opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.6, duration: 0.6 }}
+              className="mt-4 text-sm sm:text-base italic text-emerald-100/90 font-medium"
+            >
               &ldquo;Good Food Brings Good People&rdquo;
-            </div>
+            </motion.p>
 
-            {/* Hero Center Food Showcase with Subtle Float */}
-            <div className="relative mt-8 sm:mt-10 w-full max-w-sm sm:max-w-md mx-auto">
-              <div className="absolute inset-0 bg-gradient-to-t from-emerald-500/30 to-amber-500/20 rounded-3xl blur-2xl transform scale-95" />
-              <div className="relative rounded-3xl overflow-hidden border-2 border-emerald-400/30 shadow-2xl bg-emerald-950/40 p-2 animate-float-slow">
-                <div className="relative rounded-2xl overflow-hidden aspect-[4/3] bg-emerald-900/50">
-                  <img
-                    src="/products/chicken-platter.jpg"
-                    alt="Tex’s Chicken & Burgers Signature Chicken Platter"
-                    className="w-full h-full object-cover transition-transform duration-700 hover:scale-105"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
-                  <div className="absolute bottom-3 left-3 right-3 text-left flex items-end justify-between">
-                    <div>
-                      <span className="text-[11px] font-bold text-amber-300 uppercase tracking-wider block">
-                        Signature Dish
-                      </span>
-                      <span className="text-sm sm:text-base font-bold text-white leading-tight">
-                        Chicken &amp; Rice Platter
-                      </span>
-                    </div>
-                    <span className="text-xs bg-emerald-600/90 text-white font-semibold px-2 py-0.5 rounded-md border border-emerald-400/40">
-                      Made Fresh
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Hero CTA buttons */}
-            <div className="mt-8 sm:mt-10 flex flex-wrap items-center justify-center gap-3 sm:gap-4">
-              <Link to="/products">
+            {/* Hero CTAs */}
+            <motion.div
+              initial={prefersReducedMotion ? { opacity: 1 } : { opacity: 0, y: 15 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.7, duration: 0.6 }}
+              className="mt-8 sm:mt-10 flex flex-wrap items-center justify-center gap-3 sm:gap-4"
+            >
+              <a href="#born-in-nyc">
                 <Button
                   size="lg"
                   className="h-12 px-6 sm:px-8 bg-amber-400 hover:bg-amber-300 text-slate-950 font-bold text-sm sm:text-base rounded-xl shadow-lg shadow-amber-400/20 gap-2 transition-all hover:scale-[1.02]"
                 >
-                  <Utensils className="h-4 w-4" />
-                  Explore Our Menu
+                  <ChevronDown className="h-4 w-4 animate-bounce" />
+                  Explore Our Story
                 </Button>
-              </Link>
-              <a href="#our-story">
+              </a>
+              <Link to="/products">
                 <Button
                   size="lg"
                   variant="outline"
                   className="h-12 px-6 sm:px-8 border-emerald-400/40 bg-emerald-900/40 hover:bg-emerald-800/60 text-emerald-100 font-semibold text-sm sm:text-base rounded-xl backdrop-blur-sm gap-2"
                 >
-                  Our Story
-                  <ChevronRight className="h-4 w-4" />
+                  <Utensils className="h-4 w-4" />
+                  Explore Menu
                 </Button>
-              </a>
+              </Link>
+            </motion.div>
+
+            {/* Footprint Quick Stats Banner */}
+            <div className="mt-12 sm:mt-16 grid grid-cols-2 sm:grid-cols-3 gap-3 w-full max-w-2xl text-center">
+              <div className="p-3.5 rounded-2xl bg-white/5 border border-emerald-500/20 backdrop-blur-sm">
+                <div className="text-2xl sm:text-3xl font-black text-amber-300">Late 1980s</div>
+                <div className="text-[11px] sm:text-xs text-emerald-200 mt-0.5">NYC Roots</div>
+              </div>
+              <div className="p-3.5 rounded-2xl bg-white/5 border border-emerald-500/20 backdrop-blur-sm">
+                <div className="text-2xl sm:text-3xl font-black text-amber-300">55+</div>
+                <div className="text-[11px] sm:text-xs text-emerald-200 mt-0.5">East Coast Locations</div>
+              </div>
+              <div className="col-span-2 sm:col-span-1 p-3.5 rounded-2xl bg-white/5 border border-emerald-500/20 backdrop-blur-sm">
+                <div className="text-2xl sm:text-3xl font-black text-amber-300">100%</div>
+                <div className="text-[11px] sm:text-xs text-emerald-200 mt-0.5">Certified Halal</div>
+              </div>
             </div>
           </div>
         </section>
 
         {/* ==================================================================== */}
-        {/* 3. OUR STORY & OUR MISSION                                           */}
+        {/* SECTION 2: BORN IN NEW YORK (NYC STORY)                               */}
         {/* ==================================================================== */}
-        <section id="our-story" className="py-16 sm:py-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-14 items-center">
-            {/* Story Text */}
-            <div className="space-y-6">
-              <div>
-                <div className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-emerald-800 bg-emerald-100/70 border border-emerald-200/80 px-3 py-1 rounded-full mb-3">
-                  <Sparkles className="h-3.5 w-3.5 text-emerald-700" />
-                  <span>Our Story &amp; Mission</span>
-                </div>
-                <h2 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold tracking-tight text-slate-900 leading-tight">
-                  Authentic Halal Flavor, <br />
-                  <span className="text-emerald-800">Crafted Fresh Daily.</span>
-                </h2>
-              </div>
-
-              <p className="text-base sm:text-lg text-slate-700 leading-relaxed">
-                Tex’s Chicken & Burgers is built around a simple idea —{" "}
-                <strong className="text-slate-900 font-semibold">
-                  fresh food, great taste, and a welcoming experience for everyone.
-                </strong>
-              </p>
-
-              <p className="text-sm sm:text-base text-slate-600 leading-relaxed">
-                From sizzling marinated meats cooked right on the grill to our fragrant, spiced basmati rice, warm pita,
-                crisp salad, and world-famous signature white and fiery red sauces, every order is prepared with care
-                and authentic culinary pride.
-              </p>
-
-              {/* Three Culinary Highlights */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2">
-                <div className="p-3.5 rounded-xl bg-white border border-slate-200/80 shadow-xs">
-                  <div className="h-8 w-8 rounded-lg bg-emerald-50 text-emerald-700 flex items-center justify-center mb-2">
-                    <Flame className="h-4 w-4" />
-                  </div>
-                  <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wide">Freshly Grilled</h3>
-                  <p className="text-[11px] text-slate-500 mt-0.5">Cooked hot to order on the griddle</p>
-                </div>
-
-                <div className="p-3.5 rounded-xl bg-white border border-slate-200/80 shadow-xs">
-                  <div className="h-8 w-8 rounded-lg bg-amber-50 text-amber-700 flex items-center justify-center mb-2">
-                    <Star className="h-4 w-4" />
-                  </div>
-                  <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wide">Basmati Rice</h3>
-                  <p className="text-[11px] text-slate-500 mt-0.5">Long-grain rice with signature spices</p>
-                </div>
-
-                <div className="p-3.5 rounded-xl bg-white border border-slate-200/80 shadow-xs">
-                  <div className="h-8 w-8 rounded-lg bg-emerald-50 text-emerald-700 flex items-center justify-center mb-2">
-                    <Heart className="h-4 w-4" />
-                  </div>
-                  <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wide">House Sauces</h3>
-                  <p className="text-[11px] text-slate-500 mt-0.5">Famous white sauce &amp; fiery red sauce</p>
-                </div>
-              </div>
+        <section id="born-in-nyc" className="py-16 sm:py-24 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+          <motion.div {...fadeIn} className="text-center max-w-3xl mx-auto mb-12">
+            <div className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-emerald-800 bg-emerald-100/80 border border-emerald-200 px-3 py-1 rounded-full mb-3">
+              <MapPin className="h-3.5 w-3.5 text-emerald-700" />
+              <span>Section 01 • Origin</span>
             </div>
+            <h2 className="text-3xl sm:text-4xl md:text-5xl font-black tracking-tight text-slate-900 leading-tight">
+              BORN IN <span className="text-emerald-800">NEW YORK CITY</span>
+            </h2>
+            <p className="mt-3 text-base sm:text-lg text-slate-600 leading-relaxed">
+              The Tex’s journey began in the late 1980s on the vibrant streets of New York City, rooted in neighborhood storefronts across the boroughs.
+            </p>
+          </motion.div>
 
-            {/* Story Visual Frame */}
-            <div className="relative">
-              <div className="absolute -inset-2 rounded-3xl bg-gradient-to-tr from-emerald-700/20 via-amber-400/20 to-emerald-800/10 blur-xl opacity-70" />
-              <div className="relative rounded-2xl overflow-hidden border border-slate-200 bg-white shadow-xl">
-                <div className="aspect-[4/3] sm:aspect-[16/11] overflow-hidden bg-slate-100">
+          {/* Borough Timeline Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {/* The Bronx */}
+            <motion.div
+              {...fadeIn}
+              transition={{ delay: 0.1, duration: 0.5 }}
+              className="p-6 sm:p-8 rounded-3xl bg-white border border-stone-200 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden"
+            >
+              <div className="text-4xl sm:text-5xl font-black text-stone-200 absolute top-4 right-4 select-none">
+                01
+              </div>
+              <div className="inline-flex items-center justify-center h-12 w-12 rounded-2xl bg-emerald-100 text-emerald-800 font-black text-lg mb-4">
+                BX
+              </div>
+              <h3 className="text-xl font-black text-slate-900 mb-2">The Bronx</h3>
+              <p className="text-sm text-slate-600 leading-relaxed">
+                Small corner kitchens serving hungry local workers, bus drivers, and neighborhood families looking for fresh, hot, and honest comfort food.
+              </p>
+            </motion.div>
+
+            {/* Harlem */}
+            <motion.div
+              {...fadeIn}
+              transition={{ delay: 0.2, duration: 0.5 }}
+              className="p-6 sm:p-8 rounded-3xl bg-white border border-stone-200 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden"
+            >
+              <div className="text-4xl sm:text-5xl font-black text-stone-200 absolute top-4 right-4 select-none">
+                02
+              </div>
+              <div className="inline-flex items-center justify-center h-12 w-12 rounded-2xl bg-amber-100 text-amber-800 font-black text-lg mb-4">
+                HL
+              </div>
+              <h3 className="text-xl font-black text-slate-900 mb-2">Harlem</h3>
+              <p className="text-sm text-slate-600 leading-relaxed">
+                Developing distinctive seasoning blends that resonated with deep culinary traditions, perfecting the crunch of fried chicken with rich flavor.
+              </p>
+            </motion.div>
+
+            {/* Brooklyn */}
+            <motion.div
+              {...fadeIn}
+              transition={{ delay: 0.3, duration: 0.5 }}
+              className="p-6 sm:p-8 rounded-3xl bg-white border border-stone-200 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden"
+            >
+              <div className="text-4xl sm:text-5xl font-black text-stone-200 absolute top-4 right-4 select-none">
+                03
+              </div>
+              <div className="inline-flex items-center justify-center h-12 w-12 rounded-2xl bg-emerald-100 text-emerald-800 font-black text-lg mb-4">
+                BK
+              </div>
+              <h3 className="text-xl font-black text-slate-900 mb-2">Brooklyn</h3>
+              <p className="text-sm text-slate-600 leading-relaxed">
+                Expanding into diverse immigrant communities, demonstrating that American comfort food can be 100% halal without ever sacrificing taste or value.
+              </p>
+            </motion.div>
+          </div>
+        </section>
+
+        {/* ==================================================================== */}
+        {/* SECTION 3: THE BEGINNING                                             */}
+        {/* ==================================================================== */}
+        <section className="py-16 sm:py-20 bg-[#F4F1EA]/70 border-y border-stone-200">
+          <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+            <motion.div {...fadeIn} className="max-w-3xl mx-auto text-center space-y-4">
+              <div className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-emerald-800 bg-emerald-100 border border-emerald-200 px-3 py-1 rounded-full">
+                <Sparkles className="h-3.5 w-3.5 text-emerald-700" />
+                <span>Section 02 • The Need</span>
+              </div>
+              <h2 className="text-3xl sm:text-4xl font-black tracking-tight text-slate-900">
+                A SIMPLE, POWERFUL PURPOSE
+              </h2>
+              <p className="text-base sm:text-lg text-slate-700 leading-relaxed">
+                In the late 1980s, a close-knit group of friends observed a glaring gap in the city’s bustling food scene. Working-class families, students, and immigrant communities wanted delicious, affordable, easy-to-grab American comfort food—yet certified halal options were virtually nonexistent.
+              </p>
+            </motion.div>
+
+            {/* The 5 Pillars of The Beginning */}
+            <div className="mt-10 grid grid-cols-2 sm:grid-cols-5 gap-3">
+              {[
+                { title: "Affordable", desc: "Honest pricing for everyday working people" },
+                { title: "Accessible", desc: "Conveniently located in local neighborhoods" },
+                { title: "Always Fresh", desc: "Never pre-cooked under heat lamps" },
+                { title: "100% Halal", desc: "Mindful preparation & verified sourcing" },
+                { title: "Comfort Food", desc: "Golden chicken, juicy burgers & warm sides" },
+              ].map((item, idx) => (
+                <motion.div
+                  key={item.title}
+                  {...fadeIn}
+                  transition={{ delay: idx * 0.08, duration: 0.4 }}
+                  className={`p-4 rounded-2xl bg-white border border-stone-200 text-center shadow-xs ${
+                    idx === 4 ? "col-span-2 sm:col-span-1" : ""
+                  }`}
+                >
+                  <div className="text-emerald-700 font-bold text-xs uppercase tracking-wider">
+                    0{idx + 1}
+                  </div>
+                  <h4 className="font-extrabold text-slate-900 text-sm sm:text-base mt-1">
+                    {item.title}
+                  </h4>
+                  <p className="text-[11px] text-slate-500 mt-1 leading-snug">
+                    {item.desc}
+                  </p>
+                </motion.div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* ==================================================================== */}
+        {/* SECTION 4: THE CRAFT & BURGER ANIMATION                              */}
+        {/* ==================================================================== */}
+        <section id="the-craft" className="py-16 sm:py-24 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+          <motion.div {...fadeIn} className="text-center max-w-3xl mx-auto mb-10">
+            <div className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-emerald-800 bg-emerald-100/80 border border-emerald-200 px-3 py-1 rounded-full mb-3">
+              <Flame className="h-3.5 w-3.5 text-emerald-700" />
+              <span>Section 03 • Culinary Mastery</span>
+            </div>
+            <h2 className="text-3xl sm:text-4xl md:text-5xl font-black tracking-tight text-slate-900">
+              THE CRAFT BEHIND THE CRUNCH
+            </h2>
+            <p className="mt-3 text-base sm:text-lg text-slate-600 leading-relaxed">
+              Great food isn’t an accident. For over three decades, Tex’s has refined southern-style frying traditions, proprietary breading blends, and hot flat-top smashing techniques to create dishes that are crispy on the outside, succulent on the inside.
+            </p>
+          </motion.div>
+
+          {/* Interactive Exploding Burger Component */}
+          <motion.div {...fadeIn}>
+            <BurgerExplodeAnimation />
+          </motion.div>
+
+          {/* The 4 Craft Pillars */}
+          <div className="mt-12 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="p-5 rounded-2xl bg-white border border-stone-200 shadow-xs">
+              <span className="text-2xl mb-2 block">🌾</span>
+              <h4 className="font-black text-slate-900 text-base">Signature Breading</h4>
+              <p className="text-xs sm:text-sm text-slate-600 mt-1 leading-relaxed">
+                Hand-dipped and seasoned with a proprietary blend of southern spices that locks in juices during frying.
+              </p>
+            </div>
+            <div className="p-5 rounded-2xl bg-white border border-stone-200 shadow-xs">
+              <span className="text-2xl mb-2 block">🌡️</span>
+              <h4 className="font-black text-slate-900 text-base">Precise Frying</h4>
+              <p className="text-xs sm:text-sm text-slate-600 mt-1 leading-relaxed">
+                Fried in pure, clean vegetable oil at calibrated temperatures for that unforgettable golden snap.
+              </p>
+            </div>
+            <div className="p-5 rounded-2xl bg-white border border-stone-200 shadow-xs">
+              <span className="text-2xl mb-2 block">🥩</span>
+              <h4 className="font-black text-slate-900 text-base">Flat-Top Smashed</h4>
+              <p className="text-xs sm:text-sm text-slate-600 mt-1 leading-relaxed">
+                Fresh halal ground beef pressed firmly on a blistering grill to create crispy, caramelized edges.
+              </p>
+            </div>
+            <div className="p-5 rounded-2xl bg-white border border-stone-200 shadow-xs">
+              <span className="text-2xl mb-2 block">🌿</span>
+              <h4 className="font-black text-slate-900 text-base">Cooked Hot to Order</h4>
+              <p className="text-xs sm:text-sm text-slate-600 mt-1 leading-relaxed">
+                Every sandwich, tender, and burger is made when you request it, so your food is sizzling and fresh.
+              </p>
+            </div>
+          </div>
+        </section>
+
+        {/* ==================================================================== */}
+        {/* SECTION 5: 2016 MILESTONE                                            */}
+        {/* ==================================================================== */}
+        <section
+          className="py-16 sm:py-20 text-white relative overflow-hidden"
+          style={{
+            background: "linear-gradient(135deg, #062E1F 0%, #0F5132 60%, #062E1F 100%)",
+          }}
+        >
+          <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10">
+            <motion.div {...fadeIn}>
+              <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-amber-400/20 border border-amber-400/40 text-amber-300 text-xs font-bold uppercase tracking-wider mb-6">
+                <Trophy className="w-3.5 h-3.5" />
+                <span>Historic Milestone</span>
+              </div>
+              <div className="text-6xl sm:text-8xl md:text-9xl font-black tracking-tight text-transparent bg-clip-text bg-gradient-to-b from-amber-300 via-yellow-200 to-amber-500 mb-4 select-none">
+                2016
+              </div>
+              <h2 className="text-2xl sm:text-4xl font-black text-white tracking-tight mb-4">
+                TEXAS CHICKEN &amp; BURGERS
+              </h2>
+              <p className="text-base sm:text-lg text-emerald-100 max-w-2xl mx-auto leading-relaxed">
+                After decades of operating individual neighborhood spots, the founders formally unified their recipes, culinary standards, and hospitality under the <strong className="text-white">Texas Chicken &amp; Burgers</strong> banner. A single, unmistakable standard for fresh halal comfort food was born.
+              </p>
+            </motion.div>
+          </div>
+        </section>
+
+        {/* ==================================================================== */}
+        {/* SECTION 6: THEN → NOW (55+ LOCATIONS GROWTH)                         */}
+        {/* ==================================================================== */}
+        <section className="py-16 sm:py-24 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+          <motion.div {...fadeIn} className="text-center max-w-3xl mx-auto mb-14">
+            <div className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-emerald-800 bg-emerald-100/80 border border-emerald-200 px-3 py-1 rounded-full mb-3">
+              <Zap className="h-3.5 w-3.5 text-emerald-700" />
+              <span>Section 04 • Growth</span>
+            </div>
+            <h2 className="text-3xl sm:text-4xl md:text-5xl font-black tracking-tight text-slate-900">
+              THEN <span className="text-emerald-800">→</span> NOW
+            </h2>
+            <p className="mt-3 text-base sm:text-lg text-slate-600">
+              From a humble single storefront in NYC to a beloved brand across the East Coast.
+            </p>
+          </motion.div>
+
+          {/* Growth Journey Stepper */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 relative">
+            {[
+              {
+                step: "Phase 1",
+                highlight: "1 Location",
+                title: "Humble Beginnings",
+                desc: "A single NYC storefront serving local residents and testing recipes.",
+              },
+              {
+                step: "Phase 2",
+                highlight: "Neighborhoods",
+                title: "Local Favorites",
+                desc: "Word spread rapidly across boroughs for unmatched crunch and halal purity.",
+              },
+              {
+                step: "Phase 3",
+                highlight: "Metro Expansion",
+                title: "Multiple Locations",
+                desc: "Standardized kitchens and dedicated supply chains supporting high demand.",
+              },
+              {
+                step: "Phase 4",
+                highlight: "55+ Locations",
+                title: "East Coast Footprint",
+                desc: "Over 55 thriving locations and counting across the East Coast with dedicated fans.",
+              },
+            ].map((node, i) => (
+              <motion.div
+                key={node.step}
+                {...fadeIn}
+                transition={{ delay: i * 0.1, duration: 0.5 }}
+                className={`p-6 rounded-3xl border transition-all ${
+                  i === 3
+                    ? "bg-gradient-to-br from-[#062E1F] to-[#0F5132] text-white border-emerald-600 shadow-xl"
+                    : "bg-white border-stone-200 text-slate-900 shadow-xs"
+                }`}
+              >
+                <div
+                  className={`text-xs font-bold uppercase tracking-wider ${
+                    i === 3 ? "text-amber-300" : "text-emerald-700"
+                  }`}
+                >
+                  {node.step}
+                </div>
+                <div
+                  className={`text-2xl sm:text-3xl font-black my-2 ${
+                    i === 3 ? "text-amber-300" : "text-slate-900"
+                  }`}
+                >
+                  {node.highlight}
+                </div>
+                <h4
+                  className={`text-base font-bold mb-1 ${
+                    i === 3 ? "text-white" : "text-slate-800"
+                  }`}
+                >
+                  {node.title}
+                </h4>
+                <p
+                  className={`text-xs leading-relaxed ${
+                    i === 3 ? "text-emerald-100/90" : "text-slate-500"
+                  }`}
+                >
+                  {node.desc}
+                </p>
+              </motion.div>
+            ))}
+          </div>
+        </section>
+
+        {/* ==================================================================== */}
+        {/* SECTION 7: WHY TEX’S? (THE STORY BEHIND THE NAME)                    */}
+        {/* ==================================================================== */}
+        <section className="py-16 sm:py-20 bg-[#F4F1EA]/70 border-y border-stone-200">
+          <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 sm:gap-12 items-center">
+              <motion.div {...fadeIn} className="lg:col-span-7 space-y-4">
+                <div className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-emerald-800 bg-emerald-100 border border-emerald-200 px-3 py-1 rounded-full">
+                  <Heart className="h-3.5 w-3.5 text-emerald-700" />
+                  <span>The Brand Identity</span>
+                </div>
+                <h2 className="text-3xl sm:text-4xl font-black tracking-tight text-slate-900">
+                  WHY THE NAME <span className="text-emerald-800">&ldquo;TEX’S&rdquo;?</span>
+                </h2>
+                <p className="text-base text-slate-700 leading-relaxed">
+                  People often ask how an NYC-born brand got the name <strong className="text-slate-900">Tex’s</strong>.
+                </p>
+                <p className="text-sm sm:text-base text-slate-600 leading-relaxed">
+                  The inspiration connects directly to the legendary, ultra-crispy, golden southern-style breading technique the founders spent years mastering. By combining southern cooking traditions with New York’s multicultural energy and an unbending commitment to 100% halal preparation, the brand established a flavor profile like no other.
+                </p>
+                <p className="text-sm sm:text-base text-slate-600 leading-relaxed">
+                  Over time, regular patrons began affectionately shortening Texas Chicken &amp; Burgers to just <strong className="text-slate-900">&ldquo;Tex’s&rdquo;</strong>—a friendly, modern badge of flavor that honors our culinary heritage while driving our future forward.
+                </p>
+              </motion.div>
+
+              <motion.div
+                {...fadeIn}
+                transition={{ delay: 0.2, duration: 0.6 }}
+                className="lg:col-span-5 p-6 sm:p-8 rounded-3xl bg-gradient-to-br from-[#062E1F] to-[#0A3D28] text-white shadow-xl border border-emerald-600/50 text-center"
+              >
+                <div className="inline-flex p-3 rounded-2xl bg-white/10 border border-white/20 mb-4">
                   <img
-                    src="/products/combo-platter.jpg"
-                    alt="Tex’s Chicken & Burgers Combo Platter with Lamb, Chicken and Basmati Rice"
-                    className="w-full h-full object-cover transition-transform duration-500 hover:scale-105"
+                    src="/branding/logo.png"
+                    alt="Tex’s Logo"
+                    className="h-16 w-auto object-contain"
                   />
                 </div>
-                <div className="p-4 sm:p-5 bg-gradient-to-r from-[#062E1F] to-[#0F5132] text-white flex items-center justify-between">
-                  <div>
-                    <span className="text-xs font-bold text-amber-300 block tracking-wide">100% QUALITY PROMISE</span>
-                    <span className="text-sm sm:text-base font-extrabold text-white">
-                      From Our Kitchen to Your Table
-                    </span>
-                  </div>
-                  <Link to="/products">
-                    <Button
-                      size="sm"
-                      className="bg-amber-400 hover:bg-amber-300 text-slate-950 font-bold text-xs rounded-lg"
-                    >
-                      View Menu
-                    </Button>
-                  </Link>
-                </div>
-              </div>
+                <h3 className="text-2xl font-black text-amber-300">
+                  Southern Craft. <br />NYC Heart.
+                </h3>
+                <p className="text-xs sm:text-sm text-emerald-100 mt-2 leading-relaxed">
+                  Crispy golden breading meets 100% verified halal preparation in every single kitchen.
+                </p>
+              </motion.div>
             </div>
           </div>
         </section>
 
         {/* ==================================================================== */}
-        {/* 4. WHAT WE SERVE (DATABASE CATEGORIES VISUAL GRID)                    */}
+        {/* SECTION 8: QUALITY YOU CAN TASTE                                     */}
         {/* ==================================================================== */}
-        <section id="what-we-serve" className="py-14 sm:py-18 bg-[#F4F1EA]/70 border-y border-stone-200">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="text-center max-w-2xl mx-auto mb-10 sm:mb-12">
-              <div className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-emerald-800 bg-emerald-100/70 border border-emerald-200/80 px-3 py-1 rounded-full mb-3">
-                <Utensils className="h-3.5 w-3.5 text-emerald-700" />
-                <span>Our Specialties</span>
+        <section id="quality" className="py-16 sm:py-24 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+          <motion.div {...fadeIn} className="text-center max-w-3xl mx-auto mb-14">
+            <div className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-emerald-800 bg-emerald-100/80 border border-emerald-200 px-3 py-1 rounded-full mb-3">
+              <ShieldCheck className="h-3.5 w-3.5 text-emerald-700" />
+              <span>Section 05 • Sourcing &amp; Purity</span>
+            </div>
+            <h2 className="text-3xl sm:text-4xl md:text-5xl font-black tracking-tight text-slate-900">
+              QUALITY YOU CAN TASTE
+            </h2>
+            <p className="mt-3 text-base sm:text-lg text-slate-600">
+              Transparent, uncompromising food standards you and your family can trust every day.
+            </p>
+          </motion.div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Quality Pillar 1: 100% Halal */}
+            <motion.div
+              {...fadeIn}
+              transition={{ delay: 0.1 }}
+              className="p-6 sm:p-8 rounded-3xl bg-white border border-stone-200 shadow-sm hover:shadow-md transition-shadow flex flex-col justify-between"
+            >
+              <div>
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-bold uppercase tracking-wide mb-3">
+                  <span>☪</span>
+                  <span>100% Halal Certified</span>
+                </div>
+                <h3 className="text-xl sm:text-2xl font-black text-slate-900 mb-2">
+                  Mindfully Raised &amp; Prepared
+                </h3>
+                <p className="text-sm text-slate-600 leading-relaxed">
+                  Tex’s works directly with certified halal suppliers and independent halal certification experts. Animals are raised with care, free from unnatural growth steroids or hormone additives, and processed under humane, stress-free halal guidelines.
+                </p>
               </div>
-              <h2 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold tracking-tight text-slate-900">
-                WHAT WE SERVE
+              <div className="mt-5 pt-4 border-t border-stone-100 flex items-center gap-2 text-xs font-semibold text-emerald-800">
+                <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                <span>Zero non-halal cross contamination guaranteed</span>
+              </div>
+            </motion.div>
+
+            {/* Quality Pillar 2: Never Frozen */}
+            <motion.div
+              {...fadeIn}
+              transition={{ delay: 0.2 }}
+              className="p-6 sm:p-8 rounded-3xl bg-white border border-stone-200 shadow-sm hover:shadow-md transition-shadow flex flex-col justify-between"
+            >
+              <div>
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-50 border border-amber-200 text-amber-800 text-xs font-bold uppercase tracking-wide mb-3">
+                  <Flame className="w-3.5 h-3.5 text-amber-600" />
+                  <span>Never Frozen Meats</span>
+                </div>
+                <h3 className="text-xl sm:text-2xl font-black text-slate-900 mb-2">
+                  Fresh Chicken &amp; Beef Daily
+                </h3>
+                <p className="text-sm text-slate-600 leading-relaxed">
+                  We believe frozen meats ruin natural flavor and tenderness. Our chicken and ground beef arrive fresh to our kitchens, seasoned and prepared daily so every tender is juicy and every patty is seared with maximum crust.
+                </p>
+              </div>
+              <div className="mt-5 pt-4 border-t border-stone-100 flex items-center gap-2 text-xs font-semibold text-emerald-800">
+                <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                <span>Cooked fresh on the spot — never pre-cooked</span>
+              </div>
+            </motion.div>
+
+            {/* Quality Pillar 3: Fresh Produce */}
+            <motion.div
+              {...fadeIn}
+              transition={{ delay: 0.3 }}
+              className="p-6 sm:p-8 rounded-3xl bg-white border border-stone-200 shadow-sm hover:shadow-md transition-shadow flex flex-col justify-between"
+            >
+              <div>
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-bold uppercase tracking-wide mb-3">
+                  <Sparkles className="w-3.5 h-3.5 text-emerald-600" />
+                  <span>Fresh Ingredients</span>
+                </div>
+                <h3 className="text-xl sm:text-2xl font-black text-slate-900 mb-2">
+                  Crisp Produce Chopped Daily
+                </h3>
+                <p className="text-sm text-slate-600 leading-relaxed">
+                  Every burger and sandwich is layered with crisp green leaf lettuce, vine-ripened red tomatoes, crunchy crinkle pickles, and fresh red onions. No bagged wilted greens or synthetic flavorings.
+                </p>
+              </div>
+              <div className="mt-5 pt-4 border-t border-stone-100 flex items-center gap-2 text-xs font-semibold text-emerald-800">
+                <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                <span>Farm-fresh ingredients washed &amp; sliced in-house</span>
+              </div>
+            </motion.div>
+
+            {/* Quality Pillar 4: Zero Fillers / No Pink Slime */}
+            <motion.div
+              {...fadeIn}
+              transition={{ delay: 0.4 }}
+              className="p-6 sm:p-8 rounded-3xl bg-white border border-stone-200 shadow-sm hover:shadow-md transition-shadow flex flex-col justify-between"
+            >
+              <div>
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-50 border border-amber-200 text-amber-800 text-xs font-bold uppercase tracking-wide mb-3">
+                  <ShieldCheck className="w-3.5 h-3.5 text-amber-600" />
+                  <span>Zero Fillers Commitment</span>
+                </div>
+                <h3 className="text-xl sm:text-2xl font-black text-slate-900 mb-2">
+                  No Pink Slime &amp; No Ammonia Treatments
+                </h3>
+                <p className="text-sm text-slate-600 leading-relaxed">
+                  Tex’s ground beef is 100% pure beef. As a strict company quality policy, we do not source from companies that use ammonia treatments, and our meat contains absolutely zero lean finely textured beef (&ldquo;pink slime&rdquo;) or chemical fillers.
+                </p>
+              </div>
+              <div className="mt-5 pt-4 border-t border-stone-100 flex items-center gap-2 text-xs font-semibold text-emerald-800">
+                <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                <span>Pure, wholesome beef with honest nutrition</span>
+              </div>
+            </motion.div>
+          </div>
+        </section>
+
+        {/* ==================================================================== */}
+        {/* SECTION 9: MADE FOR THE MENU (REAL PRODUCTS SHOWCASE)                */}
+        {/* ==================================================================== */}
+        <section className="py-16 sm:py-24 bg-[#F4F1EA]/70 border-y border-stone-200">
+          <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+            <motion.div {...fadeIn} className="text-center max-w-3xl mx-auto mb-14">
+              <div className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-emerald-800 bg-emerald-100 border border-emerald-200 px-3 py-1 rounded-full mb-3">
+                <Utensils className="h-3.5 w-3.5 text-emerald-700" />
+                <span>Section 06 • The Lineup</span>
+              </div>
+              <h2 className="text-3xl sm:text-4xl md:text-5xl font-black tracking-tight text-slate-900">
+                MADE FOR THE MENU
               </h2>
-              <p className="mt-2 text-sm sm:text-base text-slate-600">
-                From hearty platters and warm pita wraps to crispy wings and sweet desserts, explore our full halal menu.
+              <p className="mt-3 text-base sm:text-lg text-slate-600">
+                A preview of genuine Tex’s classics prepared hot and fresh daily.
               </p>
+            </motion.div>
+
+            {/* Menu Highlights Bento Grid */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+              {[
+                {
+                  title: "Signature Fried Chicken",
+                  items: "2 PC, 3 PC, 4 PC Meals",
+                  desc: "Bone-in chicken marinated in secret spices, coated in our legendary southern breading, and fried to golden perfection.",
+                  icon: "🍗",
+                  tag: "Customer Favorite",
+                },
+                {
+                  title: "Tex’s Smash Burgers",
+                  items: "Classic, Deluxe & Hell Smash",
+                  desc: "Never-frozen halal beef patties smashed thin on the flat-top for crispy edges, topped with melted cheese and signature sauce.",
+                  icon: "🍔",
+                  tag: "100% Halal Beef",
+                },
+                {
+                  title: "Crispy Chicken Sandwiches",
+                  items: "Classic, Deluxe & Grilled",
+                  desc: "Whole-muscle chicken breast fried crispy or grilled tender, served on a toasted brioche bun with house-made pickles.",
+                  icon: "🥪",
+                  tag: "Whole Muscle Breast",
+                },
+                {
+                  title: "Fiery Wings & Tenders",
+                  items: "6 PC, 15 PC Wings & 3–5 PC Tenders",
+                  desc: "Tossed in spicy cayenne blends or served crisp with dipping sauces. Pure white-meat tenders hand-breaded daily.",
+                  icon: "🔥",
+                  tag: "Spicy & Crisp",
+                },
+                {
+                  title: "Southern Comfort Sides",
+                  items: "Fries, Mac & Cheese, Mash & Gravy",
+                  desc: "Seasoned crinkle fries, creamy mac & cheese, velvety mashed potatoes topped with savory brown gravy, and crisp coleslaw.",
+                  icon: "🍟",
+                  tag: "Made from Scratch",
+                },
+                {
+                  title: "Golden Honey Biscuits",
+                  items: "Warm, Flaky & Buttery",
+                  desc: "Baked fresh throughout the day and brushed with real golden honey butter. The quintessential southern finish.",
+                  icon: "🍯",
+                  tag: "Baked Hourly",
+                },
+              ].map((item, idx) => (
+                <motion.div
+                  key={item.title}
+                  {...fadeIn}
+                  transition={{ delay: idx * 0.08, duration: 0.5 }}
+                  className="p-6 rounded-3xl bg-white border border-stone-200 shadow-xs hover:shadow-md transition-shadow flex flex-col justify-between"
+                >
+                  <div>
+                    <div className="flex items-center justify-between gap-2 mb-3">
+                      <span className="text-3xl">{item.icon}</span>
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-800 bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-200">
+                        {item.tag}
+                      </span>
+                    </div>
+                    <h3 className="text-lg font-black text-slate-900">{item.title}</h3>
+                    <div className="text-xs font-semibold text-amber-700 mt-0.5">
+                      {item.items}
+                    </div>
+                    <p className="text-xs text-slate-600 mt-2 leading-relaxed">
+                      {item.desc}
+                    </p>
+                  </div>
+                  <div className="mt-5 pt-3 border-t border-stone-100 flex items-center justify-between">
+                    <Link
+                      to="/products"
+                      className="text-xs font-bold text-emerald-700 hover:text-emerald-800 flex items-center gap-1 group"
+                    >
+                      <span>Explore Options</span>
+                      <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-0.5" />
+                    </Link>
+                  </div>
+                </motion.div>
+              ))}
             </div>
 
-            {/* Category Cards Grid */}
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3.5 sm:gap-4 lg:gap-5">
-              {categories.map((category) => {
-                const emoji = getCategoryEmoji(category);
-                const image = getCategoryImage(category);
-                const description = getCategoryDescription(category);
-
-                return (
-                  <Link
-                    key={category.id}
-                    to={`/products?category=${category.id}`}
-                    className="group flex flex-col bg-white rounded-2xl overflow-hidden border border-slate-200/90 shadow-xs hover:shadow-md transition-all duration-300 hover:-translate-y-1 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-700"
-                  >
-                    {/* Category Image */}
-                    <div className="relative aspect-square w-full bg-slate-100 overflow-hidden">
-                      <img
-                        src={image}
-                        alt={category.name}
-                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-108"
-                        loading="lazy"
-                      />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent opacity-60 group-hover:opacity-40 transition-opacity" />
-                      <div className="absolute top-2 left-2 bg-white/90 backdrop-blur-xs text-slate-900 text-sm px-2 py-0.5 rounded-full shadow-xs">
-                        {emoji}
-                      </div>
-                    </div>
-
-                    {/* Category Details */}
-                    <div className="p-3 flex-1 flex flex-col justify-between">
-                      <div>
-                        <h3 className="text-xs sm:text-sm font-bold text-slate-900 group-hover:text-emerald-800 transition-colors line-clamp-1">
-                          {category.name}
-                        </h3>
-                        <p className="text-[11px] text-slate-500 line-clamp-2 mt-0.5 leading-tight">
-                          {description}
-                        </p>
-                      </div>
-
-                      <div className="mt-2.5 flex items-center text-[11px] font-semibold text-emerald-700 group-hover:text-emerald-800">
-                        <span>Order Now</span>
-                        <ArrowRight className="ml-1 h-3 w-3 transition-transform group-hover:translate-x-0.5" />
-                      </div>
-                    </div>
-                  </Link>
-                );
-              })}
-            </div>
-
-            <div className="mt-8 sm:mt-10 text-center">
+            <div className="mt-12 text-center">
               <Link to="/products">
                 <Button
-                  variant="outline"
-                  className="h-11 px-6 border-emerald-700/40 text-emerald-800 hover:bg-emerald-800 hover:text-white font-bold text-sm rounded-xl gap-2 transition-colors"
+                  size="lg"
+                  className="h-12 px-8 bg-emerald-800 hover:bg-emerald-900 text-white font-bold text-sm sm:text-base rounded-xl shadow-md gap-2"
                 >
-                  <ShoppingBag className="h-4 w-4" />
-                  View All Products &amp; Categories
+                  <Utensils className="h-4 w-4" />
+                  View Full Menu &amp; Order
                 </Button>
               </Link>
             </div>
@@ -348,252 +747,260 @@ export default function About() {
         </section>
 
         {/* ==================================================================== */}
-        {/* 5. FRESH • HALAL • TASTY (FOOD QUALITY & FRESHNESS WITH ANIMATION)   */}
+        {/* SECTION 10: TEX’S REWARDS (SPURS LOYALTY)                            */}
         {/* ==================================================================== */}
-        <section
-          id="fresh-halal-tasty"
-          className="py-16 sm:py-20 text-white relative overflow-hidden"
-          style={{
-            background: "linear-gradient(135deg, #062E1F 0%, #083825 50%, #0F5132 100%)",
-          }}
-        >
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
-            <div className="text-center max-w-2xl mx-auto mb-12">
-              <div className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-amber-300 bg-amber-400/10 border border-amber-400/30 px-3 py-1 rounded-full mb-3">
-                <span>☪</span>
-                <span>Our Uncompromising Standards</span>
+        <section id="rewards" className="py-16 sm:py-24 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+          <motion.div {...fadeIn} className="text-center max-w-3xl mx-auto mb-14">
+            <div className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-amber-800 bg-amber-100/80 border border-amber-300 px-3 py-1 rounded-full mb-3">
+              <Gift className="h-3.5 w-3.5 text-amber-700" />
+              <span>Section 07 • Loyalty Program</span>
+            </div>
+            <h2 className="text-3xl sm:text-4xl md:text-5xl font-black tracking-tight text-slate-900">
+              TEX’S REWARDS <span className="text-amber-600">• EARN SPURS</span>
+            </h2>
+            <p className="mt-3 text-base sm:text-lg text-slate-600">
+              Earn loyalty Spurs on every dollar spent and redeem them for free food, sides, and exclusive perks.
+            </p>
+          </motion.div>
+
+          {/* How It Works Flow */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3.5 sm:gap-4 mb-12">
+            {[
+              { step: "01", title: "Eat", desc: "Order online or scan in-store" },
+              { step: "02", title: "Earn Spurs", desc: "Get Spurs for every $1 spent" },
+              { step: "03", title: "Level Up", desc: "Climb Bronze, Silver & Gold" },
+              { step: "04", title: "Redeem", desc: "Free food starting at 150 Spurs" },
+            ].map((st, i) => (
+              <div
+                key={st.step}
+                className="p-4 rounded-2xl bg-white border border-stone-200 text-center shadow-xs relative"
+              >
+                <div className="text-xs font-black text-amber-600 tracking-wider">
+                  STEP {st.step}
+                </div>
+                <h4 className="text-base font-black text-slate-900 mt-1">{st.title}</h4>
+                <p className="text-[11px] text-slate-500 mt-0.5">{st.desc}</p>
               </div>
-              <h2 className="text-2xl sm:text-4xl font-black tracking-tight text-white">
-                FRESH • HALAL • TASTY
-              </h2>
-              <p className="mt-2 text-sm sm:text-base text-emerald-200/90">
-                Every ingredient is prepared with the utmost respect for taste, freshness, and halal authenticity.
+            ))}
+          </div>
+
+          {/* Tier Cards / Selector */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+            {/* Bronze Tier */}
+            <div
+              onClick={() => setActiveTier("bronze")}
+              className={`cursor-pointer p-6 rounded-3xl border transition-all ${
+                activeTier === "bronze"
+                  ? "bg-gradient-to-b from-amber-50 to-white border-amber-400 shadow-md ring-2 ring-amber-400/30"
+                  : "bg-white border-stone-200 opacity-80 hover:opacity-100"
+              }`}
+            >
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-xs font-bold uppercase tracking-wider text-amber-800 bg-amber-100 px-2.5 py-0.5 rounded-full">
+                  Tier 1
+                </span>
+                <span className="text-xs font-mono text-slate-400">0–999 Spurs</span>
+              </div>
+              <h3 className="text-xl font-black text-slate-900">Bronze Member</h3>
+              <p className="text-xs text-slate-500 mt-1 mb-4">
+                Start earning immediately when you create an account.
               </p>
+              <ul className="space-y-2 text-xs text-slate-700">
+                <li className="flex items-center gap-2">
+                  <CheckCircle2 className="w-3.5 h-3.5 text-amber-600" />
+                  <span>1 Spur per $1 spent</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <CheckCircle2 className="w-3.5 h-3.5 text-amber-600" />
+                  <span>Welcome reward on signup</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <CheckCircle2 className="w-3.5 h-3.5 text-amber-600" />
+                  <span>Exclusive digital coupons</span>
+                </li>
+              </ul>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-              {/* Pillar 1 */}
-              <div className="bg-white/5 border border-emerald-500/20 backdrop-blur-sm rounded-2xl p-5 hover:bg-white/10 transition-all group">
-                <div className="h-12 w-12 rounded-xl bg-emerald-500/20 text-emerald-300 flex items-center justify-center text-xl mb-3.5 group-hover:scale-110 transition-transform">
-                  🥩
-                </div>
-                <h3 className="text-base font-bold text-white mb-1.5 flex items-center gap-1.5">
-                  100% Halal Certified
-                  <CheckCircle2 className="h-4 w-4 text-emerald-400 shrink-0" />
-                </h3>
-                <p className="text-xs sm:text-sm text-emerald-200/80 leading-relaxed">
-                  Strictly verified halal meats and wholesome kitchen standards you and your family can trust every day.
-                </p>
+            {/* Silver Tier */}
+            <div
+              onClick={() => setActiveTier("silver")}
+              className={`cursor-pointer p-6 rounded-3xl border transition-all ${
+                activeTier === "silver"
+                  ? "bg-gradient-to-b from-slate-100 to-white border-slate-400 shadow-md ring-2 ring-slate-400/30"
+                  : "bg-white border-stone-200 opacity-80 hover:opacity-100"
+              }`}
+            >
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-xs font-bold uppercase tracking-wider text-slate-800 bg-slate-200 px-2.5 py-0.5 rounded-full">
+                  Tier 2
+                </span>
+                <span className="text-xs font-mono text-slate-400">1,000–2,499 Spurs</span>
               </div>
+              <h3 className="text-xl font-black text-slate-900">Silver Member</h3>
+              <p className="text-xs text-slate-500 mt-1 mb-4">
+                Accelerated rewards for frequent diners.
+              </p>
+              <ul className="space-y-2 text-xs text-slate-700">
+                <li className="flex items-center gap-2">
+                  <CheckCircle2 className="w-3.5 h-3.5 text-slate-600" />
+                  <span>1.1x Spurs multiplier</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <CheckCircle2 className="w-3.5 h-3.5 text-slate-600" />
+                  <span>Free Birthday treat</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <CheckCircle2 className="w-3.5 h-3.5 text-slate-600" />
+                  <span>Priority seasonal offers</span>
+                </li>
+              </ul>
+            </div>
 
-              {/* Pillar 2 */}
-              <div className="bg-white/5 border border-emerald-500/20 backdrop-blur-sm rounded-2xl p-5 hover:bg-white/10 transition-all group">
-                <div className="h-12 w-12 rounded-xl bg-emerald-500/20 text-emerald-300 flex items-center justify-center text-xl mb-3.5 group-hover:scale-110 transition-transform">
-                  🥗
-                </div>
-                <h3 className="text-base font-bold text-white mb-1.5 flex items-center gap-1.5">
-                  Fresh Vegetables
-                  <CheckCircle2 className="h-4 w-4 text-emerald-400 shrink-0" />
-                </h3>
-                <p className="text-xs sm:text-sm text-emerald-200/80 leading-relaxed">
-                  Crisp lettuce, ripe red tomatoes, cucumbers, and fragrant herbs chopped daily for refreshing balance.
-                </p>
+            {/* Gold Tier */}
+            <div
+              onClick={() => setActiveTier("gold")}
+              className={`cursor-pointer p-6 rounded-3xl border transition-all ${
+                activeTier === "gold"
+                  ? "bg-gradient-to-b from-yellow-50 to-white border-yellow-500 shadow-md ring-2 ring-yellow-500/30"
+                  : "bg-white border-stone-200 opacity-80 hover:opacity-100"
+              }`}
+            >
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-xs font-bold uppercase tracking-wider text-amber-900 bg-yellow-300 px-2.5 py-0.5 rounded-full">
+                  VIP Tier 3
+                </span>
+                <span className="text-xs font-mono text-slate-400">2,500+ Spurs</span>
               </div>
-
-              {/* Pillar 3 */}
-              <div className="bg-white/5 border border-amber-400/30 backdrop-blur-sm rounded-2xl p-5 hover:bg-white/10 transition-all group">
-                <div className="h-12 w-12 rounded-xl bg-amber-400/20 text-amber-300 flex items-center justify-center text-xl mb-3.5 group-hover:scale-110 transition-transform">
-                  🥣
-                </div>
-                <h3 className="text-base font-bold text-amber-300 mb-1.5 flex items-center gap-1.5">
-                  Iconic House Sauces
-                  <Star className="h-4 w-4 text-amber-400 shrink-0" />
-                </h3>
-                <p className="text-xs sm:text-sm text-emerald-200/80 leading-relaxed">
-                  Our famous creamy white sauce and bold red hot sauce bring signature flavor to every single bite.
-                </p>
-              </div>
-
-              {/* Pillar 4 */}
-              <div className="bg-white/5 border border-emerald-500/20 backdrop-blur-sm rounded-2xl p-5 hover:bg-white/10 transition-all group">
-                <div className="h-12 w-12 rounded-xl bg-emerald-500/20 text-emerald-300 flex items-center justify-center text-xl mb-3.5 group-hover:scale-110 transition-transform">
-                  🔥
-                </div>
-                <h3 className="text-base font-bold text-white mb-1.5 flex items-center gap-1.5">
-                  Cooked to Order
-                  <CheckCircle2 className="h-4 w-4 text-emerald-400 shrink-0" />
-                </h3>
-                <p className="text-xs sm:text-sm text-emerald-200/80 leading-relaxed">
-                  Grilled fresh when you order so your platters, gyros, and burgers are hot, juicy, and flavorful.
-                </p>
-              </div>
+              <h3 className="text-xl font-black text-slate-900">Gold Member</h3>
+              <p className="text-xs text-slate-500 mt-1 mb-4">
+                The ultimate VIP experience with maximum perks.
+              </p>
+              <ul className="space-y-2 text-xs text-slate-700">
+                <li className="flex items-center gap-2">
+                  <CheckCircle2 className="w-3.5 h-3.5 text-amber-600" />
+                  <span>1.25x Spurs multiplier</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <CheckCircle2 className="w-3.5 h-3.5 text-amber-600" />
+                  <span>Exclusive tasting previews &amp; VIP gifts</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <CheckCircle2 className="w-3.5 h-3.5 text-amber-600" />
+                  <span>Special surprise double Spurs days</span>
+                </li>
+              </ul>
             </div>
           </div>
-        </section>
 
-        {/* ==================================================================== */}
-        {/* 6. WHY TEX’S CHICKEN & BURGERS?                                       */}
-        {/* ==================================================================== */}
-        <section id="why-us" className="py-16 sm:py-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center max-w-2xl mx-auto mb-12">
-            <div className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-emerald-800 bg-emerald-100/70 border border-emerald-200/80 px-3 py-1 rounded-full mb-3">
-              <ShieldCheck className="h-3.5 w-3.5 text-emerald-700" />
-              <span>The Tex’s Difference</span>
+          {/* Official Redemption Ladder */}
+          <div className="p-6 sm:p-8 rounded-3xl bg-white border border-stone-200 shadow-sm">
+            <h3 className="text-lg font-black text-slate-900 mb-4 flex items-center gap-2">
+              <Award className="w-5 h-5 text-amber-600" />
+              <span>Official Redemption Menu</span>
+            </h3>
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+              <div className="p-3.5 rounded-2xl bg-stone-50 border border-stone-200 text-center">
+                <div className="text-amber-600 font-black text-xl">150 Spurs</div>
+                <div className="text-xs font-bold text-slate-900 mt-1">Warm Biscuit</div>
+                <div className="text-[10px] text-slate-500">Honey butter glaze</div>
+              </div>
+              <div className="p-3.5 rounded-2xl bg-stone-50 border border-stone-200 text-center">
+                <div className="text-amber-600 font-black text-xl">250 Spurs</div>
+                <div className="text-xs font-bold text-slate-900 mt-1">Crispy Side</div>
+                <div className="text-[10px] text-slate-500">Fries or coleslaw</div>
+              </div>
+              <div className="p-3.5 rounded-2xl bg-stone-50 border border-stone-200 text-center">
+                <div className="text-amber-600 font-black text-xl">400 Spurs</div>
+                <div className="text-xs font-bold text-slate-900 mt-1">2 PC Chicken</div>
+                <div className="text-[10px] text-slate-500">Signature bone-in</div>
+              </div>
+              <div className="p-3.5 rounded-2xl bg-stone-50 border border-stone-200 text-center">
+                <div className="text-amber-600 font-black text-xl">500 Spurs</div>
+                <div className="text-xs font-bold text-slate-900 mt-1">Cheeseburger</div>
+                <div className="text-[10px] text-slate-500">Halal beef &amp; brioche</div>
+              </div>
+              <div className="col-span-2 sm:col-span-1 p-3.5 rounded-2xl bg-stone-50 border border-stone-200 text-center">
+                <div className="text-amber-600 font-black text-xl">750 Spurs</div>
+                <div className="text-xs font-bold text-slate-900 mt-1">3 PC Tenders</div>
+                <div className="text-[10px] text-slate-500">Hand-breaded strips</div>
+              </div>
             </div>
-            <h2 className="text-2xl sm:text-4xl font-black tracking-tight text-slate-900">
-              WHY TEX’S CHICKEN &amp; BURGERS?
-            </h2>
-            <p className="mt-2 text-sm sm:text-base text-slate-600">
-              We take pride in our food quality, authentic recipe traditions, and welcoming service.
+            <p className="text-[11px] text-slate-400 mt-4 text-center">
+              Spurs remain valid for 1 full year from the date earned. Terms apply.
             </p>
           </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-            {/* Card 1 */}
-            <Card className="border-slate-200/90 shadow-xs hover:shadow-md transition-shadow">
-              <CardContent className="p-6">
-                <div className="text-3xl mb-3">🥩</div>
-                <h3 className="text-base font-bold text-slate-900 mb-1">Quality Ingredients</h3>
-                <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
-                  Carefully selected meats, real seasonings, and genuine ingredients prepared according to high standards.
-                </p>
-              </CardContent>
-            </Card>
-
-            {/* Card 2 */}
-            <Card className="border-slate-200/90 shadow-xs hover:shadow-md transition-shadow">
-              <CardContent className="p-6">
-                <div className="text-3xl mb-3">🥗</div>
-                <h3 className="text-base font-bold text-slate-900 mb-1">Fresh Food Always</h3>
-                <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
-                  Food cooked to order with crisp sides and hot breads, never sitting stale under heat lamps.
-                </p>
-              </CardContent>
-            </Card>
-
-            {/* Card 3 */}
-            <Card className="border-amber-400/40 bg-amber-50/30 shadow-xs hover:shadow-md transition-shadow">
-              <CardContent className="p-6">
-                <div className="text-3xl mb-3">☪️</div>
-                <h3 className="text-base font-bold text-slate-900 mb-1">Halal Focus</h3>
-                <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
-                  Consistent, verified halal dedication across our entire food catalog for peace of mind.
-                </p>
-              </CardContent>
-            </Card>
-
-            {/* Card 4 */}
-            <Card className="border-slate-200/90 shadow-xs hover:shadow-md transition-shadow">
-              <CardContent className="p-6">
-                <div className="text-3xl mb-3">❤️</div>
-                <h3 className="text-base font-bold text-slate-900 mb-1">Made With Care</h3>
-                <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
-                  Generous portions served with genuine friendliness, creating an inviting meal every time.
-                </p>
-              </CardContent>
-            </Card>
-          </div>
         </section>
 
         {/* ==================================================================== */}
-        {/* 7. CATERING SECTION                                                  */}
+        {/* SECTION 11: FINAL BRAND STATEMENT & CINEMATIC CTA                   */}
         {/* ==================================================================== */}
-        <section id="catering" className="py-14 sm:py-18 bg-[#F4F1EA]/60 border-y border-stone-200">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="bg-gradient-to-br from-[#062E1F] to-[#0F5132] text-white rounded-3xl overflow-hidden shadow-2xl border border-emerald-700/60 grid grid-cols-1 lg:grid-cols-12 items-center">
-              <div className="lg:col-span-7 p-6 sm:p-10 lg:p-12 space-y-5">
-                <div className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-amber-300 bg-amber-400/20 border border-amber-400/30 px-3 py-1 rounded-full">
-                  <Users className="h-3.5 w-3.5" />
-                  <span>Events &amp; Gatherings</span>
-                </div>
+        <section
+          id="final-statement"
+          className="relative py-20 sm:py-28 text-white overflow-hidden"
+          style={{
+            background: "linear-gradient(145deg, #041F15 0%, #062E1F 40%, #0A3D28 75%, #041F15 100%)",
+          }}
+        >
+          {/* Ambient Lighting */}
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-amber-400/10 rounded-full blur-3xl pointer-events-none" />
 
-                <h2 className="text-2xl sm:text-4xl font-black tracking-tight text-white leading-tight">
-                  CATERING FOR EVERY OCCASION
-                </h2>
-
-                <p className="text-emerald-200 text-sm sm:text-base leading-relaxed">
-                  Make every gathering special with authentic Tex’s Chicken &amp; Burgers catering trays, party platters, and custom
-                  boxed meals. Perfect for groups of any size:
-                </p>
-
-                {/* Catering Events Pills */}
-                <div className="flex flex-wrap gap-2 pt-1">
-                  {["Family Events", "Parties", "Corporate Lunches", "Weddings", "Celebrations", "Community Feasts"].map(
-                    (event) => (
-                      <Badge
-                        key={event}
-                        variant="outline"
-                        className="border-emerald-500/40 text-emerald-100 bg-emerald-950/40 font-medium px-3 py-1 text-xs"
-                      >
-                        ✓ {event}
-                      </Badge>
-                    ),
-                  )}
-                </div>
-
-                <div className="pt-3">
-                  <Link to="/products">
-                    <Button
-                      size="lg"
-                      className="bg-amber-400 hover:bg-amber-300 text-slate-950 font-bold text-sm sm:text-base rounded-xl shadow-lg gap-2"
-                    >
-                      <ShoppingBag className="h-4 w-4" />
-                      Explore Catering Menu
-                    </Button>
-                  </Link>
-                </div>
-              </div>
-
-              <div className="lg:col-span-5 h-full min-h-[260px] sm:min-h-[340px] relative overflow-hidden bg-emerald-950">
+          <div className="relative max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <motion.div {...fadeIn}>
+              <div className="inline-flex p-3 sm:p-4 rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 mb-6 shadow-xl">
                 <img
-                  src="/products/catering.jpg"
-                  alt="Tex’s Chicken & Burgers Catering Platter"
-                  className="w-full h-full object-cover"
-                  loading="lazy"
+                  src="/branding/logo.png"
+                  alt="Tex’s Chicken & Burgers"
+                  className="h-16 sm:h-20 w-auto object-contain"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t lg:bg-gradient-to-r from-[#062E1F] via-transparent to-transparent opacity-80" />
               </div>
-            </div>
-          </div>
-        </section>
 
-        {/* ==================================================================== */}
-        {/* 8. FINAL CTA                                                         */}
-        {/* ==================================================================== */}
-        <section id="final-cta" className="py-16 sm:py-20 max-w-4xl mx-auto px-4 text-center">
-          <div className="relative p-8 sm:p-12 rounded-3xl bg-white border border-slate-200 shadow-xl overflow-hidden">
-            <div className="absolute -right-16 -top-16 w-48 h-48 bg-amber-400/10 rounded-full blur-2xl pointer-events-none" />
-            <div className="absolute -left-16 -bottom-16 w-48 h-48 bg-emerald-500/10 rounded-full blur-2xl pointer-events-none" />
-
-            <div className="relative space-y-4">
-              <span className="text-3xl sm:text-4xl block">🍽️</span>
-              <h2 className="text-2xl sm:text-4xl font-black tracking-tight text-slate-900 leading-tight">
-                GOOD FOOD <br />
-                <span className="text-emerald-800">BRINGS GOOD PEOPLE</span>
+              <h2 className="text-3xl sm:text-5xl md:text-6xl font-black tracking-tight text-white mb-3">
+                TEX’S CHICKEN &amp; BURGERS
               </h2>
-              <p className="text-sm sm:text-base text-slate-600 max-w-md mx-auto">
-                Explore our full halal menu of platters, gyros, burgers, party wings, and sides.
+
+              <p className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-amber-300 tracking-wide mb-4">
+                Worth Every Bite
               </p>
 
-              <div className="pt-3">
+              <blockquote className="text-lg sm:text-xl md:text-2xl italic text-emerald-100/90 font-medium max-w-xl mx-auto mb-10">
+                &ldquo;Good Food Brings Good People&rdquo;
+              </blockquote>
+
+              <div className="flex flex-wrap items-center justify-center gap-4">
                 <Link to="/products">
                   <Button
                     size="lg"
-                    className="h-12 px-8 bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-base rounded-xl shadow-md gap-2"
+                    className="h-14 px-8 sm:px-10 bg-amber-400 hover:bg-amber-300 text-slate-950 font-black text-base sm:text-lg rounded-2xl shadow-xl shadow-amber-400/25 gap-2 transition-transform hover:scale-[1.02]"
                   >
-                    View Categories
-                    <ArrowRight className="h-4 w-4" />
+                    <Utensils className="h-5 w-5" />
+                    Explore Menu
+                  </Button>
+                </Link>
+                <Link to="/">
+                  <Button
+                    size="lg"
+                    variant="outline"
+                    className="h-14 px-8 sm:px-10 border-emerald-400/40 bg-emerald-950/60 hover:bg-emerald-900/80 text-white font-bold text-base sm:text-lg rounded-2xl backdrop-blur-sm gap-2"
+                  >
+                    Order Online
+                    <ArrowRight className="h-5 w-5" />
                   </Button>
                 </Link>
               </div>
-            </div>
+
+              <div className="mt-12 flex items-center justify-center gap-6 text-xs text-emerald-300/80 uppercase tracking-widest font-semibold">
+                <span>NYC Born</span>
+                <span>•</span>
+                <span>100% Halal</span>
+                <span>•</span>
+                <span>55+ Locations</span>
+              </div>
+            </motion.div>
           </div>
         </section>
       </main>
 
-      {/* ====================================================================== */}
-      {/* 9. MOBILE BOTTOM NAVIGATION (ACTIVE = "about")                         */}
-      {/* ====================================================================== */}
+      {/* Persistent Customer Bottom Navigation (Active tab = "about") */}
       <CustomerBottomNav active="about" />
     </div>
   );

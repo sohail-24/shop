@@ -23,17 +23,28 @@ const imageExtensions: Record<string, string> = {
   "image/webp": ".webp",
 };
 
-app.use(
-  "*",
-  cors({
-    origin: (origin) => origin || "",
-    allowHeaders: ["Content-Type", "Authorization", "x-trpc-source", "trpc-accept"],
-    allowMethods: ["POST", "GET", "OPTIONS", "PUT", "DELETE", "PATCH"],
-    exposeHeaders: ["Content-Length"],
-    maxAge: 600,
-    credentials: true,
-  })
-);
+app.use("*", async (c, next) => {
+  const origin = c.req.header("origin");
+  if (origin) {
+    c.header("Access-Control-Allow-Origin", origin);
+    c.header("Access-Control-Allow-Credentials", "true");
+    c.header("Vary", "Origin");
+  } else {
+    c.header("Access-Control-Allow-Origin", "*");
+  }
+  c.header("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE, PATCH, HEAD");
+  c.header(
+    "Access-Control-Allow-Headers",
+    "Content-Type, Authorization, x-trpc-source, trpc-accept, *"
+  );
+  c.header("Access-Control-Expose-Headers", "Content-Length, *");
+  c.header("Access-Control-Max-Age", "600");
+
+  if (c.req.method === "OPTIONS") {
+    return c.text("", 204);
+  }
+  await next();
+});
 
 app.use(bodyLimit({ maxSize: 50 * 1024 * 1024 }));
 
