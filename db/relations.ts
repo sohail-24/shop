@@ -16,6 +16,7 @@ import {
   deliveryZones,
   gstConfigurations,
   shippingMethods,
+  productImages,
 } from "./schema";
 
 // ─────────────────────────────────────────────────────────────
@@ -85,6 +86,7 @@ export const productsRelations = relations(products, ({ one, many }) => ({
   orderItems: many(orderItems),
   inventoryItems: many(inventory),
   warehouseStockMovements: many(warehouseStockMovements),
+  imagesList: many(productImages),
 }));
 
 // Cart items belong to a User and Product
@@ -237,3 +239,11 @@ export const shippingMethodsRelations = relations(shippingMethods, ({ one }) => 
     references: [deliveryZones.id],
   }),
 }));
+
+export const productImagesRelations = relations(productImages, ({ one }) => ({
+  product: one(products, {
+    fields: [productImages.productId],
+    references: [products.id],
+  }),
+}));
+

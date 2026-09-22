@@ -8,6 +8,11 @@ import { appRouter } from "./router";
 import { createContext } from "./context";
 import { authenticateAdminRequest } from "./auth/admin-session";
 import { isOwner } from "@contracts/roles";
+import {
+  saveProductImageDurable,
+  findProductImageByFilename,
+  migrateLocalImagesToDurable,
+} from "./queries/productImages";
 
 import { existsSync, mkdirSync, readFileSync } from "node:fs";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
@@ -42,7 +47,7 @@ app.use("*", async (c, next) => {
   c.header("Access-Control-Max-Age", "600");
 
   if (c.req.method === "OPTIONS") {
-    return c.text("", 204);
+    return c.body(null, 204);
   }
   await next();
 });
@@ -98,6 +103,29 @@ app.get("/api/uploads/:filename", async (c) => {
     }
   }
 
+  // Fallback to durable Neon PostgreSQL storage if file is not on local filesystem
+  try {
+    const durableImage = await findProductImageByFilename(filename);
+    if (durableImage && durableImage.data && durableImage.data.length > 0) {
+      // Opportunistically cache to local filesystem for fast future reads
+      try {
+        await writeFile(join(productUploadsDirectory, filename), durableImage.data);
+      } catch {
+        // Cache write failure is non-fatal
+      }
+
+      const mimeType = durableImage.mimeType || contentTypeFor(filename) || "image/png";
+      return new Response(durableImage.data, {
+        headers: {
+          "Content-Type": mimeType,
+          "Cache-Control": "public, max-age=31536000, immutable",
+        },
+      });
+    }
+  } catch (err) {
+    console.error(`[durable-images] Error fetching image "${filename}" from database:`, err);
+  }
+
   return c.json({ error: "Not Found" }, 404);
 });
 
@@ -143,17 +171,31 @@ app.post("/api/products/upload", async (c) => {
     return c.json({ error: "Product images must be 5 MB or smaller." }, 400);
   }
 
-  await mkdir(productUploadsDirectory, { recursive: true });
   const filename = `product-${randomUUID()}${extension}`;
   const fileBytes = Buffer.from(await image.arrayBuffer());
-  await writeFile(join(productUploadsDirectory, filename), fileBytes);
 
+  // Save to durable Neon PostgreSQL database FIRST
   try {
+    await saveProductImageDurable({
+      filename,
+      mimeType: image.type,
+      data: fileBytes,
+      size: fileBytes.length,
+    });
+  } catch (err) {
+    console.error("[durable-images] Failed to save image to Neon PostgreSQL:", err);
+    return c.json({ error: "Failed to persist image to durable database." }, 500);
+  }
+
+  // Also write to local cache directories for fast I/O
+  try {
+    await mkdir(productUploadsDirectory, { recursive: true });
+    await writeFile(join(productUploadsDirectory, filename), fileBytes);
     const publicProductsDir = resolve(process.cwd(), "public/products");
     await mkdir(publicProductsDir, { recursive: true });
     await writeFile(join(publicProductsDir, filename), fileBytes);
   } catch {
-    // Ignore backup failure
+    // Ignore cache failure
   }
 
   for (const [name, value] of responseHeaders) c.header(name, value, { append: true });
@@ -174,6 +216,11 @@ app.use("/api/trpc/*", async (c) => {
   });
 });
 app.all("/api/*", (c) => c.json({ error: "Not Found" }, 404));
+
+// Ensure local images are migrated into durable Neon PostgreSQL storage on server startup
+migrateLocalImagesToDurable().catch((err) => {
+  console.warn("[durable-images] Background startup image migration warning:", err);
+});
 
 export default app;
 

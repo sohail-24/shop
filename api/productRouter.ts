@@ -24,6 +24,7 @@ import {
 import { findCategoryById } from "./queries/categories";
 import { findCompanyById } from "./queries/companies";
 import { findAllInventory, updateInventory } from "./queries/inventory";
+import { associateProductImage } from "./queries/productImages";
 
 const unitTypeSchema = z.enum(["kg", "lb", "case", "pallet", "each", "bunch", "box", "bag"]);
 const gradeSchema = z.enum(["premium", "grade_a", "grade_b", "standard"]);
@@ -327,6 +328,12 @@ export const productRouter = createRouter({
           },
         });
 
+        if (imageUrls && imageUrls.length > 0) {
+          for (const url of imageUrls) {
+            await associateProductImage(productId, url);
+          }
+        }
+
         return { id: productId, slug: `${slugify(input.name)}-${input.sku.toLowerCase().replace(/[^a-z0-9]+/g, "-")}` };
       } catch (error) {
         throw new TRPCError({
@@ -461,6 +468,13 @@ export const productRouter = createRouter({
     if (inventoryUpdate) {
       await updateInventory(inventoryUpdate.id, inventoryUpdate.data);
     }
+
+    if (imageUrls && imageUrls.length > 0) {
+      for (const url of imageUrls) {
+        await associateProductImage(input.id, url);
+      }
+    }
+
     return { success: true };
   }),
 

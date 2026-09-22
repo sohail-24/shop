@@ -12,8 +12,8 @@ import { Label } from "@/components/ui/label";
 export default function AdminLogin() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [email, setEmail] = useState("admin@freshflow.com");
+  const [password, setPassword] = useState("admin123");
   const [error, setError] = useState<string | null>(null);
   const utils = trpc.useUtils();
   const login = trpc.auth.loginAdmin.useMutation();
@@ -66,6 +66,9 @@ export default function AdminLogin() {
           </CardHeader>
           <CardContent>
             <form className="space-y-4" onSubmit={submit}>
+              <div className="rounded-md bg-muted/60 p-3 text-xs text-muted-foreground border border-border/50">
+                <span className="font-semibold text-foreground">Demo Admin:</span> admin@freshflow.com / admin123
+              </div>
               <div className="space-y-2">
                 <Label htmlFor="admin-email">Email</Label>
                 <div className="relative"><Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" /><Input id="admin-email" className="pl-9" type="email" value={email} onChange={(event) => setEmail(event.target.value)} required autoComplete="username" /></div>

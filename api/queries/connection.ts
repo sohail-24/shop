@@ -25,7 +25,7 @@ export function getDb(): any {
     try {
       pool = new Pool({
         connectionString: env.databaseUrl,
-        connectionTimeoutMillis: 2000,
+        connectionTimeoutMillis: 15000,
       });
 
       pool.on("error", (err) => {

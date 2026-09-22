@@ -49,12 +49,8 @@ function preventAssetFallback(): Plugin {
           /\.(?:js|mjs|cjs|ts|tsx|jsx|css|json|map|wasm|png|jpe?g|gif|svg|webp|ico|woff2?|ttf|eot)$/i.test(url) ||
           url.startsWith("/assets/")
         ) {
-          if (req.headers.accept) {
-            req.headers.accept = req.headers.accept
-              .replace(/text\/html/g, "text/plain")
-              .replace(/\*\/\*/g, "application/octet-stream");
-          } else {
-            req.headers.accept = "application/octet-stream";
+          if (req.headers.accept && req.headers.accept.includes("text/html")) {
+            req.headers.accept = req.headers.accept.replace(/text\/html/g, "text/plain");
           }
         }
         next();
@@ -75,7 +71,7 @@ export default defineConfig({
     port: 3000,
     host: "0.0.0.0",
     allowedHosts: true,
-    cors: false,
+    cors: true,
   },
   resolve: {
     alias: {

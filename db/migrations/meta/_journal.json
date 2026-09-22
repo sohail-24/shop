@@ -22,6 +22,13 @@
       "when": 1786205810669,
       "tag": "0002_big_jack_murdock",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1786280000000,
+      "tag": "0003_durable_product_images",
+      "breakpoints": true
     }
   ]
 }

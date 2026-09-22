@@ -11,7 +11,21 @@ import {
   index,
   uniqueIndex,
   boolean,
+  customType,
 } from "drizzle-orm/pg-core";
+
+export const bytea = customType<{ data: Buffer; driverData: Buffer }>({
+  dataType() {
+    return "bytea";
+  },
+  toDriver(val: Buffer): Buffer {
+    return Buffer.isBuffer(val) ? val : Buffer.from(val);
+  },
+  fromDriver(val: unknown): Buffer {
+    if (Buffer.isBuffer(val)) return val;
+    return Buffer.from(val as any);
+  },
+});
 
 export const authProviderEnum = pgEnum("authProvider", ["local", "mobile"]);
 export const userRoleEnum = pgEnum("role", ["user", "admin"]);
@@ -864,3 +878,31 @@ export const shippingMethods = pgTable(
 
 export type ShippingMethod = typeof shippingMethods.$inferSelect;
 export type InsertShippingMethod = typeof shippingMethods.$inferInsert;
+
+// ─────────────────────────────────────────────────────────────
+// PRODUCT IMAGES — Durable binary storage for product assets
+// ─────────────────────────────────────────────────────────────
+export const productImages = pgTable(
+  "product_images",
+  {
+    id: bigserial("id", { mode: "number" }).primaryKey(),
+    productId: bigint("productId", { mode: "number" }),
+    filename: varchar("filename", { length: 255 }).notNull().unique(),
+    mimeType: varchar("mimeType", { length: 100 }).notNull(),
+    data: bytea("data").notNull(),
+    size: integer("size").notNull(),
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+    updatedAt: timestamp("updatedAt")
+      .defaultNow()
+      .notNull()
+      .$onUpdate(() => new Date()),
+  },
+  (table) => ({
+    filenameIdx: uniqueIndex("product_images_filename_idx").on(table.filename),
+    productIdx: index("product_images_product_idx").on(table.productId),
+  })
+);
+
+export type ProductImage = typeof productImages.$inferSelect;
+export type InsertProductImage = typeof productImages.$inferInsert;
+

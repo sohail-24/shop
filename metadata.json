@@ -1,6 +1,6 @@
 {
   "name": "Tex’s Chicken & Burgers",
-  "description": "Tex’s Chicken & Burgers - Worth Every Bite. Authentic NYC-style halal food marketplace featuring platters, gyros, burgers, sandwiches, party wings, sides, and drinks",
+  "description": "Tex’s Chicken & Burgers - Worth Every Bite. Authentic NYC-style halal food featuring platters, burgers & sandwiches, party wings, sides, drinks, and catering.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

@@ -1,39 +1,39 @@
 import { Navigate, Routes, Route, useLocation } from "react-router";
-import { lazy, Suspense } from "react";
+import { Suspense } from "react";
 import type { ReactNode } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import AppLayout from "@/components/AppLayout";
 import { useAuth } from "@/hooks/useAuth";
 import { isOwner } from "@/lib/roles";
 
-// Lazy load all pages for code splitting
-const LandingPage = lazy(() => import("./pages/LandingPage"));
-const Dashboard = lazy(() => import("./pages/Dashboard"));
-const Products = lazy(() => import("./pages/Products"));
-const AddProduct = lazy(() => import("./pages/AddProduct"));
-const EditProduct = lazy(() => import("./pages/EditProduct"));
-const Categories = lazy(() => import("./pages/Categories"));
-const ProductDetail = lazy(() => import("./pages/ProductDetail"));
-const Cart = lazy(() => import("./pages/Cart"));
-const Info = lazy(() => import("./pages/Info"));
-const Checkout = lazy(() => import("./pages/Checkout"));
-const Orders = lazy(() => import("./pages/Orders"));
-const OrderDetail = lazy(() => import("./pages/OrderDetail"));
-const Invoices = lazy(() => import("./pages/Invoices"));
-const InvoiceDetail = lazy(() => import("./pages/InvoiceDetail"));
-const Inventory = lazy(() => import("./pages/Inventory"));
-const Warehouse = lazy(() => import("./pages/Warehouse"));
-const Customers = lazy(() => import("./pages/Customers"));
-const DeliveryZones = lazy(() => import("./pages/DeliveryZones"));
-const GstRules = lazy(() => import("./pages/GstRules"));
-const ShippingRules = lazy(() => import("./pages/ShippingRules"));
-const Reports = lazy(() => import("./pages/Reports"));
-const Profile = lazy(() => import("./pages/Profile"));
-const Settings = lazy(() => import("./pages/Settings"));
-const OwnerPlaceholder = lazy(() => import("./pages/OwnerPlaceholder"));
-const AdminLogin = lazy(() => import("./pages/AdminLogin"));
-const About = lazy(() => import("./pages/About"));
-const NotFound = lazy(() => import("./pages/NotFound"));
+// Statically imported pages to prevent dynamic module import failures and network skew
+import LandingPage from "./pages/LandingPage";
+import Dashboard from "./pages/Dashboard";
+import Products from "./pages/Products";
+import AddProduct from "./pages/AddProduct";
+import EditProduct from "./pages/EditProduct";
+import Categories from "./pages/Categories";
+import ProductDetail from "./pages/ProductDetail";
+import Cart from "./pages/Cart";
+import Info from "./pages/Info";
+import Checkout from "./pages/Checkout";
+import Orders from "./pages/Orders";
+import OrderDetail from "./pages/OrderDetail";
+import Invoices from "./pages/Invoices";
+import InvoiceDetail from "./pages/InvoiceDetail";
+import Inventory from "./pages/Inventory";
+import Warehouse from "./pages/Warehouse";
+import Customers from "./pages/Customers";
+import DeliveryZones from "./pages/DeliveryZones";
+import GstRules from "./pages/GstRules";
+import ShippingRules from "./pages/ShippingRules";
+import Reports from "./pages/Reports";
+import Profile from "./pages/Profile";
+import Settings from "./pages/Settings";
+import OwnerPlaceholder from "./pages/OwnerPlaceholder";
+import AdminLogin from "./pages/AdminLogin";
+import About from "./pages/About";
+import NotFound from "./pages/NotFound";
 
 function PageLoader() {
   return (
